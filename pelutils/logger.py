@@ -14,7 +14,12 @@ class Unverbose:
 unverbose = Unverbose()
 
 class Logger:
-
+	"""
+	A simple logger that
+	- always writes to file
+	- has verbosity flag
+	- saves timestamp
+	"""
 	def __init__(self, fpath: str, title: str, verbose=True):
 		dirs = "/".join(fpath.split('/')[:-1])
 		if not os.path.exists(dirs) and dirs:
@@ -74,5 +79,4 @@ class NullLogger(Logger):
 
 	def section(self, title=""):
 		pass
-
 

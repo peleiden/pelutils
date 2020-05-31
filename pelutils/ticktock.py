@@ -19,7 +19,16 @@ class Profile:
 
 
 class TickTock:
-
+	"""
+	A taker that works like Matlab's Tic and Toc.
+	Simples use case:
+	```
+	tt = TickTorck()
+	tt.tick()
+	<some task>
+	time = tt.tock()
+	```
+	"""
 	_start: float = 0.
 	_units = {"ns": 1e9, "mus": 1e6, "ms": 1e3, "s": 1, "m": 1/60}
 	profiles = {}
