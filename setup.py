@@ -9,6 +9,7 @@ with open('HISTORY.md') as history_file:
 # To update
 # 1. Increment version below and document this in HISTORY.md (and possibly README.md)
 # 2. Make master up to date with rebase
+# 3. `rm -rf dist/*`
 # 4. `python setup.py sdist bdist_wheel`
 # 5. `twine upload dist/*`
 
