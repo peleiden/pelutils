@@ -1,6 +1,6 @@
-import numpy as np
 import random
 from datetime import datetime
+import numpy as np
 
 try:
 	import git
@@ -40,7 +40,7 @@ def get_timestamp(for_file: bool=False) -> str:
 	:param for_file: File friendly format, if True
 	:param type param:  Argument
 	"""
-	d_string = str(datatime.now())
+	d_string = str(datetime.now())
 	if for_file: d_string = "-".join(d_string.split(".")[0].split(":")).replace(" ", "_")
 	return d_string
 
@@ -50,3 +50,4 @@ def get_timestamp(for_file: bool=False) -> str:
 from .logger import *
 from .parse import *
 from .ticktock import *
+from .datahandling import *
