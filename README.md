@@ -1,4 +1,4 @@
-# pelutils 
+# pelutils
 ### Utility functions that we commonly use including flexible parser, logger and time taker
 
 ## Parser
@@ -9,5 +9,7 @@ Useful for parametric methods such as machine learning.
 Easy to use logger which fit common needs.
 
 ## TickTock
-Simple time taker inspired by Matlab Tic and Toc.
+Simple time taker inspired by Matlab Tic, Toc.
 
+## DataStorage
+Mutation of dataclass that saves/loads its fields from disk
