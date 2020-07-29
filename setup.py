@@ -9,13 +9,13 @@ with open('HISTORY.md') as history_file:
 # To update
 # 1. Increment version below and document this in HISTORY.md (and possibly README.md)
 # 2. Make master up to date with rebase
-# 3. `rm -rf dist/*`
+# 3. `rm -rf dist`
 # 4. `python setup.py sdist bdist_wheel`
 # 5. `twine upload dist/*`
 
 setup_args = dict(
 	name							= 'pelutils',
-	version							= '0.1.0',
+	version							= '0.1.1',
 	description						= 'Utility functions that are commmonly useful',
 	long_description_content_type	= "text/markdown",
 	long_description				= README + '\n\n' + HISTORY,

@@ -38,7 +38,7 @@ class Logger:
 	def __call__(self, *tolog, with_timestamp=True):
 		self.log(*tolog, with_timestamp=with_timestamp)
 
-	def log(self, *tolog, with_timestamp=true, sep=none):
+	def log(self, *tolog, with_timestamp=True, sep=None):
 		sep = sep or self._default_sep
 		time = get_timestamp()
 		with open(self.fpath, "a", encoding="utf-8") as logfile:
@@ -80,4 +80,3 @@ class NullLogger(Logger):
 		pass
 	def section(self, title=""):
 		pass
-
