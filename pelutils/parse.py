@@ -8,9 +8,7 @@ from pprint import pformat
 class Parser:
 	"""
 	Maintains multiple parsers to allow a workflow of mixing use of config files and CLI arguments.
-	Receives a dict of options. This should be a dict of dicts where each dict corresponds to an option with the key as the name.
-	In the dict for each option, the key 'default' should store the default value and all other keys should correspond to
-	kwargs in ArgumentParser.add_argument.
+
 
 	Can read from single .ini file and CLI arguments. CLI arguments overwrite settings in all experiments defined if ini file.
 	In .ini file, defaults for all runs can be set in [DEFAULT] section and multiple runs can be added with their own section.
@@ -52,6 +50,12 @@ class Parser:
 			show_defaults: bool = True,
 			description_last: bool = False,
 		):
+		"""
+		Receives a dict of options.
+		This should be a dict of dicts where each dict corresponds to an option with the key as the name.
+		In the dict for each option, the key 'default' should store the default value and all other keys should correspond to
+		kwargs in ArgumentParser.add_argument.
+		"""
 		self.options = options
 		self.defaults = dict()
 		self.save_location = ''
@@ -118,25 +122,21 @@ class Parser:
 				if exp_args.location:
 					if self.save_location and self.save_location != exp_args.location: raise ValueError("Multiple save locations are not supported")
 					self.save_location = exp_args.location
-					exp_args.location = f"{exp_args.location}/{experiment_name.lower()}"
+					# Only give subfolder if there are indeed multiple runs
+					if len(self.configparser.sections()) > 1: exp_args.location = f"{exp_args.location}/{experiment_name.lower()}"
 
 				del exp_args.config
 				experiments.append({'name': experiment_name, **vars(exp_args)})
 
 		return experiments, with_config
 
-
 	def _document_settings(self, with_config: bool):
-		"""
-		Saves all settings used for experiments for reproducability.
-		"""
-
+		"""Saves all settings used for experiments for reproducability"""
 		os.makedirs(self.save_location, exist_ok = True)
 
 		with open(f"{self.save_location}/{self.name}_config.ini", 'w') as f:
 			if with_config: self.configparser.write(f)
-			f.write(f"\n# Run command\n # {' '.join(sys.argv)}\n")
+			f.write(f"\n# Run command\n# {' '.join(sys.argv)}\n")
 			str_defaults = pformat(self.defaults).replace('\n', '\n# ')
 			f.write(f"\n# Default configuration values at run\n# {str_defaults}")
-
 

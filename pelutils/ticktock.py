@@ -1,22 +1,55 @@
 from time import perf_counter
 
+from typing import List, Dict, Tuple
+
+class TimeUnit:
+	nanosecond  = ("ns",  1e9)
+	microsecond = ("mus", 1e6)
+	millisecond = ("ms",  1e3)
+	second      = ("s",   1)
+	minute      = ("min", 1/60)
+	hour        = ("h",   1/3600)
+
+
 class Profile:
 
 	start: float
 
-	def __init__(self, depth: int):
-		self.hits = []
+	def __init__(self, name: str, depth: int):
+		self.hits: List[float] = []
+		self.name = name
 		self.depth = depth
 
+	def get_hits(self):
+		return self.hits
+
 	def sum(self):
-		return sum(self.hits)
+		""" Returns total runtime """
+		return sum(self.get_hits())
 
 	def mean(self):
-		return self.sum() / len(self.hits) if self.hits else 0
+		""" Returns mean runtime lengths """
+		return self.sum() / len(self) if self.get_hits() else 0
+
+	def std(self):
+		""" Returns empirical standard deviation of runtime
+		 Be aware that this is highly sensitive to outliers and often a bad estimate """
+		s = self.mean()
+		return (1 / (len(self)+1) * sum(map(lambda x: (x-s)**2, self.get_hits()))) ** 0.5
+
+	def remove_outliers(self, threshold=2):
+		""" Remove all hits larger than threshold * average
+		Returns number of removed outliers """
+		mu = self.mean()
+		original_length = len(self)
+		self.hits = [x for x in self.hits if x <= threshold * mu]
+		return original_length - len(self)
+
+	def __str__(self):
+		return self.name
 
 	def __len__(self):
 		return len(self.hits)
-
 
 class TickTock:
 	"""
@@ -29,10 +62,9 @@ class TickTock:
 	time = tt.tock()
 	```
 	"""
-	_start: float = 0.
-	_units = {"ns": 1e9, "mus": 1e6, "ms": 1e3, "s": 1, "m": 1/60}
-	profiles = {}
-	_profile_depth = 0
+	_start = 0
+	profiles: Dict[str, Profile] = {}
+	_profile_stack: List[Profile] = list()
 
 	def tick(self):
 		self._start = perf_counter()
@@ -44,24 +76,35 @@ class TickTock:
 
 	def profile(self, name: str):
 		if name not in self.profiles:
-			self.profiles[name] = Profile(self._profile_depth)
-		self._profile_depth += 1
+			self.profiles[name] = Profile(name, len(self._profile_stack))
+		self._profile_stack.append(self.profiles[name])
 		self.profiles[name].start = perf_counter()
 
-	def end_profile(self, name: str):
-		dt = perf_counter() - self.profiles[name].start
-		self.profiles[name].hits.append(dt)
-		self._profile_depth -= 1
+	def end_profile(self, name: str=None):
+		end = perf_counter()
+		dt = end - self._profile_stack[-1].start
+		self._profile_stack[-1].hits.append(dt)
+		profile = self._profile_stack.pop()
+		if name is not None:
+			assert name == profile.name, f"Expected to pop profile '{profile.name}', received '{name}'"
 		return dt
 
-	def rename_section(self, name: str, new_name: str):
-		# Renames a section
-		# If a section with new_name already exists, they are combined under new_name
-		if self.profiles[new_name]:
-			self.profiles[new_name].hits += self.profiles[name].hits
-		else:
-			self.profiles[new_name] = self.profiles[name]
-		del self.profiles[name]
+	def fuse(self, tt):
+		"""Fuses a TickTock instance into self"""
+		for profile in tt.profiles.values():
+			if profile.name in self.profiles.keys():
+				self.profiles[profile.name].hits += profile.hits
+			else:
+				self.profiles[profile.name] = profile
+
+	def remove_outliers(self, threshold=2):
+		# For all profiles, remove hits longer than threshold * average hit
+		for profile in self.profiles.values():
+			profile.remove_outliers(threshold)
+
+	def reset(self):
+		self.profiles = {}
+		self._profile_depth = 0
 
 	@staticmethod
 	def thousand_seps(numstr: str or float or int) -> str:
@@ -75,15 +118,13 @@ class TickTock:
 		return decs + rest
 
 	@classmethod
-	def stringify_time(cls, dt: float, unit="ms"):
-		str_ = f"{dt*cls._units[unit]:.3f} {unit}"
+	def stringify_time(cls, dt: float, unit: Tuple[str, float]=TimeUnit.millisecond):
+		str_ = f"{dt*unit[1]:.3f} {unit[0]}"
 		return cls.thousand_seps(str_)
 
-	def reset(self):
-		self.profiles = {}
-		self._profile_depth = 0
-
-	def stringify_sections(self, unit="s"):
+	def stringify_sections(self, unit: Tuple[str, float]=TimeUnit.second):
+		# TODO: Less mess here
+		# TODO: Keep track of children/parent profiles to ensure correct printing
 		# Returns pretty sections
 		strs = [["Execution times", "Total time", "Hits", "Avg. time"]]
 		# std_strs = []
@@ -94,7 +135,7 @@ class TickTock:
 				"- " * v.depth + kw,
 				self.stringify_time(v.sum(), unit),
 				self.thousand_seps(len(v)),
-				self.stringify_time(v.mean(), "ms")# + " p/m ",
+				self.stringify_time(v.mean(), TimeUnit.millisecond)
 			])
 		# longest_std = max(len(x) for x in std_strs)
 		# std_strs = [" " * (longest_std-len(x)) + x for x in std_strs]
@@ -111,13 +152,5 @@ class TickTock:
 		return "\n".join(strs)
 
 	def __str__(self):
-		return self.stringify_sections("s")
-
-if __name__ == "__main__":
-	tt = TickTock()
-	for i in range(100_000):
-		tt.profile("Test")
-		tt.end_profile("Test")
-	print(tt)
-
+		return self.stringify_sections(TimeUnit.second)
 

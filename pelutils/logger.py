@@ -8,7 +8,7 @@ class Unverbose:
 	def __enter__(self):
 		self.allow_verbose = False
 
-	def __exit__(self, type, value, tb):
+	def __exit__(self, *args):
 		self.allow_verbose = True
 
 unverbose = Unverbose()
@@ -20,6 +20,8 @@ class Logger:
 	- has verbosity flag
 	- saves timestamp
 	"""
+	_default_sep = "\n"
+
 	def __init__(self, fpath: str, title: str, verbose=True):
 		dirs = "/".join(fpath.split('/')[:-1])
 		if not os.path.exists(dirs) and dirs:
@@ -34,14 +36,13 @@ class Logger:
 		self.log(title + "\n")
 
 	def __call__(self, *tolog, with_timestamp=True):
-
 		self.log(*tolog, with_timestamp=with_timestamp)
 
-	def log(self, *tolog, with_timestamp=True):
-
+	def log(self, *tolog, with_timestamp=true, sep=none):
+		sep = sep or self._default_sep
 		time = get_timestamp()
 		with open(self.fpath, "a", encoding="utf-8") as logfile:
-			tolog = " ".join([str(x) for x in tolog])
+			tolog = sep.join([str(x) for x in tolog])
 			spaces = len(time) * " "
 			logs = tolog.split("\n")
 			if with_timestamp and tolog:
@@ -67,16 +68,16 @@ class Logger:
 		self.log()
 		self.log(title)
 
+	def throw(self, error: Exception, with_timestamp=True):
+		self.log(error, with_timestamp=with_timestamp)
+		raise error
+
 class NullLogger(Logger):
-
 	_verbose = False
-
 	def __init__(self, *args, **kwargs):
 		pass
-
 	def log(self, *tolog, **kwargs):
 		pass
-
 	def section(self, title=""):
 		pass
 
