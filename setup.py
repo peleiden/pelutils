@@ -23,6 +23,7 @@ setup_args = dict(
 
 install_requires = [
 	'numpy',
+	'torch',
 ]
 
 if __name__ == '__main__':

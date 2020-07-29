@@ -1,6 +1,8 @@
 import random
 from datetime import datetime
+
 import numpy as np
+import torch
 
 try:
 	import git
@@ -8,19 +10,12 @@ try:
 except ModuleNotFoundError:
 	has_git = False
 
-try:
-	import torch
-	has_torch = True
-except ModuleNotFoundError:
-	has_torch = False
-
 def seedsetter():
-	if has_torch:
-		torch.manual_seed(0)
-		torch.cuda.manual_seed(0)
-		torch.cuda.manual_seed_all(0)
-		torch.backends.cudnn.deterministic = True
-		torch.backends.cudnn.benchmark = False
+	torch.manual_seed(0)
+	torch.cuda.manual_seed(0)
+	torch.cuda.manual_seed_all(0)
+	torch.backends.cudnn.deterministic = True
+	torch.backends.cudnn.benchmark = False
 	np.random.seed(0)
 	random.seed(0)
 
