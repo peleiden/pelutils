@@ -33,7 +33,7 @@ class Profile:
 
 	def std(self):
 		""" Returns empirical standard deviation of runtime
-		 Be aware that this is highly sensitive to outliers and often a bad estimate """
+		Be aware that this is highly sensitive to outliers and often a bad estimate """
 		s = self.mean()
 		return (1 / (len(self)+1) * sum(map(lambda x: (x-s)**2, self.get_hits()))) ** 0.5
 
@@ -60,6 +60,12 @@ class TickTock:
 	tt.tick()
 	<some task>
 	time = tt.tock()
+	```
+	Profiling code sections is also supported
+	```
+	tt.profile(<profile name>)
+	<some task>
+	tt.end_profile()
 	```
 	"""
 	_start = 0

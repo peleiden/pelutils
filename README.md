@@ -1,8 +1,8 @@
 # pelutils
-### Utility functions that we commonly use including flexible parser, logger and time taker
+Utility functions that we commonly use including flexible parser, logger and time taker.
 
 ## Parser
-A combination of parsing CLI and config file arguments which allows for a powerfel, easy-to-use workflow.
+A combination of parsing CLI and config file arguments which allows for a powerful, easy-to-use workflow.
 Useful for parametric methods such as machine learning.
 
 ## Logger

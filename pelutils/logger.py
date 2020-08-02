@@ -3,6 +3,14 @@ import os
 from . import get_timestamp
 
 class Unverbose:
+	"""
+	Used for disabling verbose logging in a code section
+	Example:
+	log = Logger(..., verbose=True)
+	with unverbose:
+		log("This will be logged")
+		log.verbose("This will not be logged")
+	"""
 	allow_verbose = True
 
 	def __enter__(self):
@@ -13,12 +21,11 @@ class Unverbose:
 
 unverbose = Unverbose()
 
+
 class Logger:
 	"""
-	A simple logger that
-	- always writes to file
-	- has verbosity flag
-	- saves timestamp
+	A simple logger which creates a log file and pushes strings both to stdout and the log file
+	Sections, verbosity and error logging is supported
 	"""
 	_default_sep = "\n"
 
@@ -35,8 +42,8 @@ class Logger:
 
 		self.log(title + "\n")
 
-	def __call__(self, *tolog, with_timestamp=True):
-		self.log(*tolog, with_timestamp=with_timestamp)
+	def __call__(self, *tolog, with_timestamp=True, sep=None):
+		self.log(*tolog, with_timestamp=with_timestamp, sep=sep)
 
 	def log(self, *tolog, with_timestamp=True, sep=None):
 		sep = sep or self._default_sep
@@ -71,6 +78,7 @@ class Logger:
 	def throw(self, error: Exception, with_timestamp=True):
 		self.log(error, with_timestamp=with_timestamp)
 		raise error
+
 
 class NullLogger(Logger):
 	_verbose = False
