@@ -1,3 +1,7 @@
+# 0.2.1 - BREAKING CHANGES
+
+    - Removed torch as dependency
+
 # 0.2.0 - BREAKING CHANGES
 
     - Logger is now a global variable. Logging should happen by importing the log variable and calling .configure to set it up. To reset the logger, .clean can be called.

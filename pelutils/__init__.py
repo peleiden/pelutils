@@ -2,7 +2,7 @@ import random
 from datetime import datetime
 
 import numpy as np
-import torch
+# import torch
 
 try:
 	import git
@@ -11,11 +11,11 @@ except ModuleNotFoundError:
 	has_git = False
 
 def set_seeds(seed: int = 0) -> int:
-	torch.manual_seed(seed)
-	torch.cuda.manual_seed(seed)
-	torch.cuda.manual_seed_all(seed)
-	torch.backends.cudnn.deterministic = True
-	torch.backends.cudnn.benchmark = False
+	# torch.manual_seed(seed)
+	# torch.cuda.manual_seed(seed)
+	# torch.cuda.manual_seed_all(seed)
+	# torch.backends.cudnn.deterministic = True
+	# torch.backends.cudnn.benchmark = False
 	np.random.seed(seed)
 	random.seed(seed)
 	return seed
