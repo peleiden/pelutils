@@ -1,12 +1,12 @@
 import os
 
-from . import get_timestamp
+from pelutils import get_timestamp
+
 
 class Unverbose:
 	"""
 	Used for disabling verbose logging in a code section
 	Example:
-	log = Logger(..., verbose=True)
 	with unverbose:
 		log("This will be logged")
 		log.verbose("This will not be logged")
@@ -19,7 +19,9 @@ class Unverbose:
 	def __exit__(self, *args):
 		self.allow_verbose = True
 
-unverbose = Unverbose()
+
+class LoggingException(Exception):
+	pass
 
 
 class Logger:
@@ -27,25 +29,50 @@ class Logger:
 	A simple logger which creates a log file and pushes strings both to stdout and the log file
 	Sections, verbosity and error logging is supported
 	"""
-	_default_sep = "\n"
 
-	def __init__(self, fpath: str, title: str, verbose=True):
+	_unverbose = Unverbose()
+	_default_sep: bool
+	_include_micros: bool
+	_is_configured = False
+	
+	def configure(self, fpath: str, title: str, default_seperator="\n", include_micros=False):
+		if self._is_configured:
+			raise LoggingException("Logger has already been configured. Use log.clean to reset logger")
+
 		dirs = "/".join(fpath.split('/')[:-1])
 		if not os.path.exists(dirs) and dirs:
 			os.makedirs(dirs)
 
 		self.fpath = fpath
-		self._verbose = verbose
+		self._default_sep = default_seperator
+		self._include_micros = include_micros
 
-		with open(self.fpath, "w+", encoding="utf-8") as logfile:
+		with open(self.fpath, "w", encoding="utf-8") as logfile:
 			logfile.write("")
 
+		self._is_configured = True
 		self.log(title + "\n")
+	
+	def clean(self):
+		if not self._is_configured:
+			raise LoggingException("Logger is not configured and thus cannot be cleaned")
+
+		del self._default_sep
+		del self._include_micros
+		del self.fpath
+		self._is_configured = False
+	
+	@property
+	def unverbose(self):
+		return self._unverbose
 
 	def __call__(self, *tolog, with_timestamp=True, sep=None):
 		self.log(*tolog, with_timestamp=with_timestamp, sep=sep)
 
 	def log(self, *tolog, with_timestamp=True, sep=None):
+		if not self._is_configured:
+			raise LoggingException("Logger has not been configured")
+
 		sep = sep or self._default_sep
 		time = get_timestamp()
 		with open(self.fpath, "a", encoding="utf-8") as logfile:
@@ -65,11 +92,8 @@ class Logger:
 			print(tolog)
 
 	def verbose(self, *tolog, with_timestamp=True):
-		if self._verbose and unverbose.allow_verbose:
-			self(*tolog, with_timestamp=with_timestamp)
-
-	def is_verbose(self):
-		return self._verbose and unverbose.allow_verbose
+		if self.unverbose.allow_verbose:
+			self.log(*tolog, with_timestamp=with_timestamp)
 
 	def section(self, title=""):
 		self.log()
@@ -80,11 +104,5 @@ class Logger:
 		raise error
 
 
-class NullLogger(Logger):
-	_verbose = False
-	def __init__(self, *args, **kwargs):
-		pass
-	def log(self, *tolog, **kwargs):
-		pass
-	def section(self, title=""):
-		pass
+log = Logger()
+
