@@ -1,4 +1,5 @@
 import os
+import traceback as tb
 
 from pelutils import get_timestamp
 
@@ -51,7 +52,7 @@ class Logger:
 			logfile.write("")
 
 		self._is_configured = True
-		self.log(title + "\n")
+		self._log(title + "\n")
 	
 	def clean(self):
 		if not self._is_configured:
@@ -67,9 +68,9 @@ class Logger:
 		return self._unverbose
 
 	def __call__(self, *tolog, with_timestamp=True, sep=None):
-		self.log(*tolog, with_timestamp=with_timestamp, sep=sep)
+		self._log(*tolog, with_timestamp=with_timestamp, sep=sep)
 
-	def log(self, *tolog, with_timestamp=True, sep=None):
+	def _log(self, *tolog, with_timestamp=True, sep=None, with_print=True):
 		if not self._is_configured:
 			raise LoggingException("Logger has not been configured")
 
@@ -89,20 +90,23 @@ class Logger:
 					logs[i] = ""
 			tolog = "\n".join(x.rstrip() for x in logs)
 			logfile.write(tolog+"\n")
-			print(tolog)
+			if with_print:
+				print(tolog)
 
 	def verbose(self, *tolog, with_timestamp=True):
 		if self.unverbose.allow_verbose:
-			self.log(*tolog, with_timestamp=with_timestamp)
+			self._log(*tolog, with_timestamp=with_timestamp)
 
 	def section(self, title=""):
-		self.log()
-		self.log(title)
+		self._log()
+		self._log(title)
 
-	def throw(self, error: Exception, with_timestamp=True):
-		self.log(error, with_timestamp=with_timestamp)
+	def throw(self, error: Exception):
+		try:
+			raise error
+		except type(error):
+			self._log(tb.format_exc(), with_print=False)
 		raise error
 
 
 log = Logger()
-
