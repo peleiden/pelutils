@@ -1,4 +1,8 @@
-# 0.2.2
+# 0.2.5
+
+    - Add input method to logger
+
+# 0.2.4
 
     - Better logging of errors
 

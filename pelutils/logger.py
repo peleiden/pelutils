@@ -35,7 +35,7 @@ class Logger:
 	_default_sep: bool
 	_include_micros: bool
 	_is_configured = False
-	
+
 	def configure(self, fpath: str, title: str, default_seperator="\n", include_micros=False):
 		if self._is_configured:
 			raise LoggingException("Logger has already been configured. Use log.clean to reset logger")
@@ -53,7 +53,7 @@ class Logger:
 
 		self._is_configured = True
 		self._log(title + "\n")
-	
+
 	def clean(self):
 		if not self._is_configured:
 			raise LoggingException("Logger is not configured and thus cannot be cleaned")
@@ -62,7 +62,7 @@ class Logger:
 		del self._include_micros
 		del self.fpath
 		self._is_configured = False
-	
+
 	@property
 	def unverbose(self):
 		return self._unverbose
@@ -102,11 +102,18 @@ class Logger:
 		self._log(title)
 
 	def throw(self, error: Exception):
+		# FIXME: This does not return the full stacktrace
 		try:
 			raise error
 		except type(error):
 			self._log(tb.format_exc(), with_print=False)
 		raise error
+
+	def input(self, prompt=""):
+		self._log("Waiting for user input", "Prompt: %s" % prompt)
+		response = input(prompt)
+		self._log("Input: %s" % response)
+		return response
 
 
 log = Logger()
