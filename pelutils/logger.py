@@ -4,11 +4,11 @@ import traceback as tb
 from pelutils import get_timestamp
 
 
-class Unverbose:
+class _Unverbose:
 	"""
 	Used for disabling verbose logging in a code section
 	Example:
-	with unverbose:
+	with log.unverbose:
 		log("This will be logged")
 		log.verbose("This will not be logged")
 	"""
@@ -31,7 +31,7 @@ class Logger:
 	Sections, verbosity and error logging is supported
 	"""
 
-	_unverbose = Unverbose()
+	_unverbose = _Unverbose()
 	_default_sep: bool
 	_include_micros: bool
 	_is_configured = False
@@ -110,9 +110,10 @@ class Logger:
 		raise error
 
 	def input(self, prompt=""):
-		self._log("Waiting for user input", "Prompt: %s" % prompt)
+		self._log("Waiting for user input")
+		self._log("Prompt: %s" % prompt, with_print=False)
 		response = input(prompt)
-		self._log("Input: %s" % response)
+		self._log("Input:  %s" % response, with_print=False)
 		return response
 
 

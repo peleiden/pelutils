@@ -1,3 +1,8 @@
+# 0.2.6
+
+    - Make Unverbose class private and update documentation
+    - Update formatting when using .input
+
 # 0.2.5
 
     - Add input method to logger

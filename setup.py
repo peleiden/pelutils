@@ -15,8 +15,8 @@ with open('HISTORY.md') as history_file:
 
 setup_args = dict(
 	name                          = 'pelutils',
-	version                       = '0.2.5',
-	description                   = 'Utility functions that are commmonly useful',
+	version                       = '0.2.6',
+	description                   = 'Utility functions that are often useful',
 	long_description_content_type = "text/markdown",
 	long_description              = README + '\n\n' + HISTORY,
 	license                       = 'BSD-3-Clause',
