@@ -2,26 +2,31 @@ import random
 from datetime import datetime
 
 import numpy as np
-# import torch
+try:
+	import torch
+	_has_torch = True
+except ModuleNotFoundError:
+	_has_torch = False
 
 try:
 	import git
-	has_git = True
+	_has_git = True
 except ModuleNotFoundError:
-	has_git = False
+	_has_git = False
 
 def set_seeds(seed: int = 0) -> int:
-	# torch.manual_seed(seed)
-	# torch.cuda.manual_seed(seed)
-	# torch.cuda.manual_seed_all(seed)
-	# torch.backends.cudnn.deterministic = True
-	# torch.backends.cudnn.benchmark = False
 	np.random.seed(seed)
 	random.seed(seed)
+	if _has_torch:
+		torch.manual_seed(seed)
+		torch.cuda.manual_seed(seed)
+		torch.cuda.manual_seed_all(seed)
+		torch.backends.cudnn.deterministic = True
+		torch.backends.cudnn.benchmark = False
 	return seed
 
 def get_commit() -> str:
-	if has_git:
+	if _has_git:
 		repo = git.Repo(".")  # TODO: Search upwards in directories
 		return str(repo.head.commit)
 	return None

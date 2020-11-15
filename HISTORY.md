@@ -1,3 +1,8 @@
+# 0.2.7
+
+    - Fix error where the full stacktrace was not printed by log.throw
+    - set_seeds now checks if torch is available. This means torch seeds are still set without needing it as a dependency
+
 # 0.2.6
 
     - Make Unverbose class private and update documentation

@@ -1,5 +1,6 @@
 import os
 import traceback as tb
+from itertools import chain
 
 from pelutils import get_timestamp
 
@@ -32,7 +33,7 @@ class Logger:
 	"""
 
 	_unverbose = _Unverbose()
-	_default_sep: bool
+	_default_sep: str
 	_include_micros: bool
 	_is_configured = False
 
@@ -102,11 +103,16 @@ class Logger:
 		self._log(title)
 
 	def throw(self, error: Exception):
-		# FIXME: This does not return the full stacktrace
 		try:
 			raise error
-		except type(error):
-			self._log(tb.format_exc(), with_print=False)
+		except:
+			self._log("ERROR: %s thrown with stacktrace" % type(error).__name__)
+			# Get stack except the part thrown here
+			stack = tb.format_stack()[:-1]
+			# Format the stacktrace such that empty lines are removed
+			stack = list(chain.from_iterable([elem.split("\n") for elem in stack]))
+			stack = [line for line in stack if line.strip()]
+			self._log(*stack, with_timestamp=False, with_print=False)
 		raise error
 
 	def input(self, prompt=""):

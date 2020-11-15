@@ -6,10 +6,10 @@ A combination of parsing CLI and config file arguments which allows for a powerf
 Useful for parametric methods such as machine learning.
 
 ## Logger
-Easy to use logger which fit common needs.
+Easy to use logger which fits common needs.
 
 ## TickTock
-Simple time taker inspired by Matlab Tic, Toc.
+Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling
 
 ## DataStorage
 Mutation of dataclass that saves/loads its fields from disk
