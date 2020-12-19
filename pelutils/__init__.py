@@ -1,3 +1,4 @@
+import os
 import random
 from datetime import datetime
 
@@ -43,6 +44,34 @@ def get_timestamp(for_file: bool = False, include_micros = False) -> str:
 	if for_file:
 		d_string = "-".join(d_string.split(".")[0].split(":")).replace(" ", "_")
 	return d_string
+
+class EnvVars:
+	"""
+	Execute a piece of code with certain environment variables
+	Example: Disabling multithreading in tesseract
+		with EnvVars(OMP_NUM_THREADS=1):
+			# Tesseract code here
+	Any existing environment variables are restored, and newly added are removed after exiting with block
+	"""
+
+	_origs: dict
+
+	def __init__(self, **env_vars):
+		self._vars = env_vars
+
+	def __enter__(self):
+		self._origs = dict()
+		for var, value in self._vars.items():
+			self._origs[var] = os.environ.get(var)
+			os.environ[var] = str(value)
+
+	def __exit__(self, *args):
+		for var, value in self._origs.items():
+			if value is None:
+				del os.environ[var]
+			else:
+				os.environ[var] = value
+
 
 # To allow imports directly from utils #
 # Currently to be placed lower because get_timestamp is needed by logger #

@@ -1,3 +1,7 @@
+# 0.2.8
+
+    - Add code to execute code with specific environment variables
+
 # 0.2.7
 
     - Fix error where the full stacktrace was not printed by log.throw
