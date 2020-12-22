@@ -45,6 +45,16 @@ def get_timestamp(for_file: bool = False, include_micros = False) -> str:
 		d_string = "-".join(d_string.split(".")[0].split(":")).replace(" ", "_")
 	return d_string
 
+def thousand_seps(numstr: str or float or int) -> str:
+	decs = str(numstr)
+	rest = ""
+	if "." in decs:
+		rest = decs[decs.index("."):]
+		decs = decs[:decs.index(".")]
+	for i in range(len(decs)-3, 0, -3):
+		decs = decs[:i] + "," + decs[i:]
+	return decs + rest
+
 class EnvVars:
 	"""
 	Execute a piece of code with certain environment variables

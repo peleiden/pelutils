@@ -12,10 +12,13 @@ with open('HISTORY.md') as history_file:
 # 3. `rm -rf dist`
 # 4. `python setup.py sdist bdist_wheel`
 # 5. `twine upload dist/*`
+# To install locally
+# From root of repository, run
+# `pip install ./ --upgrade`
 
 setup_args = dict(
 	name                          = 'pelutils',
-	version                       = '0.2.8',
+	version                       = '0.2.10',
 	description                   = 'Utility functions that are often useful',
 	long_description_content_type = "text/markdown",
 	long_description              = README + '\n\n' + HISTORY,

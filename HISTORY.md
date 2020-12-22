@@ -1,3 +1,11 @@
+# 0.2.10
+
+    - Allow finer verbosity control in logger
+    - Allow multiple log commands to be collected and logged at the same time
+    - Add decorator for aforementioned feature
+    - Change thousand_seps from TickTock method to stand-alone function in __init__
+    - Verbose logging now has same signature as normal logging
+
 # 0.2.8
 
     - Add code to execute code with specific environment variables

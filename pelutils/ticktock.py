@@ -1,6 +1,7 @@
 from time import perf_counter
 
 from typing import List, Dict, Tuple
+from pelutils import thousand_seps
 
 class TimeUnit:
 	nanosecond  = ("ns",  1e9)
@@ -112,21 +113,10 @@ class TickTock:
 		self.profiles = {}
 		self._profile_depth = 0
 
-	@staticmethod
-	def thousand_seps(numstr: str or float or int) -> str:
-		decs = str(numstr)
-		rest = ""
-		if "." in decs:
-			rest = decs[decs.index("."):]
-			decs = decs[:decs.index(".")]
-		for i in range(len(decs)-3, 0, -3):
-			decs = decs[:i] + "," + decs[i:]
-		return decs + rest
-
 	@classmethod
 	def stringify_time(cls, dt: float, unit: Tuple[str, float]=TimeUnit.millisecond):
 		str_ = f"{dt*unit[1]:.3f} {unit[0]}"
-		return cls.thousand_seps(str_)
+		return thousand_seps(str_)
 
 	def stringify_sections(self, unit: Tuple[str, float]=TimeUnit.second):
 		# TODO: Less mess here
@@ -140,7 +130,7 @@ class TickTock:
 			strs.append([
 				"- " * v.depth + kw,
 				self.stringify_time(v.sum(), unit),
-				self.thousand_seps(len(v)),
+				thousand_seps(len(v)),
 				self.stringify_time(v.mean(), TimeUnit.millisecond)
 			])
 		# longest_std = max(len(x) for x in std_strs)

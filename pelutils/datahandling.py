@@ -11,7 +11,7 @@ class DataStorage:
 
 	Currently works with:
 		* Numpy arrays (numpy.ndarray)
-		* Any type that can be saved with json.dump (e.g. convertible to str without data loss)
+		* Any json serializable type - that is, it should be savable by json.dump
 
 	The field `subfolder` chooses a defines a path to prepend all saved output.
 	`json_name` chooses the name of the single json data file including all str data.
