@@ -4,83 +4,83 @@ from datetime import datetime
 
 import numpy as np
 try:
-	import torch
-	_has_torch = True
+    import torch
+    _has_torch = True
 except ModuleNotFoundError:
-	_has_torch = False
+    _has_torch = False
 
 try:
-	import git
-	_has_git = True
+    import git
+    _has_git = True
 except ModuleNotFoundError:
-	_has_git = False
+    _has_git = False
 
 def set_seeds(seed: int = 0) -> int:
-	np.random.seed(seed)
-	random.seed(seed)
-	if _has_torch:
-		torch.manual_seed(seed)
-		torch.cuda.manual_seed(seed)
-		torch.cuda.manual_seed_all(seed)
-		torch.backends.cudnn.deterministic = True
-		torch.backends.cudnn.benchmark = False
-	return seed
+    np.random.seed(seed)
+    random.seed(seed)
+    if _has_torch:
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    return seed
 
 def get_commit() -> str:
-	if _has_git:
-		repo = git.Repo(".")  # TODO: Search upwards in directories
-		return str(repo.head.commit)
-	return None
+    if _has_git:
+        repo = git.Repo(".")  # TODO: Search upwards in directories
+        return str(repo.head.commit)
+    return None
 
 def get_timestamp(for_file: bool = False, include_micros = False) -> str:
-	"""
-	Returns a time stamp
-	If for_file is true, it can be used to save files and: YYYY-MM-DD_HH-mm-SS
-	Else the timestamp will be YYYY-MM-DD HH:mm:SS:milliseconds
-	Set include_micros to include microseconds in time stamp (only if for_file is false)
-	Returns a time stamp for current time either in datetime format or, if for_file, in YYYY-MM-DD_HH-MM-SS
-	"""
-	d_string = str(datetime.now()) if include_micros else str(datetime.now())[:-3]
-	if for_file:
-		d_string = "-".join(d_string.split(".")[0].split(":")).replace(" ", "_")
-	return d_string
+    """
+    Returns a time stamp
+    If for_file is true, it can be used to save files and: YYYY-MM-DD_HH-mm-SS
+    Else the timestamp will be YYYY-MM-DD HH:mm:SS:milliseconds
+    Set include_micros to include microseconds in time stamp (only if for_file is false)
+    Returns a time stamp for current time either in datetime format or, if for_file, in YYYY-MM-DD_HH-MM-SS
+    """
+    d_string = str(datetime.now()) if include_micros else str(datetime.now())[:-3]
+    if for_file:
+        d_string = "-".join(d_string.split(".")[0].split(":")).replace(" ", "_")
+    return d_string
 
 def thousand_seps(numstr: str or float or int) -> str:
-	decs = str(numstr)
-	rest = ""
-	if "." in decs:
-		rest = decs[decs.index("."):]
-		decs = decs[:decs.index(".")]
-	for i in range(len(decs)-3, 0, -3):
-		decs = decs[:i] + "," + decs[i:]
-	return decs + rest
+    decs = str(numstr)
+    rest = ""
+    if "." in decs:
+        rest = decs[decs.index("."):]
+        decs = decs[:decs.index(".")]
+    for i in range(len(decs)-3, 0, -3):
+        decs = decs[:i] + "," + decs[i:]
+    return decs + rest
 
 class EnvVars:
-	"""
-	Execute a piece of code with certain environment variables
-	Example: Disabling multithreading in tesseract
-		with EnvVars(OMP_NUM_THREADS=1):
-			# Tesseract code here
-	Any existing environment variables are restored, and newly added are removed after exiting with block
-	"""
+    """
+    Execute a piece of code with certain environment variables
+    Example: Disabling multithreading in tesseract
+        with EnvVars(OMP_NUM_THREADS=1):
+            # Tesseract code here
+    Any existing environment variables are restored, and newly added are removed after exiting with block
+    """
 
-	_origs: dict
+    _origs: dict
 
-	def __init__(self, **env_vars):
-		self._vars = env_vars
+    def __init__(self, **env_vars):
+        self._vars = env_vars
 
-	def __enter__(self):
-		self._origs = dict()
-		for var, value in self._vars.items():
-			self._origs[var] = os.environ.get(var)
-			os.environ[var] = str(value)
+    def __enter__(self):
+        self._origs = dict()
+        for var, value in self._vars.items():
+            self._origs[var] = os.environ.get(var)
+            os.environ[var] = str(value)
 
-	def __exit__(self, *args):
-		for var, value in self._origs.items():
-			if value is None:
-				del os.environ[var]
-			else:
-				os.environ[var] = value
+    def __exit__(self, *args):
+        for var, value in self._origs.items():
+            if value is None:
+                del os.environ[var]
+            else:
+                os.environ[var] = value
 
 
 # To allow imports directly from utils #

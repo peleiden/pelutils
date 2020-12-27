@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
 with open('README.md') as readme_file:
-	README = readme_file.read()
+    README = readme_file.read()
 
 with open('HISTORY.md') as history_file:
-	HISTORY = history_file.read()
+    HISTORY = history_file.read()
 
 # To update
 # 1. Increment version below and document this in HISTORY.md (and possibly README.md)
@@ -17,23 +17,23 @@ with open('HISTORY.md') as history_file:
 # `pip install ./ --upgrade`
 
 setup_args = dict(
-	name                          = 'pelutils',
-	version                       = '0.2.10',
-	description                   = 'Utility functions that are often useful',
-	long_description_content_type = "text/markdown",
-	long_description              = README + '\n\n' + HISTORY,
-	license                       = 'BSD-3-Clause',
-	packages                      = find_packages(),
-	author                        = 'Søren Winkel Holm, Asger Laurits Schultz',
-	author_email                  = 'swholm@protonmail.com',
-	keywords                      = ['utility', 'logger', 'parser', 'profiling'],
-	url                           = 'https://github.com/peleiden/pelutils',
-	download_url                  = 'https://pypi.org/project/pelutils/'
+    name                          = 'pelutils',
+    version                       = '0.2.10',
+    description                   = 'Utility functions that are often useful',
+    long_description_content_type = "text/markdown",
+    long_description              = README + '\n\n' + HISTORY,
+    license                       = 'BSD-3-Clause',
+    packages                      = find_packages(),
+    author                        = 'Søren Winkel Holm, Asger Laurits Schultz',
+    author_email                  = 'swholm@protonmail.com',
+    keywords                      = ['utility', 'logger', 'parser', 'profiling'],
+    url                           = 'https://github.com/peleiden/pelutils',
+    download_url                  = 'https://pypi.org/project/pelutils/'
 )
 
 install_requires = [
-	'numpy',
+    'numpy',
 ]
 
 if __name__ == '__main__':
-	setup(**setup_args, install_requires=install_requires)
+    setup(**setup_args, install_requires=install_requires)
