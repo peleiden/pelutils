@@ -1,9 +1,10 @@
 import os
 import traceback as tb
 import copy
+from collections import defaultdict
 from functools import wraps, update_wrapper
 from itertools import chain
-from typing import Callable, List
+from typing import Any, Callable, DefaultDict, Dict, List
 
 from pelutils import get_timestamp
 
@@ -16,16 +17,16 @@ class _Unverbose:
         log("This will be logged")
         log.verbose("This will not be logged")
     """
-    allow_verbose = True
+    _allow_verbose = True
 
     def __enter__(self):
-        self.allow_verbose = False
+        self._allow_verbose = False
 
     def __exit__(self, *args):
-        self.allow_verbose = True
+        self._allow_verbose = True
 
 
-class _Catch:
+class _LogErrors:
     """
     Used for catching exceptions with logger and logging them before reraising them
     """
@@ -37,79 +38,86 @@ class _Catch:
         pass
 
     def __exit__(self, et, ev, tb):
-        self._log.throw(ev, _skip=2)
+        self._log.throw(ev, _tb=tb)
 
 
 class LoggingException(Exception):
     pass
 
 
-class Logger:
+class _Logger:
     """
     A simple logger which creates a log file and pushes strings both to stdout and the log file
     Sections, verbosity and error logging is supported
     """
 
-    fpath: str
-    _default_sep: str
-    _include_micros: bool
-    _verbose: bool
+    _loggers: DefaultDict[str, Dict[str, Any]] = defaultdict(dict)
+    _selected_logger = "default"
+    _unverbose = _Unverbose()
+
+    @property
+    def _fpath(self):
+        return self._loggers[self._selected_logger]["fpath"]
+    @property
+    def _default_sep(self):
+        return self._loggers[self._selected_logger]["default_sep"]
+    @property
+    def _include_micros(self):
+        return self._loggers[self._selected_logger]["include_micros"]
+    @property
+    def _verbose(self):
+        return self._loggers[self._selected_logger]["verbose"]
 
     def __init__(self):
-        self._is_configured = False
-        self._unverbose = _Unverbose()
-        self._catch = _Catch(self)
+        self._log_errors = _LogErrors(self)
         self._collect = False
         self._collected_log: List[str] = list()
         self._collected_print: List[str] = list()
 
-    def configure(self, fpath: str, title: str, default_seperator="\n", include_micros=False, verbose=True):
-        if self._is_configured:
-            raise LoggingException("Logger has already been configured. Use log.clean to reset logger")
-
+    def configure(self, fpath: str, title: str, *, default_seperator="\n", include_micros=False, verbose=True, logger="default"):
+        """ Configure a logger. This must be called before the logger can be used """
+        if logger in self._loggers:
+            self.throw(LoggingException("Logger '%s' already exists" % logger))
+        if self._collect:
+            self.throw(LoggingException("Cannot configure a new logger while collecting"))
+        self._selected_logger = logger
         dirs = os.path.join(*os.path.split(fpath)[:-1])
         if dirs:
             os.makedirs(dirs, exist_ok=True)
 
-        self.fpath = fpath
-        self._default_sep = default_seperator
-        self._include_micros = include_micros
-        self._verbose = verbose
+        self._loggers[logger]["fpath"] = fpath
+        self._loggers[logger]["default_sep"] = default_seperator
+        self._loggers[logger]["include_micros"] = include_micros
+        self._loggers[logger]["verbose"] = verbose
 
-        with open(self.fpath, "w", encoding="utf-8") as logfile:
+        with open(fpath, "w", encoding="utf-8") as logfile:
             logfile.write("")
 
-        self._is_configured = True
         self._log(title + "\n")
 
-    def clean(self):
-        if not self._is_configured:
-            raise LoggingException("Logger is not configured and thus cannot be cleaned")
-
-        del self._default_sep
-        del self._include_micros
-        del self.fpath
-        self._is_configured = False
+    def set_logger(self, logger: str):
+        if logger not in self._loggers:
+            self.throw(LoggingException("Logger '%s' does not exist" % logger))
+        if self._collect:
+            self.throw(LoggingException("Cannot configure a new logger while collecting"))
+        self._selected_logger = logger
 
     @property
     def unverbose(self):
         return self._unverbose
 
     @property
-    def catch(self):
-        return self._catch
+    def log_errors(self):
+        return self._log_errors
 
     def __call__(self, *tolog, with_timestamp=True, sep=None):
         self._log(*tolog, with_timestamp=with_timestamp, sep=sep)
 
     def _write_to_log(self, content: str):
-        with open(self.fpath, "a", encoding="utf-8") as logfile:
+        with open(self._fpath, "a", encoding="utf-8") as logfile:
             logfile.write(content + "\n")
 
     def _log(self, *tolog, with_timestamp=True, sep=None, with_print=True):
-        if not self._is_configured:
-            return
-
         sep = sep or self._default_sep
         time = get_timestamp()
         tolog = sep.join([str(x) for x in tolog])
@@ -135,24 +143,25 @@ class Logger:
                 self._collected_print.append(tolog)
 
     def verbose(self, *tolog, with_timestamp=True, sep=None, with_print=True):
-        if self._verbose and self.unverbose.allow_verbose:
+        if self._verbose and self.unverbose._allow_verbose:
             self._log(*tolog, with_timestamp=with_timestamp, sep=sep, with_print=with_print)
 
     def section(self, title=""):
         self._log()
         self._log(title)
 
-    def throw(self, error: Exception, _skip=1):
+    def _format_tb(self, error: Exception, _tb):
+        stack = tb.format_stack()[:-2] if _tb is None else tb.format_tb(_tb)
+        stack = list(chain.from_iterable([elem.split("\n") for elem in stack]))
+        stack = [line for line in stack if line.strip()]
+        return ["ERROR: %s thrown with stacktrace" % type(error).__name__, *stack]
+
+    def throw(self, error: Exception, _tb=None):
         try:
             raise error
         except:
-            self._log("ERROR: %s thrown with stacktrace" % type(error).__name__)
-            # Get stack except the part thrown here
-            stack = tb.format_stack()[:-_skip]
-            # Format the stacktrace such that empty lines are removed
-            stack = list(chain.from_iterable([elem.split("\n") for elem in stack]))
-            stack = [line for line in stack if line.strip()]
-            self._log(*stack, with_timestamp=False, with_print=False)
+            stack = self._format_tb(error, _tb)
+            self._log(*stack, with_print=False)
         raise error
 
     def input(self, prompt=""):
@@ -178,11 +187,16 @@ class Logger:
             print("\n".join(self._collected_print))
 
 
-log = Logger()
+log = _Logger()
 
 
 class collect_logs:
-    """ Wrap functions with this class to have them output all their output at once. Useful with multiprocessing """
+    """
+    Wrap functions with this class to have them output all their output at once. Useful with multiprocessing, e.g.
+    with mp.Pool() as p:
+        p.map(collect_logs(fun), ...)
+    Loggers cannot be changed or configured during this
+    """
     def __init__(self, fun: Callable):
         self.fun = fun
         update_wrapper(self, fun)

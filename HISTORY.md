@@ -1,3 +1,7 @@
+# 0.2.12 - Breaking changes
+
+    - The logger is now solely a global variable. Different loggers are handled internally in the global _Logger instance
+
 # 0.2.11
 
     - Add catch property to logger to allow automatically logging errors with with
@@ -20,7 +24,7 @@
     - Fix error where the full stacktrace was not printed by log.throw
     - set_seeds now checks if torch is available. This means torch seeds are still set without needing it as a dependency
 
-# 0.2.6 - BREAKING CHANGES
+# 0.2.6 - Breaking changes
 
     - Make Unverbose class private and update documentation
     - Update formatting when using .input
@@ -33,29 +37,29 @@
 
     - Better logging of errors
 
-# 0.2.1 - BREAKING CHANGES
+# 0.2.1 - Breaking changes
 
     - Removed torch as dependency
 
-# 0.2.0 - BREAKING CHANGES
+# 0.2.0 - Breaking changes
 
-    - Logger is now a global variable. Logging should happen by importing the log variable and calling .configure to set it up. To reset the logger, .clean can be called.
-    - It is still possible to just import Logger and use it in the traditional way, though .configure should be called first.
-    - Changed timestamp function to give a cleaner output.
-    - get_commit now returns None if gitpython is not installed.
+    - Logger is now a global variable. Logging should happen by importing the log variable and calling .configure to set it up. To reset the logger, .clean can be called
+    - It is still possible to just import Logger and use it in the traditional way, though .configure should be called first
+    - Changed timestamp function to give a cleaner output
+    - get_commit now returns None if gitpython is not installed
 
 # 0.1.2
 
-    - Update documentation for logger and ticktock.
-    - Fix bug where seperator was not an argument to Logger.__call__.
+    - Update documentation for logger and ticktock
+    - Fix bug where seperator was not an argument to Logger.__call__
 
 # 0.1.0
 
-    - Include DataStorage.
-    - Logger can throw errors and handle seperators.
-    - TickTock includes time handling and units.
-    - Minor parser path changes.
+    - Include DataStorage
+    - Logger can throw errors and handle seperators
+    - TickTock includes time handling and units
+    - Minor parser path changes
 
 # 0.0.1
 
-    - Logger, Parser, TickTock added from previous projects.
+    - Logger, Parser, TickTock added from previous projects

@@ -59,7 +59,7 @@ class EnvVars:
     """
     Execute a piece of code with certain environment variables
     Example: Disabling multithreading in tesseract
-        with EnvVars(OMP_NUM_THREADS=1):
+        with EnvVars(OMP_THREAD_LIMIT=1):
             # Tesseract code here
     Any existing environment variables are restored, and newly added are removed after exiting with block
     """
