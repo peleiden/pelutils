@@ -1,3 +1,8 @@
+# 0.2.11
+
+    - Add catch property to logger to allow automatically logging errors with with
+    - All code is now indented using spaces
+
 # 0.2.10
 
     - Allow finer verbosity control in logger
@@ -15,7 +20,7 @@
     - Fix error where the full stacktrace was not printed by log.throw
     - set_seeds now checks if torch is available. This means torch seeds are still set without needing it as a dependency
 
-# 0.2.6
+# 0.2.6 - BREAKING CHANGES
 
     - Make Unverbose class private and update documentation
     - Update formatting when using .input

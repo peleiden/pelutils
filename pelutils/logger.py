@@ -25,6 +25,21 @@ class _Unverbose:
         self.allow_verbose = True
 
 
+class _Catch:
+    """
+    Used for catching exceptions with logger and logging them before reraising them
+    """
+
+    def __init__(self, log):
+        self._log = log
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, et, ev, tb):
+        self._log.throw(ev, _skip=2)
+
+
 class LoggingException(Exception):
     pass
 
@@ -43,6 +58,7 @@ class Logger:
     def __init__(self):
         self._is_configured = False
         self._unverbose = _Unverbose()
+        self._catch = _Catch(self)
         self._collect = False
         self._collected_log: List[str] = list()
         self._collected_print: List[str] = list()
@@ -78,6 +94,10 @@ class Logger:
     @property
     def unverbose(self):
         return self._unverbose
+
+    @property
+    def catch(self):
+        return self._catch
 
     def __call__(self, *tolog, with_timestamp=True, sep=None):
         self._log(*tolog, with_timestamp=with_timestamp, sep=sep)
@@ -122,13 +142,13 @@ class Logger:
         self._log()
         self._log(title)
 
-    def throw(self, error: Exception):
+    def throw(self, error: Exception, _skip=1):
         try:
             raise error
         except:
             self._log("ERROR: %s thrown with stacktrace" % type(error).__name__)
             # Get stack except the part thrown here
-            stack = tb.format_stack()[:-1]
+            stack = tb.format_stack()[:-_skip]
             # Format the stacktrace such that empty lines are removed
             stack = list(chain.from_iterable([elem.split("\n") for elem in stack]))
             stack = [line for line in stack if line.strip()]
