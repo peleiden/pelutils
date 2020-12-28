@@ -51,8 +51,8 @@ class _Logger:
     Sections, verbosity and error logging is supported
     """
 
-    _loggers: DefaultDict[str, Dict[str, Any]] = defaultdict(dict)
-    _selected_logger = "default"
+    _loggers: DefaultDict[str, Dict[str, Any]]
+    _selected_logger: str
     _unverbose = _Unverbose()
 
     @property
@@ -73,6 +73,7 @@ class _Logger:
         self._collect = False
         self._collected_log: List[str] = list()
         self._collected_print: List[str] = list()
+        self.clean()
 
     def configure(self, fpath: str, title: str, *, default_seperator="\n", include_micros=False, verbose=True, logger="default"):
         """ Configure a logger. This must be called before the logger can be used """
@@ -185,6 +186,11 @@ class _Logger:
             self._write_to_log("\n".join(self._collected_log))
         if self._collected_print:
             print("\n".join(self._collected_print))
+
+    def clean(self):
+        self._loggers = defaultdict(dict)
+        self._selected_logger = "default"
+
 
 
 log = _Logger()

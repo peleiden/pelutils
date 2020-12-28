@@ -1,6 +1,7 @@
 import os, sys
 from argparse import ArgumentParser, RawTextHelpFormatter
 from configparser import ConfigParser
+from typing import Tuple
 
 from pprint import pformat
 
@@ -9,12 +10,10 @@ class Parser:
     """
     Maintains multiple parsers to allow a workflow of mixing use of config files and CLI arguments.
 
-
     Can read from single .ini file and CLI arguments. CLI arguments overwrite settings in all experiments defined if ini file.
     In .ini file, defaults for all runs can be set in [DEFAULT] section and multiple runs can be added with their own section.
 
     The parser returns a list of dicts of the parsed settings for the experiments.
-
 
     Quick example:
     A file `main.py` could contain:
@@ -100,7 +99,7 @@ class Parser:
 
         return experiments
 
-    def _read_config(self, conf_arg, args) -> (list, bool):
+    def _read_config(self, conf_arg, args) -> Tuple[list, bool]:
         experiments = list()
         with_config = False
 

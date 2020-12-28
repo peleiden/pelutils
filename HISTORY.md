@@ -1,3 +1,7 @@
+# 0.2.13
+
+    - Readd clean method to logger
+
 # 0.2.12 - Breaking changes
 
     - The logger is now solely a global variable. Different loggers are handled internally in the global _Logger instance
