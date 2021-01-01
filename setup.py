@@ -18,7 +18,7 @@ with open('HISTORY.md') as history_file:
 
 setup_args = dict(
     name                          = 'pelutils',
-    version                       = '0.2.13',
+    version                       = '0.3.0',
     description                   = 'Utility functions that are often useful',
     long_description_content_type = "text/markdown",
     long_description              = README + '\n\n' + HISTORY,

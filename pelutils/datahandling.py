@@ -5,9 +5,10 @@ from typing import List
 
 import numpy as np
 
-@dataclass
+
 class DataStorage:
-    """The DataStorage class is an augmentation of the dataclass that incluces a standard way to save and load data.
+    """
+    The DataStorage class is an augmentation of the dataclass that incluces a standard way to save and load data.
 
     Currently works with:
         * Numpy arrays (numpy.ndarray)
@@ -33,7 +34,7 @@ class DataStorage:
 
     # In seperate script
     rdata = ResultData.load()
-    print(rdata.goalscorers) #["Max Fenger"]
+    print(rdata.goalscorers)  # ["Max Fenger"]
     ```
     """
 
@@ -44,10 +45,11 @@ class DataStorage:
         """Saves all the fields of the instatiated data classes in npy's or json in <`loc`>/<`self.subfolder`>
 
         :param str loc: Save location to place the subfolder in
-        :return: list (wtih length = # of saved files) of full save paths
+        :return: list (with length = # of saved files) of full save paths
         """
         loc = self._get_loc(loc)
-        if loc: os.makedirs(loc, exist_ok=True)
+        if loc:
+            os.makedirs(loc, exist_ok=True)
 
         # Split data by whether it should be saved .json and to .npy
         to_json, to_npy = dict(), dict()
@@ -69,8 +71,8 @@ class DataStorage:
 
     @classmethod
     def load(cls, loc: str = ''):
-        """Instantiates the DataStorage-inherited class by loading all files saved by `save` of that same class.
-
+        """
+        Instantiates the DataStorage-inherited class by loading all files saved by `save` of that same class.
         :param str loc: Save location used
         :return: An instance of this class with the content of the files
         """
