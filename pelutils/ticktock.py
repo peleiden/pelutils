@@ -52,6 +52,7 @@ class Profile:
     def __len__(self):
         return len(self.hits)
 
+
 class TickTock:
     """
     A taker that works like Matlab's Tic and Toc.

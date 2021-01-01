@@ -1,6 +1,5 @@
 import os
 import traceback as tb
-import copy
 from collections import defaultdict
 from functools import wraps, update_wrapper
 from itertools import chain
@@ -119,6 +118,8 @@ class _Logger:
             logfile.write(content + "\n")
 
     def _log(self, *tolog, with_timestamp=True, sep=None, with_print=True):
+        if not self._loggers:
+            return
         sep = sep or self._default_sep
         time = get_timestamp()
         tolog = sep.join([str(x) for x in tolog])
