@@ -1,7 +1,9 @@
+from __future__ import annotations
 import os, sys
 from argparse import ArgumentParser, RawTextHelpFormatter
 from configparser import ConfigParser
-from typing import Tuple
+from copy import deepcopy
+from typing import Any, Dict, List, Tuple
 
 from pprint import pformat
 
@@ -19,123 +21,174 @@ class Parser:
     A file `main.py` could contain:
     ```
     options = {
-        location: {default: 'local_train', help: 'save_location', type: str},
-        learning_rate: {default: 1.5e-3, help: 'Controls size of parameter update', type: float}
+        "location": { "default": "local_train", "help": "save_location", "type": str },
+        "learning-rate": { "default": 1.5e-3, "help": "Controls size of parameter update", "type": float },
+        "gamma": { "default": 1, "help": "Use of generator network in updating", "type": float },
+        "initialize-zeros": { "help": "Whether to initialize all parameters to 0", "action": "store_true" },
     }
     parser = Parser(options)
     experiments = parser.parse()
 
     ```
     This could then by run by
-    `python main.py --learning_rate 1e-5`
+    `python main.py data/my-big-experiment --learning_rate 1e-5`
     or by
-    `python main.py --config cfg.ini`
+    `python main.py data/my-big-experiment --config cfg.ini`
     where `cfg.ini` could contain
-
     ```
     [DEFAULT]
-    location = data/my_big_experiment
+    gamma = 0.95
     [RUN1]
-    learning_rate = 1e-4
+    learning-rate = 1e-4
+    initialize-zeros
     [RUN2]
-    learning_rate = 1e-5
+    learning-rate = 1e-5
+    gamma = 0.9
     ```
-
     """
-    def __init__(self,
-            options: dict,
-            name: str = "Experiment",
-            description: str = "Run experiments with these options",
-            show_defaults: bool = True,
-            description_last: bool = False,
-        ):
+
+    with_config: bool
+    location: str
+
+    def __init__(
+        self,
+        options: dict,
+        name = "Experiment",
+        description = "Run experiments with these options",
+        show_defaults = True,
+        description_last = False,
+        multiple_jobs = True,  # If this is True, all jobs are put in subfolders
+    ):
         """
         Receives a dict of options.
         This should be a dict of dicts where each dict corresponds to an option with the key as the name.
-        In the dict for each option, the key 'default' should store the default value and all other keys should correspond to
+        In the dict for each option, the key "default" should store the default value and all other keys should correspond to
         kwargs in ArgumentParser.add_argument.
         """
         self.options = options
-        self.defaults = dict()
-        self.save_location = ''
+        self._bool_opts = { argname: settings["action"] == "store_false" for argname, settings
+            in options.items() if settings.get("action") in ("store_false", "store_true") }
+        self.defaults = dict()  # { argname: default value }
         self.name = name
+        self.multiple_jobs = multiple_jobs
 
-        #Seperate parser for only receiving the config file
-        self.config_receiver = ArgumentParser(add_help = False)
-        self.config_receiver.add_argument('--config', help="Location of configuration file to use (if any). Config file should follow .ini format.", metavar='FILE')
-
-        #Main parser for CLI arguments
+        # Main parser for CLI arguments
         self.argparser = ArgumentParser(
-            description=description,
-            formatter_class=RawTextHelpFormatter,
-            parents=[self.config_receiver]
+            description = description,
+            formatter_class = RawTextHelpFormatter,
         )
+        self.argparser.add_argument("location", help="Location of output", type=str)
+        self.argparser.add_argument("-c", "--config",
+            help="Location of configuration file to use (if any). Config file should follow .ini format.", metavar="FILE")
         if description_last:
             self.argparser.epilog = description
             self.argparser.description = None
+
+        abbrvs = set(["-h", "-c"])  # -h is reserved for --help and -c for --config
         for argname, settings in self.options.items():
-            self.defaults[argname] = settings.pop('default')
+            self.defaults[argname] = settings.pop("default") if argname not in self._bool_opts else self._bool_opts[argname]
 
-            if 'help' in settings and show_defaults:
-                settings['help'] += f"\n  Default='{self.defaults[argname]}'"
+            if show_defaults and "help" in settings:
+                settings["help"] += f"\n  Default = {self.defaults[argname]}"
 
-            self.argparser.add_argument(f'--{argname}', **settings)
+            # Add abbreviation if no conflict
+            abbrv = f"-{argname[0]}" # TODO: Use 3.9 syntax (walrus)
+            if abbrv in abbrvs:
+                self.argparser.add_argument(f"--{argname}", **settings)
+            else:
+                self.argparser.add_argument(abbrv, f"--{argname}", **settings)
+                abbrvs.add(abbrv)
 
-        self.configparser = ConfigParser()
+        # Parser for config file
+        self.configparser = ConfigParser(allow_no_value=True)
 
-    def parse(self, document = True) -> list:
-        conf_arg, args = self.config_receiver.parse_known_args()
+    def _parse_known_args(self) -> Dict[str, Any]:
+        """ Returns a dict containing the arguments given explicitly from the command line """
+        args, __ = self.argparser.parse_known_args()
+        args = vars(args)
+        known_args = dict()
+        for argname, value in args.items():
+            if value == None:
+                continue
+            elif argname in self._bool_opts and self._bool_opts[argname] == value:
+                continue
+            known_args[argname] = value
+        return known_args
 
-        experiments, with_config = self._read_config(conf_arg, args)
+    def parse(self) -> List[Dict[str, Any]]:
+        """ Parse arguments and return a dict for each """
+        # Parse command line arguments
+        args = self._parse_known_args()
+        self.location = args["location"]
 
-        if not experiments: #If configparser set nothing or only set defaults
-            self.argparser.set_defaults(**self.defaults)
-            args = self.argparser.parse_args(args)
-            if args.location: self.save_location = args.location
-            del args.config
-            experiments.append({'name': self.name, **vars(args)})
+        # Parse config files
+        experiments, self.with_config = self._read_config(args)
 
-        if document: self._document_settings(with_config)
+        if not self.with_config:  # If CLI arguments only
+            args = { **self.defaults, **args } # TODO: Use 3.9 syntax
+            args["location"] = os.path.join(self.location, self.name)\
+                if self.multiple_jobs else self.location
+            experiments.append({"name": self.name, **args})
 
         return experiments
 
-    def _read_config(self, conf_arg, args) -> Tuple[list, bool]:
-        experiments = list()
-        with_config = False
+    def _set_bools_in_dict(self, d: Dict[str, Any]):
+        """ Boolean arguments present are set to the negation of their default values
+        Those not present are set to default values """
+        for argname, default_value in self._bool_opts.items():
+            if argname in d:
+                if type(d[argname]) == bool:
+                    continue
+                d[argname] = not default_value
+            else:
+                d[argname] = default_value
 
-        if conf_arg.config:
-            with_config = True
-            if not self.configparser.read([conf_arg.config]):
-                raise FileNotFoundError(f"Could not find config file {conf_arg.config}")
+    def _read_config(self, cli_args: dict) -> Tuple[list, bool]:
+        experiments = list()
+
+        if "config" in cli_args:
+            if not self.configparser.read([cli_args["config"]]):
+                raise FileNotFoundError(f"Could not find config file {cli_args['config']}")
 
             # User set DEFAULT section should overwrite the defaults
-            self.defaults = {**self.defaults, **dict(self.configparser.items("DEFAULT"))}
+            default_config_items = dict(self.configparser.items("DEFAULT"))
+            self.defaults = {**self.defaults,  **default_config_items} # TODO: Use 3.9 syntax
+
+            if len(self.configparser) > 1 and not self.multiple_jobs:
+                raise ValueError("Multiple jobs are given in the config file, "
+                    "however the parser has been configured for a single job")
 
             # Each other section corresponds to an experiment
-            for experiment_name in self.configparser.sections():
-                options = {**self.defaults, **dict(self.configparser.items(experiment_name))}
-                self.argparser.set_defaults(**options)
-                exp_args = self.argparser.parse_args(args)
+            for experiment_name in self.configparser.sections() if self.configparser.sections() else ["DEFAULT"]:
+                config_items = dict(self.configparser.items(experiment_name))
+                options = {**self.defaults, **config_items} # TODO: Use 3.9 syntax
+                self._set_bools_in_dict(options)
 
-                #For multiple experiments, subfolders are nice
-                if exp_args.location:
-                    if self.save_location and self.save_location != exp_args.location: raise ValueError("Multiple save locations are not supported")
-                    self.save_location = exp_args.location
-                    # Only give subfolder if there are indeed multiple runs
-                    if len(self.configparser.sections()) > 1: exp_args.location = f"{exp_args.location}/{experiment_name.lower()}"
+                experiment_name = experiment_name if experiment_name != "DEFAULT" else self.name
 
-                del exp_args.config
-                experiments.append({'name': experiment_name, **vars(exp_args)})
+                # Put experiments into single subfolders
+                location = os.path.join(self.location, experiment_name)\
+                    if self.multiple_jobs else self.location
 
-        return experiments, with_config
+                args = cli_args.copy()
+                del args["config"]
+                experiments.append({
+                    **options,
+                    **args,
+                    "name": experiment_name,
+                    "location": location,
+                })
 
-    def _document_settings(self, with_config: bool):
-        """Saves all settings used for experiments for reproducability"""
-        os.makedirs(self.save_location, exist_ok = True)
+        return experiments, "config" in cli_args
 
-        with open(f"{self.save_location}/{self.name}_config.ini", 'w') as f:
-            if with_config: self.configparser.write(f)
+    def document_settings(self):
+        """ Saves all settings used for experiments for reproducability """
+        os.makedirs(self.location, exist_ok = True)
+
+        with open(os.path.join(self.location, self.name + "_config.ini"), "w") as f:
+            if self.with_config:
+                self.configparser.write(f)
             f.write(f"\n# Run command\n# {' '.join(sys.argv)}\n")
-            str_defaults = pformat(self.defaults).replace('\n', '\n# ')
-            f.write(f"\n# Default configuration values at run\n# {str_defaults}")
+            str_defaults = pformat(self.defaults).replace("\n", "\n# ")
+            f.write(f"\n# Default configuration values at runtime\n# {str_defaults}")
 

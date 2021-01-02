@@ -1,6 +1,6 @@
 # 0.3.0 - Breaking changes
 
-- Only works for Python 3.9+
+- Only works for Python 3.7+
 
 - If logger has not been configured, it now does no logging instead of crashing
 
