@@ -1,7 +1,7 @@
 import os
 import traceback as tb
 from collections import defaultdict
-from functools import wraps, update_wrapper
+from functools import update_wrapper
 from itertools import chain
 from typing import Any, Callable, DefaultDict, Dict, List
 
@@ -37,7 +37,8 @@ class _LogErrors:
         pass
 
     def __exit__(self, et, ev, tb):
-        self._log.throw(ev, _tb=tb)
+        if et is not None:
+            self._log.throw(ev, _tb=tb)
 
 
 class LoggingException(Exception):
@@ -64,7 +65,7 @@ class _Logger:
     def _include_micros(self):
         return self._loggers[self._selected_logger]["include_micros"]
     @property
-    def _verbose(self):
+    def is_verbose(self):
         return self._loggers[self._selected_logger]["verbose"]
 
     def __init__(self):
@@ -145,7 +146,7 @@ class _Logger:
                 self._collected_print.append(tolog)
 
     def verbose(self, *tolog, with_timestamp=True, sep=None, with_print=True):
-        if self._verbose and self.unverbose._allow_verbose:
+        if self.is_verbose and self.unverbose._allow_verbose:
             self._log(*tolog, with_timestamp=with_timestamp, sep=sep, with_print=with_print)
 
     def section(self, title=""):
@@ -156,7 +157,11 @@ class _Logger:
         stack = tb.format_stack()[:-2] if _tb is None else tb.format_tb(_tb)
         stack = list(chain.from_iterable([elem.split("\n") for elem in stack]))
         stack = [line for line in stack if line.strip()]
-        return ["ERROR: %s thrown with stacktrace" % type(error).__name__, *stack]
+        return [
+            "ERROR: %s thrown with stacktrace" % type(error).__name__,
+            *stack,
+            "%s: %s" % (type(error).__name__, error),
+        ]
 
     def throw(self, error: Exception, _tb=None):
         try:

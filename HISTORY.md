@@ -1,10 +1,13 @@
 # 0.3.0 - Breaking changes
 
-- Only works for Python 3.9+
+- Only works for Python 3.7+
 
 - If logger has not been configured, it now does no logging instead of crashing
 
   This prevents dependecies that use the logger to crash the program if it is not used
+- `log.throw` now also logs the actual error rather than just the stack trace
+- `log` now has public property `is_verbose`
+- Fixed `with log.log_errors` always throwing errors
 - Added code samples to `README`
 - `Parser` no longer automatically determines if experiments should be placed in subfolders
 
