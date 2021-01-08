@@ -1,6 +1,5 @@
 import os
 import json
-from dataclasses import dataclass
 from typing import List
 
 import numpy as np
@@ -14,8 +13,8 @@ class DataStorage:
         * Numpy arrays (numpy.ndarray)
         * Any json serializable type - that is, it should be savable by json.dump
 
-    The field `subfolder` chooses a defines a path to prepend all saved output.
-    `json_name` chooses the name of the single json data file including all str data.
+    The field `subfolder` is the directory in which to place all saved date
+    `json_name` chooses the name of the single json data file including all jsonifiable data
 
     Usage example
     ```

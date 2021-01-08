@@ -5,12 +5,46 @@ Utility functions that we commonly use including flexible parser, logger and tim
 A combination of parsing CLI and config file arguments which allows for a powerful, easy-to-use workflow.
 Useful for parametric methods such as machine learning.
 
+A file `main.py` could contain:
+```py
+options = {
+    "location": { "default": "local_train", "help": "save_location", "type": str },
+    "learning-rate": { "default": 1.5e-3, "help": "Controls size of parameter update", "type": float },
+    "gamma": { "default": 1, "help": "Use of generator network in updating", "type": float },
+    "initialize-zeros": { "help": "Whether to initialize all parameters to 0", "action": "store_true" },
+}
+parser = Parser(options)
+experiments = parser.parse()
+```
+
+This could then by run by
+`python main.py data/my-big-experiment --learning_rate 1e-5`
+or by
+`python main.py data/my-big-experiment --config cfg.ini`
+where `cfg.ini` could contain
+
+```
+[DEFAULT]
+gamma = 0.95
+[RUN1]
+learning-rate = 1e-4
+initialize-zeros
+[RUN2]
+learning-rate = 1e-5
+gamma = 0.9
+```
+
 ## Logging
 Easy to use logger which fits common needs.
 
-Import `log` from `pelutils`. Then configure it with `log.configure(...)` and start logging with `log("This will be printed to stdout and saved to the logfile")`.
-
 ```py
+# Configure logger for the script
+log.configure("path/to/save/log.log", "Title of log")
+
+# Start logging
+for i in range(70):  # Nice
+    log("Execution %i" % i)
+
 # Sections
 log.section("New section in the logfile")
 
@@ -24,7 +58,7 @@ with log.unverbose:
 log.throw(ValueError("Your value is bad, and you should feel bad"))
 # The zero-division error is logged
 with log.log_errors:
-    0/0
+    0 / 0
 
 # User input
 inp = log.input("WHAT... is your favourite colour? ")
@@ -34,7 +68,8 @@ inp = log.input("WHAT... is your favourite colour? ")
 def fun():
     log("Hello there")
     log("General Kenobi!")
-collect_logs(fun)()
+with mp.Pool() as p:
+    p.map(collect_logs(fun), args)
 ```
 
 

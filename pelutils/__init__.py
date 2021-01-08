@@ -1,7 +1,9 @@
 import os
 import random
 from datetime import datetime
+from typing import Tuple
 
+import git
 import numpy as np
 try:
     import torch
@@ -9,13 +11,8 @@ try:
 except ModuleNotFoundError:
     _has_torch = False
 
-try:
-    import git
-    _has_git = True
-except ModuleNotFoundError:
-    _has_git = False
 
-def set_seeds(seed: int = 0) -> int:
+def set_seeds(seed: int = 0):
     np.random.seed(seed)
     random.seed(seed)
     if _has_torch:
@@ -24,13 +21,25 @@ def set_seeds(seed: int = 0) -> int:
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-    return seed
 
-def get_commit() -> str:
-    if _has_git:
-        repo = git.Repo(".")  # TODO: Search upwards in directories
-        return str(repo.head.commit)
-    return None
+def get_repo() -> Tuple[str, str]:
+    """
+    Returns full path of git repository and commit SHA
+    Searches for repo by searching upwards from working directory
+    If it cannot find a repository, it raises a git.InvalidGitRepositoryError
+    """
+    cdir = os.path.join(os.getcwd(), ".")
+    pdir = os.path.dirname(cdir)
+    while cdir != pdir:
+        cdir = pdir
+        try:  # Check if repository
+            repo = git.Repo(cdir)
+            return cdir, str(repo.head.commit)
+        except git.InvalidGitRepositoryError:
+            pass
+        pdir = os.path.dirname(cdir)
+    else:  # Raise error if no repo was found
+        raise git.InvalidGitRepositoryError("Unable to find git repository from %s" % os.getcwd())
 
 def get_timestamp(for_file: bool = False, include_micros = False) -> str:
     """
@@ -59,8 +68,10 @@ class EnvVars:
     """
     Execute a piece of code with certain environment variables
     Example: Disabling multithreading in tesseract
-        with EnvVars(OMP_THREAD_LIMIT=1):
-            # Tesseract code here
+    ```
+    with EnvVars(OMP_THREAD_LIMIT=1):
+        # Tesseract code here
+    ```
     Any existing environment variables are restored, and newly added are removed after exiting with block
     """
 

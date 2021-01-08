@@ -5,7 +5,7 @@ from functools import update_wrapper
 from itertools import chain
 from typing import Any, Callable, DefaultDict, Dict, List
 
-from pelutils import get_timestamp
+from pelutils import get_timestamp, get_repo
 
 
 class _Unverbose:
@@ -75,7 +75,17 @@ class _Logger:
         self._collected_print: List[str] = list()
         self.clean()
 
-    def configure(self, fpath: str, title: str, *, default_seperator="\n", include_micros=False, verbose=True, logger="default"):
+    def configure(
+        self,
+        fpath: str,  # Path to place logger. Any missing directories are created
+        title: str,  # Title on first line of logfile
+        *,
+        default_seperator = "\n",
+        include_micros    = False,      # Include microseconds in timestamps
+        verbose           = True,       # Log verbose logs
+        log_commit        = False,      # Log commit of git repository
+        logger            = "default",  # Name of logger
+    ):
         """ Configure a logger. This must be called before the logger can be used """
         if logger in self._loggers:
             self.throw(LoggingException("Logger '%s' already exists" % logger))
@@ -95,6 +105,12 @@ class _Logger:
             logfile.write("")
 
         self._log(title + "\n")
+        if log_commit:
+            repo, commit = get_repo()
+            self._log(
+                "Executing in repository %s" % repo,
+                "Commit: %s\n" % commit,
+            )
 
     def set_logger(self, logger: str):
         if logger not in self._loggers:
@@ -198,15 +214,17 @@ class _Logger:
         self._selected_logger = "default"
 
 
-
 log = _Logger()
 
 
 class collect_logs:
     """
-    Wrap functions with this class to have them output all their output at once. Useful with multiprocessing, e.g.
+    Wrap functions with this class to have them output all their output at once
+    Useful with multiprocessing, e.g.
+    ```
     with mp.Pool() as p:
         p.map(collect_logs(fun), ...)
+    ```
     Loggers cannot be changed or configured during this
     """
     def __init__(self, fun: Callable):

@@ -1,3 +1,13 @@
+# 0.3.1 - Breaking changes
+
+- Add functionality to logger for logging repository commit
+- Remove function `get_commit`
+- Add function `get_repo` which returns repository path and commit
+
+  It attempts to find a repository by searching from working directory and upwards
+- Updates to examples in `README` and other minor documentation changes
+- `set_seeds` no longer returns seed, as this is already given as input to the function
+
 # 0.3.0 - Breaking changes
 
 - Only works for Python 3.7+
