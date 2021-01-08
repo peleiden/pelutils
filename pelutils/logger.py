@@ -1,9 +1,10 @@
+from __future__ import annotations
 import os
 import traceback as tb
 from collections import defaultdict
 from functools import update_wrapper
 from itertools import chain
-from typing import Any, Callable, DefaultDict, Dict, List
+from typing import Any, Callable, DefaultDict, Dict, Generator, Iterable, List
 
 from pelutils import get_timestamp, get_repo
 
@@ -187,12 +188,22 @@ class _Logger:
             self._log(*stack, with_print=False)
         raise error
 
-    def input(self, prompt=""):
-        self._log("Waiting for user input")
-        self._log("Prompt: %s" % prompt, with_print=False)
+    def _input(self, prompt: str) -> str:
+        self._log("Prompt: '%s'" % prompt, with_print=False)
         response = input(prompt)
-        self._log("Input:  %s" % response, with_print=False)
+        self._log("Input:  '%s'" % response, with_print=False)
         return response
+
+    def input(self, prompt: str | Iterable[str] = "") -> str | Generator[str]:
+        """
+        Get user input and log both prompt an input
+        If prompt is an iterable, a generator of user inputs will be returned
+        """
+        self._log("Waiting for user input", with_print=False)
+        if isinstance(prompt, str):
+            return self._input(prompt)
+        else:
+            return (self._input(p) for p in prompt)
 
     def _reset_collected(self):
         self._collected_log = list()

@@ -1,3 +1,9 @@
+# 0.3.2
+
+- `log.input` now also accepts iterables as input
+
+  For such inputs, it will return a generator of user inputs
+
 # 0.3.1 - Breaking changes
 
 - Add functionality to logger for logging repository commit
