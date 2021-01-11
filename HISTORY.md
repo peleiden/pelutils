@@ -1,6 +1,11 @@
+# 0.3.4
+
+- `log` now ignores logged lines that are `None`
+- Logger now raises errors normally instead of using `throw` method
+
 # 0.3.3
 
-- `get_repo` now accepts a custom path search for repo as opposed to always using working dir..
+- `get_repo` now accepts a custom path search for repo as opposed to always using working dir
 
 # 0.3.2
 
