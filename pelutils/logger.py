@@ -89,9 +89,9 @@ class _Logger:
     ):
         """ Configure a logger. This must be called before the logger can be used """
         if logger in self._loggers:
-            self.throw(LoggingException("Logger '%s' already exists" % logger))
+            raise LoggingException("Logger '%s' already exists" % logger)
         if self._collect:
-            self.throw(LoggingException("Cannot configure a new logger while collecting"))
+            raise LoggingException("Cannot configure a new logger while collecting")
         self._selected_logger = logger
         dirs = os.path.join(*os.path.split(fpath)[:-1])
         if dirs:
@@ -115,9 +115,9 @@ class _Logger:
 
     def set_logger(self, logger: str):
         if logger not in self._loggers:
-            self.throw(LoggingException("Logger '%s' does not exist" % logger))
+            raise LoggingException("Logger '%s' does not exist" % logger)
         if self._collect:
-            self.throw(LoggingException("Cannot configure a new logger while collecting"))
+            raise LoggingException("Cannot configure a new logger while collecting")
         self._selected_logger = logger
 
     @property
@@ -140,7 +140,7 @@ class _Logger:
             return
         sep = sep or self._default_sep
         time = get_timestamp()
-        tolog = sep.join([str(x) for x in tolog])
+        tolog = sep.join([str(x) for x in tolog if x is not None])
         spaces = len(time) * " "
         space = " " * 5
         logs = tolog.split("\n")
@@ -170,7 +170,7 @@ class _Logger:
         self._log()
         self._log(title)
 
-    def _format_tb(self, error: Exception, _tb):
+    def _format_tb(self, error: Exception, _tb) -> List[str]:
         stack = tb.format_stack()[:-2] if _tb is None else tb.format_tb(_tb)
         stack = list(chain.from_iterable([elem.split("\n") for elem in stack]))
         stack = [line for line in stack if line.strip()]
