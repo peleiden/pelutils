@@ -22,13 +22,15 @@ def set_seeds(seed: int = 0):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-def get_repo() -> Tuple[str, str]:
+def get_repo(path: str=None) -> Tuple[str, str]:
     """
     Returns full path of git repository and commit SHA
-    Searches for repo by searching upwards from working directory
+    Searches for repo by searching upwards from given directory (if None: uses working dir).
     If it cannot find a repository, it raises a git.InvalidGitRepositoryError
     """
-    cdir = os.path.join(os.getcwd(), ".")
+    if path is None:
+        path = os.getcwd()
+    cdir = os.path.join(path, ".")
     pdir = os.path.dirname(cdir)
     while cdir != pdir:
         cdir = pdir
@@ -39,7 +41,7 @@ def get_repo() -> Tuple[str, str]:
             pass
         pdir = os.path.dirname(cdir)
     else:  # Raise error if no repo was found
-        raise git.InvalidGitRepositoryError("Unable to find git repository from %s" % os.getcwd())
+        raise git.InvalidGitRepositoryError("Unable to find git repository from %s" % path)
 
 def get_timestamp(for_file: bool = False, include_micros = False) -> str:
     """
