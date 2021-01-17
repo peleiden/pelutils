@@ -17,24 +17,22 @@ with open('HISTORY.md') as history_file:
 # `pip install ./ --upgrade`
 
 setup_args = dict(
-    name                          = 'pelutils',
-    version                       = '0.3.4',
-    description                   = 'Utility functions that are often useful',
+    name             = 'pelutils',
+    version          = '0.3.5',
+    description      = 'Utility functions that are often useful',
     long_description_content_type = "text/markdown",
-    long_description              = README + '\n\n' + HISTORY,
-    license                       = 'BSD-3-Clause',
-    packages                      = find_packages(),
-    author                        = 'Søren Winkel Holm, Asger Laurits Schultz',
-    author_email                  = 'swholm@protonmail.com',
-    keywords                      = ['utility', 'logger', 'parser', 'profiling'],
-    url                           = 'https://github.com/peleiden/pelutils',
-    download_url                  = 'https://pypi.org/project/pelutils/'
+    long_description = README + '\n\n' + HISTORY,
+    license          = 'BSD-3-Clause',
+    packages         = find_packages(),
+    author           = 'Søren Winkel Holm, Asger Laurits Schultz',
+    author_email     = 'swholm@protonmail.com',
+    keywords         = ['utility', 'logger', 'parser', 'profiling'],
+    url              = 'https://github.com/peleiden/pelutils',
+    download_url     = 'https://pypi.org/project/pelutils/',
+    install_requires = ["numpy", "gitpython"],
+    extras_require   = { "ds": ["torch", "matplotlib"] },
 )
 
-install_requires = [
-    'numpy',
-    'gitpython',
-]
 
 if __name__ == '__main__':
-    setup(**setup_args, install_requires=install_requires)
+    setup(**setup_args)
