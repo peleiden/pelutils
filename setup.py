@@ -30,7 +30,7 @@ setup_args = dict(
     url              = 'https://github.com/peleiden/pelutils',
     download_url     = 'https://pypi.org/project/pelutils/',
     install_requires = ["numpy", "gitpython"],
-    extras_require   = { "ds": ["torch", "matplotlib"] },
+    extras_require   = { "ds": ["torch", "matplotlib", "scipy"] },
 )
 
 
