@@ -11,7 +11,16 @@ except ModuleNotFoundError as e:
     raise _import_error from e
 
 
-def corr_ci(x: Iterable, y: Iterable, alpha: float=0.05, output: Callable=None):
+def z(alpha=0.05, two_sided=True, distribution=stats.norm(0, 1)):
+    """ Get z value for a given significance level """
+    if not 0 <= alpha <= 1:
+        raise ValueError("alpha must be between 0 and 1, not %s" % alpha)
+    if two_sided:
+        return distribution.ppf(1 - alpha / 2)
+    else:
+        return distribution.ppf(1 - alpha)
+
+def corr_ci(x: Iterable, y: Iterable, alpha=0.05, output: Callable=None):
     """
     A convenience function for getting a pearson correlation + confidence interval of it.
     Uses the method often called Fisher's z transformation: https://en.wikipedia.org/wiki/Fisher_transformation
@@ -20,7 +29,7 @@ def corr_ci(x: Iterable, y: Iterable, alpha: float=0.05, output: Callable=None):
     x, y:  Data iterables to compare
 
     alpha: Significance level. 0.05 by default
-    output: A function to use to output a quick string with the information. Could be `log` or `print`
+    output: A function to use to output a string with the information. Could be `log` or `print`
 
     Returns
     float: Pearson's correlation coefficient

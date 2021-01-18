@@ -73,7 +73,7 @@ with mp.Pool() as p:
 ```
 
 
-## Time taking
+## Time Taking and Profiling
 Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
 
 ```py
@@ -117,3 +117,64 @@ yoda.save("old")
 # There will also be a file named numbers.npy
 yoda = Person.load("old")
 ```
+
+# pelutils.ds
+
+This submodule contains various utility functions for data science and machine learning. To make sure the necessary requirements are installed, install using
+```py
+pip install pelutils[ds]
+```
+
+## PyTorch
+
+All PyTorch functions work independently of whether CUDA is available or not.
+
+```py
+# Clear CUDA cache and synchronize
+reset_cuda()
+
+# Inference only: No gradients should be tracked in the following function
+# Same as putting entire function body inside with torch.no_grad()
+@no_grad
+def infer():
+    <code that includes feedforwarding>
+
+# Feed forward in batches to prevent using too much memory
+# Every time a memory allocation error is encountered, the number of batches is doubled
+# Same as using y = net(x), but without risk of running out of memory
+bff = BatchFeedForward(net, len(x))
+y = bff(x)
+# Change to another network
+bff.update_net(net2)
+```
+
+## Statistics
+
+Includes various commonly used statistical functions.
+
+```py
+# Get one sided z value for exponential(lambda=2) distribution with a significance level of 1 %
+zval = z(alpha=0.01, two_sided=False, distribution=scipy.stats.expon(loc=1/2))
+
+# Get correlation, confidence interval, and p value for two vectors
+a, b = np.random.randn(100), np.random.randn(100)
+r, lower_r, upper_r, p = corr_ci(a, b, alpha=0.01)
+```
+
+## Matplotlib
+
+Contains predefined rc params, colours, and figure sizes.
+
+```py
+# Set wide figure size
+plt.figure(figsize=figsize_wide)
+
+# Use larger font for larger figures - works well with predefined figure sizes
+update_rc_params(rc_params)
+
+# 15 different, unique colours
+c = iter(colours)
+for i in range(15):
+    plt.plot(x[i], y[i], color=next(c))
+```
+
