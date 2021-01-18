@@ -1,4 +1,6 @@
+from __future__ import annotations
 import os
+import ctypes
 import random
 from datetime import datetime
 from typing import Tuple
@@ -43,7 +45,7 @@ def get_repo(path: str=None) -> Tuple[str, str]:
     else:  # Raise error if no repo was found
         raise git.InvalidGitRepositoryError("Unable to find git repository from %s" % path)
 
-def get_timestamp(for_file: bool = False, include_micros = False) -> str:
+def get_timestamp(for_file = False, include_micros = False) -> str:
     """
     Returns a time stamp
     If for_file is true, it can be used to save files and: YYYY-MM-DD_HH-mm-SS
@@ -56,7 +58,8 @@ def get_timestamp(for_file: bool = False, include_micros = False) -> str:
         d_string = "-".join(d_string.split(".")[0].split(":")).replace(" ", "_")
     return d_string
 
-def thousand_seps(numstr: str or float or int) -> str:
+def thousand_seps(numstr: str | float | int) -> str:
+    """ Formats a number using thousand seperators """
     decs = str(numstr)
     rest = ""
     if "." in decs:
@@ -65,6 +68,10 @@ def thousand_seps(numstr: str or float or int) -> str:
     for i in range(len(decs)-3, 0, -3):
         decs = decs[:i] + "," + decs[i:]
     return decs + rest
+
+def c_ptr(arr: np.ndarray) -> ctypes.c_void_p:
+    """ Returns a c pointer that can be used to import a contiguous numpy array into a c function """
+    return ctypes.c_void_p(arr.ctypes.data)
 
 class EnvVars:
     """
