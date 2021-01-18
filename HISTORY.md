@@ -1,3 +1,9 @@
+# 0.4.0
+
+- Add `ds` submodule for data science and machine learning utilities
+
+  This includes `PyTorch` utility functions, statistics, and `matplotlib` default values
+
 # 0.3.4
 
 - `log` now ignores logged lines that are `None`

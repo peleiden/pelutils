@@ -18,6 +18,7 @@ def set_seeds(seed: int = 0):
     np.random.seed(seed)
     random.seed(seed)
     if _has_torch:
+        # https://pytorch.org/docs/stable/notes/randomness.html
         torch.manual_seed(seed)
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)

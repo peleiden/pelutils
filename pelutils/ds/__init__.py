@@ -1,5 +1,5 @@
 import functools
-from typing import Type
+from typing import Callable, Type
 
 _import_error = ModuleNotFoundError("To use the ds submodule, you must install pelutils[ds]")
 
@@ -15,7 +15,7 @@ def reset_cuda():
     if torch.cuda.is_available():
         torch.cuda.synchronize()
 
-def no_grad(fun):
+def no_grad(fun: Callable) -> Callable:
     """
     Decorator for running functions without pytorch tracking gradients, e.g.
     ```
@@ -77,7 +77,3 @@ class BatchFeedForward:
         # Final slice may have overflow, however this is simply ignored when indexing
         slices = [slice(i*slice_size, (i+1)*slice_size) for i in range(self.batches)]
         return slices
-
-
-from . import plot
-from . import stats
