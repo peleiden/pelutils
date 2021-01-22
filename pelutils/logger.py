@@ -86,6 +86,7 @@ class _Logger:
         verbose           = True,       # Log verbose logs
         log_commit        = False,      # Log commit of git repository
         logger            = "default",  # Name of logger
+        append            = False,      # Set to True to append to old log file instead of overwriting it
     ):
         """ Configure a logger. This must be called before the logger can be used """
         if logger in self._loggers:
@@ -102,8 +103,9 @@ class _Logger:
         self._loggers[logger]["include_micros"] = include_micros
         self._loggers[logger]["verbose"] = verbose
 
-        with open(fpath, "w", encoding="utf-8") as logfile:
-            logfile.write("")
+        exists = os.path.exists(fpath)
+        with open(fpath, "a" if append else "w", encoding="utf-8") as logfile:
+            logfile.write("\n\n" if append and exists else "")
 
         self._log(title + "\n")
         if log_commit:
