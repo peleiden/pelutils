@@ -1,3 +1,7 @@
+# 0.4.1
+
+- Add append mode to logger to append to old log files instead of overwriting
+
 # 0.4.0
 
 - Add `ds` submodule for data science and machine learning utilities
