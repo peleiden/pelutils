@@ -1,9 +1,9 @@
 from __future__ import annotations
 import os
 import ctypes
+import platform
 import random
 from datetime import datetime
-from typing import Tuple
 
 import git
 import numpy as np
@@ -25,7 +25,7 @@ def set_seeds(seed: int = 0):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-def get_repo(path: str=None) -> Tuple[str, str]:
+def get_repo(path: str=None) -> tuple[str, str]:
     """
     Returns full path of git repository and commit SHA
     Searches for repo by searching upwards from given directory (if None: uses working dir).
@@ -43,8 +43,7 @@ def get_repo(path: str=None) -> Tuple[str, str]:
         except git.InvalidGitRepositoryError:
             pass
         pdir = os.path.dirname(cdir)
-    else:  # Raise error if no repo was found
-        raise git.InvalidGitRepositoryError("Unable to find git repository from %s" % path)
+    raise git.InvalidGitRepositoryError("Unable to find git repository from %s" % path)
 
 def get_timestamp(for_file = False, include_micros = False) -> str:
     """
@@ -70,9 +69,13 @@ def thousand_seps(numstr: str | float | int) -> str:
         decs = decs[:i] + "," + decs[i:]
     return decs + rest
 
-def c_ptr(arr: np.ndarray) -> ctypes.c_void_p:
-    """ Returns a c pointer that can be used to import a contiguous numpy array into a c function """
-    return ctypes.c_void_p(arr.ctypes.data)
+def throws(exc_type: type, fun: Callable, *args, **kwargs) -> bool:
+    """ Check if fun(*args, **kwargs) throws an error of a given type """
+    try:
+        fun(*args, **kwargs)
+        return False
+    except exc_type:
+        return True
 
 class EnvVars:
     """
@@ -103,10 +106,21 @@ class EnvVars:
             else:
                 os.environ[var] = value
 
+def c_ptr(arr: np.ndarray) -> ctypes.c_void_p:
+    """
+    Returns a c pointer that can be used to import a contiguous numpy array into a c function
+    Set arr to None for null pointer
+    """
+    return ctypes.c_void_p(arr.ctypes.data if arr is not None else None)
+
 
 # To allow imports directly from utils #
 # Currently to be placed lower because get_timestamp is needed by logger #
 from .logger import *
+from .logger import _Logger
+log: _Logger  # Make sure type hinting works when importing
 from .parse import *
 from .ticktock import *
 from .datahandling import *
+from .tests import *
+from .format import *

@@ -1,38 +1,50 @@
-# 0.4.1
+# History
 
-- Add append mode to logger to append to old log files instead of overwriting
+## 0.5.0 - Breaking changes
 
-# 0.4.0
+- Added np.unique-style unique function to `ds` that runs in linear time but does not sort
+- Replaced verbose/non-verbose logging with logging levels similar to built-in `logging` module
+- Added `with_print` option to `log.__call__`
+- Undid change from 0.3.4 such that `None` is now logged again
+- Added `format` module. Currently supports tables
+- Updated stringification of profiles to include percentage of parent profile
+- Added `throws` function that checks if a functions throws an exception of a specific type
 
-- Add `ds` submodule for data science and machine learning utilities
+## 0.4.1
+
+- Added append mode to logger to append to old log files instead of overwriting
+
+## 0.4.0
+
+- Added `ds` submodule for data science and machine learning utilities
 
   This includes `PyTorch` utility functions, statistics, and `matplotlib` default values
 
-# 0.3.4
+## 0.3.4
 
 - Logger now raises errors normally instead of using `throw` method
 
-# 0.3.3
+## 0.3.3
 
 - `get_repo` now accepts a custom path search for repo as opposed to always using working dir
 
-# 0.3.2
+## 0.3.2
 
 - `log.input` now also accepts iterables as input
 
   For such inputs, it will return a generator of user inputs
 
-# 0.3.1 - Breaking changes
+## 0.3.1 - Breaking changes
 
-- Add functionality to logger for logging repository commit
-- Remove function `get_commit`
-- Add function `get_repo` which returns repository path and commit
+- Added functionality to logger for logging repository commit
+- Removed function `get_commit`
+- Added function `get_repo` which returns repository path and commit
 
   It attempts to find a repository by searching from working directory and upwards
 - Updates to examples in `README` and other minor documentation changes
 - `set_seeds` no longer returns seed, as this is already given as input to the function
 
-# 0.3.0 - Breaking changes
+## 0.3.0 - Breaking changes
 
 - Only works for Python 3.7+
 
@@ -49,22 +61,22 @@
 
   It also supports boolean flags in the config file
 
-# 0.2.13
+## 0.2.13
 
 - Readd clean method to logger
 
-# 0.2.12 - Breaking changes
+## 0.2.12 - Breaking changes
 
 - The logger is now solely a global variable
 
   Different loggers are handled internally in the global _Logger instance
 
-# 0.2.11
+## 0.2.11
 
 - Add catch property to logger to allow automatically logging errors with with
 - All code is now indented using spaces
 
-# 0.2.10
+## 0.2.10
 
 - Allow finer verbosity control in logger
 - Allow multiple log commands to be collected and logged at the same time
@@ -72,35 +84,35 @@
 - Change thousand_seps from TickTock method to stand-alone function in `__init__`
 - Verbose logging now has same signature as normal logging
 
-# 0.2.8
+## 0.2.8
 
 - Add code to execute code with specific environment variables
 
-# 0.2.7
+## 0.2.7
 
 - Fix error where the full stacktrace was not printed by log.throw
 - set_seeds now checks if torch is available
 
   This means torch seeds are still set without needing it as a dependency
 
-# 0.2.6 - Breaking changes
+## 0.2.6 - Breaking changes
 
 - Make Unverbose class private and update documentation
 - Update formatting when using .input
 
-# 0.2.5
+## 0.2.5
 
 - Add input method to logger
 
-# 0.2.4
+## 0.2.4
 
 - Better logging of errors
 
-# 0.2.1 - Breaking changes
+## 0.2.1 - Breaking changes
 
 - Removed torch as dependency
 
-# 0.2.0 - Breaking changes
+## 0.2.0 - Breaking changes
 
 - Logger is now a global variable
 
@@ -111,18 +123,18 @@
 - Changed timestamp function to give a cleaner output
 - `get_commit` now returns `None` if `gitpython` is not installed
 
-# 0.1.2
+## 0.1.2
 
 - Update documentation for logger and ticktock
 - Fix bug where seperator was not an argument to Logger.__call__
 
-# 0.1.0
+## 0.1.0
 
 - Include DataStorage
 - Logger can throw errors and handle seperators
 - TickTock includes time handling and units
 - Minor parser path changes
 
-# 0.0.1
+## 0.0.1
 
 - Logger, Parser, TickTock added from previous projects

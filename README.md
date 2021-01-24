@@ -1,7 +1,18 @@
 # pelutils
-Utility functions that we commonly use including flexible parser, logger and time taker.
+
+Various utilities useful for python projects. Features include
+
+- Feature-rich logger
+- Parsing for combining config files and command-line arguments - especially useful for parametric methods
+- Time taking and profiling
+- Easy to use data storage class for easy data saving and loading
+- Table formatting
+- Miscellaneous standalone functions providing various functionalities - see `pelutils/__init__.py`
+- Data-science submodule with extra utilities for statistics, plotting, and machine learning using `PyTorch`
+- `unique` function similar to `np.unique` but in linear time (currently Linux x86_64 only)
 
 ## Parsing
+
 A combination of parsing CLI and config file arguments which allows for a powerful, easy-to-use workflow.
 Useful for parametric methods such as machine learning.
 
@@ -35,6 +46,7 @@ gamma = 0.9
 ```
 
 ## Logging
+
 Easy to use logger which fits common needs.
 
 ```py
@@ -72,8 +84,8 @@ with mp.Pool() as p:
     p.map(collect_logs(fun), args)
 ```
 
-
 ## Time Taking and Profiling
+
 Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
 
 ```py
@@ -93,6 +105,7 @@ print(tt)  # Prints a table view of profiled code sections
 ```
 
 ## Data Storage
+
 A data class that saves/loads its fields from disk.
 Anything that can be saved to a `json` file will be.
 Other data types will be saved to relevant file formats.
@@ -121,8 +134,12 @@ yoda = Person.load("old")
 # pelutils.ds
 
 This submodule contains various utility functions for data science and machine learning. To make sure the necessary requirements are installed, install using
-```py
+```
 pip install pelutils[ds]
+```
+Note that in some terminals, you will instead have to write
+```
+pip install pelutils\[ds\]
 ```
 
 ## PyTorch

@@ -1,0 +1,3 @@
+[submodule "pelutils/ds/hashmap.c"]
+	path = pelutils/ds/hashmap.c
+	url = https://github.com/tidwall/hashmap.c

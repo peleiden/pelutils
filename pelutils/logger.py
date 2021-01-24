@@ -2,28 +2,49 @@ from __future__ import annotations
 import os
 import traceback as tb
 from collections import defaultdict
+from enum import IntEnum
 from functools import update_wrapper
 from itertools import chain
-from typing import Any, Callable, DefaultDict, Dict, Generator, Iterable, List
+from typing import Any, Callable, DefaultDict, Generator, Iterable
 
 from pelutils import get_timestamp, get_repo
 
 
-class _Unverbose:
+class Levels(IntEnum):
+    SECTION  = 5
+    CRITICAL = 4
+    ERROR    = 3
+    WARNING  = 2
+    INFO     = 1
+    DEBUG    = 0
+
+
+class _LevelManager:
     """
-    Used for disabling verbose logging in a code section
+    Used for disabling logging below a certain level
     Example:
-    with log.unverbose:
-        log("This will be logged")
-        log.verbose("This will not be logged")
+    with log.level(Levels.WARNING):
+        log.error("This will be logged")
+        log.info("This will not be logged")
     """
-    _allow_verbose = True
+
+    level: Levels
+    is_active = False
+
+    def __init__(self, level: Levels):
+        self.level = level
+        self.default_level = level
+
+    def with_level(self, level: Levels) -> _LevelManager:
+        self.level = level
+        return self
 
     def __enter__(self):
-        self._allow_verbose = False
+        self.is_active = True
 
     def __exit__(self, *args):
-        self._allow_verbose = True
+        self.is_active = False
+        self.level = self.default_level
 
 
 class _LogErrors:
@@ -52,9 +73,10 @@ class _Logger:
     Sections, verbosity and error logging is supported
     """
 
-    _loggers: DefaultDict[str, Dict[str, Any]]
+    _loggers: DefaultDict[str, dict[str, Any]]
     _selected_logger: str
-    _unverbose = _Unverbose()
+    _maxlen = max(len(l.name) for l in Levels)
+    _spacing = 4 * " "
 
     @property
     def _fpath(self):
@@ -66,14 +88,17 @@ class _Logger:
     def _include_micros(self):
         return self._loggers[self._selected_logger]["include_micros"]
     @property
-    def is_verbose(self):
-        return self._loggers[self._selected_logger]["verbose"]
+    def _level_mgr(self):
+        return self._loggers[self._selected_logger]["level_mgr"]
+    @property
+    def _level(self):
+        return self._level_mgr.level
 
     def __init__(self):
         self._log_errors = _LogErrors(self)
         self._collect = False
-        self._collected_log: List[str] = list()
-        self._collected_print: List[str] = list()
+        self._collected_log: list[str] = list()
+        self._collected_print: list[str] = list()
         self.clean()
 
     def configure(
@@ -82,11 +107,11 @@ class _Logger:
         title: str,  # Title on first line of logfile
         *,
         default_seperator = "\n",
-        include_micros    = False,      # Include microseconds in timestamps
-        verbose           = True,       # Log verbose logs
-        log_commit        = False,      # Log commit of git repository
-        logger            = "default",  # Name of logger
-        append            = False,      # Set to True to append to old log file instead of overwriting it
+        include_micros    = False,        # Include microseconds in timestamps
+        log_commit        = False,        # Log commit of git repository
+        logger            = "default",    # Name of logger
+        append            = False,        # Set to True to append to old log file instead of overwriting it
+        default_level     = Levels.INFO,  # Default level when using __call__ to log
     ):
         """ Configure a logger. This must be called before the logger can be used """
         if logger in self._loggers:
@@ -101,17 +126,17 @@ class _Logger:
         self._loggers[logger]["fpath"] = fpath
         self._loggers[logger]["default_sep"] = default_seperator
         self._loggers[logger]["include_micros"] = include_micros
-        self._loggers[logger]["verbose"] = verbose
+        self._loggers[logger]["level_mgr"] = _LevelManager(default_level)
 
         exists = os.path.exists(fpath)
         with open(fpath, "a" if append else "w", encoding="utf-8") as logfile:
             logfile.write("\n\n" if append and exists else "")
 
         if title:
-            self._log(title + "\n")
+            self.section(title + "\n")
         if log_commit:
             repo, commit = get_repo()
-            self._log(
+            self.section(
                 "Executing in repository %s" % repo,
                 "Commit: %s\n" % commit,
             )
@@ -123,36 +148,37 @@ class _Logger:
             raise LoggingException("Cannot configure a new logger while collecting")
         self._selected_logger = logger
 
-    @property
-    def unverbose(self):
-        return self._unverbose
+    def level(self, level: Levels):
+        return self._level_mgr.with_level(level)
 
     @property
     def log_errors(self):
         return self._log_errors
 
-    def __call__(self, *tolog, with_timestamp=True, sep=None):
-        self._log(*tolog, with_timestamp=with_timestamp, sep=sep)
+    def __call__(self, *tolog, with_info=True, sep=None, with_print=True, level: Levels=None):
+        self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 
     def _write_to_log(self, content: str):
         with open(self._fpath, "a", encoding="utf-8") as logfile:
             logfile.write(content + "\n")
 
-    def _log(self, *tolog, with_timestamp=True, sep=None, with_print=True):
-        if not self._loggers:
+    def _log(self, *tolog, level: Levels=None, with_info=True, sep=None, with_print=True):
+        level = level if level is not None else self._level
+        if (self._level_mgr.is_active and level < self._level_mgr.level) or not self._loggers:
             return
         sep = sep or self._default_sep
         time = get_timestamp()
         tolog = sep.join([str(x) for x in tolog])
-        spaces = len(time) * " "
-        space = " " * 5
+        time_spaces = len(time) * " "
+        level_format = level.name + (self._maxlen - len(level.name)) * " "
+        space = self._spacing + self._maxlen * " " + self._spacing
         logs = tolog.split("\n")
-        if with_timestamp and tolog:
-            logs[0] = f"{time}{space}{logs[0]}"
+        if with_info and tolog:
+            logs[0] = f"{time}{self._spacing}{level_format}{self._spacing}{logs[0]}"
         else:
-            logs[0] = f"{spaces}{space}{logs[0]}"
+            logs[0] = f"{time_spaces}{space}{logs[0]}"
         for i in range(1, len(logs)):
-            logs[i] = f"{spaces}{space}{logs[i]}"
+            logs[i] = f"{time_spaces}{space}{logs[i]}"
             if logs[i].strip() == "":
                 logs[i] = ""
         tolog = "\n".join(x.rstrip() for x in logs)
@@ -165,15 +191,7 @@ class _Logger:
             if with_print:
                 self._collected_print.append(tolog)
 
-    def verbose(self, *tolog, with_timestamp=True, sep=None, with_print=True):
-        if self.is_verbose and self.unverbose._allow_verbose:
-            self._log(*tolog, with_timestamp=with_timestamp, sep=sep, with_print=with_print)
-
-    def section(self, title=""):
-        self._log()
-        self._log(title)
-
-    def _format_tb(self, error: Exception, _tb) -> List[str]:
+    def _format_tb(self, error: Exception, _tb) -> list[str]:
         stack = tb.format_stack()[:-2] if _tb is None else tb.format_tb(_tb)
         stack = list(chain.from_iterable([elem.split("\n") for elem in stack]))
         stack = [line for line in stack if line.strip()]
@@ -188,13 +206,13 @@ class _Logger:
             raise error
         except:
             stack = self._format_tb(error, _tb)
-            self._log(*stack, with_print=False)
+            self.critical(*stack, with_print=False)
         raise error
 
     def _input(self, prompt: str) -> str:
-        self._log("Prompt: '%s'" % prompt, with_print=False)
+        self.info("Prompt: '%s'" % prompt, with_print=False)
         response = input(prompt)
-        self._log("Input:  '%s'" % response, with_print=False)
+        self.info("Input:  '%s'" % response, with_print=False)
         return response
 
     def input(self, prompt: str | Iterable[str] = "") -> str | Generator[str]:
@@ -226,6 +244,26 @@ class _Logger:
     def clean(self):
         self._loggers = defaultdict(dict)
         self._selected_logger = "default"
+
+    def section(self, *tolog, sep=None, with_print=True, newline=True):
+        if newline:
+            self._log("")
+        self._log(*tolog, sep=sep, with_print=with_print, level=Levels.SECTION)
+
+    def critical(self, *tolog, sep=None, with_print=True):
+        self._log(*tolog, sep=sep, with_print=with_print, level=Levels.CRITICAL)
+
+    def error(self, *tolog, with_info=True, sep=None, with_print=True):
+        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.ERROR)
+
+    def warning(self, *tolog, with_info=True, sep=None, with_print=True):
+        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.WARNING)
+
+    def info(self, *tolog, with_info=True, sep=None, with_print=True):
+        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.INFO)
+
+    def debug(self, *tolog, with_info=True, sep=None, with_print=True):
+        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.DEBUG)
 
 
 log = _Logger()
