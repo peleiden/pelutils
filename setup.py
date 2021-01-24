@@ -1,9 +1,11 @@
-from setuptools import setup, find_packages
+import subprocess
+from setuptools import setup, find_packages, Extension
+from distutils.command.install import install as install_
 
-with open('README.md') as readme_file:
+with open("README.md") as readme_file:
     README = readme_file.read()
 
-with open('HISTORY.md') as history_file:
+with open("HISTORY.md") as history_file:
     HISTORY = history_file.read()
 
 # To update
@@ -16,23 +18,31 @@ with open('HISTORY.md') as history_file:
 # From root of repository, run
 # `pip install ./ --upgrade`
 
+class install(install_):
+    def run(self):
+        subprocess.call(["make", "clean"])
+        subprocess.call(["make"])
+        super().run()
+
 setup_args = dict(
-    name             = 'pelutils',
-    version          = '0.4.1',
-    description      = 'Utility functions that are often useful',
+    name             = "pelutils",
+    version          = "0.5.0",
+    description      = "Utility functions that are often useful",
     long_description_content_type = "text/markdown",
-    long_description = README + '\n\n' + HISTORY,
-    license          = 'BSD-3-Clause',
+    long_description = README + "\n\n" + HISTORY,
+    license          = "BSD-3-Clause",
     packages         = find_packages(),
-    author           = 'Søren Winkel Holm, Asger Laurits Schultz',
-    author_email     = 'swholm@protonmail.com',
-    keywords         = ['utility', 'logger', 'parser', 'profiling'],
-    url              = 'https://github.com/peleiden/pelutils',
-    download_url     = 'https://pypi.org/project/pelutils/',
-    install_requires = ["numpy", "gitpython"],
+    package_data     = { "pelutils": ["ds/ds.so"] },
+    author           = "Søren Winkel Holm, Asger Laurits Schultz",
+    author_email     = "swholm@protonmail.com",
+    keywords         = [ "utility", "logger", "parser", "profiling"],
+    url              = "https://github.com/peleiden/pelutils",
+    download_url     = "https://pypi.org/project/pelutils/",
+    install_requires = [ "numpy", "gitpython", "rich" ],
     extras_require   = { "ds": ["torch", "matplotlib", "scipy"] },
+    cmdclass         = { "install": install },
 )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     setup(**setup_args)

@@ -1,3 +1,5 @@
+.vscode
+
 # Files and folders prepended by local_
 **/local_*/
 local_*
@@ -10,6 +12,7 @@ __pycache__/
 .history
 
 # C extensions
+*.o
 *.so
 
 # Distribution / packaging

@@ -2,8 +2,7 @@ from __future__ import annotations
 import os, sys
 from argparse import ArgumentParser, RawTextHelpFormatter
 from configparser import ConfigParser
-from copy import deepcopy
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from pprint import pformat
 
@@ -102,20 +101,20 @@ class Parser:
         # Parser for config file
         self.configparser = ConfigParser(allow_no_value=True)
 
-    def _parse_known_args(self) -> Dict[str, Any]:
+    def _parse_known_args(self) -> dict[str, Any]:
         """ Returns a dict containing the arguments given explicitly from the command line """
         args, __ = self.argparser.parse_known_args()
         args = vars(args)
         known_args = dict()
         for argname, value in args.items():
-            if value == None:
+            if value is None:
                 continue
             elif argname in self._bool_opts and self._bool_opts[argname] == value:
                 continue
             known_args[argname] = value
         return known_args
 
-    def parse(self) -> List[Dict[str, Any]]:
+    def parse(self) -> list[dict[str, Any]]:
         """ Parse arguments and return a dict for each """
         # Parse command line arguments
         args = self._parse_known_args()
@@ -136,18 +135,18 @@ class Parser:
 
         return experiments
 
-    def _set_bools_in_dict(self, d: Dict[str, Any]):
+    def _set_bools_in_dict(self, d: dict[str, Any]):
         """ Boolean arguments present are set to the negation of their default values
         Those not present are set to default values """
         for argname, default_value in self._bool_opts.items():
             if argname in d:
-                if type(d[argname]) == bool:
+                if isinstance(d[argname], bool):
                     continue
                 d[argname] = not default_value
             else:
                 d[argname] = default_value
 
-    def _read_config(self, cli_args: dict) -> Tuple[list, bool]:
+    def _read_config(self, cli_args: dict) -> tuple[list, bool]:
         experiments = list()
 
         if "config" in cli_args:

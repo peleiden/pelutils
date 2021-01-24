@@ -1,6 +1,6 @@
+from __future__ import annotations
 import os
 import json
-from typing import List
 
 import numpy as np
 
@@ -40,7 +40,7 @@ class DataStorage:
     subfolder = ''
     json_name = 'data.json'
 
-    def save(self, loc: str = '') -> List[str]:
+    def save(self, loc: str = '') -> list[str]:
         """Saves all the fields of the instatiated data classes in npy's or json in <`loc`>/<`self.subfolder`>
 
         :param str loc: Save location to place the subfolder in
