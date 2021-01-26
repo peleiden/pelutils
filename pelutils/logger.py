@@ -140,7 +140,7 @@ class _Logger:
             return
         sep = sep or self._default_sep
         time = get_timestamp()
-        tolog = sep.join([str(x) for x in tolog if x is not None])
+        tolog = sep.join([str(x) for x in tolog])
         spaces = len(time) * " "
         space = " " * 5
         logs = tolog.split("\n")

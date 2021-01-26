@@ -1,6 +1,5 @@
 # 0.3.4
 
-- `log` now ignores logged lines that are `None`
 - Logger now raises errors normally instead of using `throw` method
 
 # 0.3.3
