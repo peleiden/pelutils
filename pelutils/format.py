@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any
+import regex
 
 from rich.console import Console
 
@@ -15,24 +16,25 @@ class RichString:
 
     def __init__(self):
         self.strings: list[str] = list()  # Normal strings
-        self.riches:  list[str] = list() # Corresponding strings with rich syntax
+        self.riches:  list[str] = list()  # Corresponding strings with rich syntax
 
     def add_string(self, s: str, rich: str=None):
+        """ Add a new string and optionally a rich string equivalent """
+        if rich is None:
+            # Escape beginning brackets to prevent accidental formatting when printing
+            rich = regex.sub(r"(\[[a-zA-Z\s]+\])", r"\\\1", s)
+            rich = regex.sub(r"(\[\/\])", r"\\\1", rich)
         self.strings.append(s)
         self.riches.append(rich)
 
     def print(self):
-        self.console.print(
-            "".join(r if r is not None else s for s, r in zip(self.strings, self.riches))
-        )
+        """ Print rich text """
+        self.console.print("".join(r for r in self.riches))
 
     @classmethod
     def multiprint(cls, rss: list[RichString]):
         """ Print content of multiple RichStrings at once """
-        p = "\n".join(
-            "".join(r if r is not None else s for s, r in zip(rs.strings, rs.riches))
-                for rs in rss
-        )
+        p = "\n".join("".join(r for r in rs.riches) for rs in rss)
         cls.console.print(p)
 
     def __str__(self) -> str:

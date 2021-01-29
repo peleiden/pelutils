@@ -1,5 +1,10 @@
 # History
 
+## 0.5.1
+
+- Fixed accidental rich formatting in logger
+- Fixed logger crashing when not configured
+
 ## 0.5.0 - Breaking changes
 
 - Added np.unique-style unique function to `ds` that runs in linear time but does not sort

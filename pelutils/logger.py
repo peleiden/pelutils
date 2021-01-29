@@ -181,8 +181,10 @@ class _Logger:
         return f"[{format}]{s}[/]"
 
     def _log(self, *tolog, level: Levels=None, with_info=True, sep=None, with_print=True):
+        if not self._loggers:
+            return
         level = level if level is not None else self._level
-        if (self._level_mgr.is_active and level < self._level_mgr.level) or not self._loggers:
+        if self._level_mgr.is_active and level < self._level_mgr.level:
             return
         sep = sep or self._default_sep
         time = get_timestamp()

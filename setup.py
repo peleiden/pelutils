@@ -1,5 +1,5 @@
 import subprocess
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, find_packages
 from distutils.command.install import install as install_
 
 with open("README.md") as readme_file:
@@ -26,7 +26,7 @@ class install(install_):
 
 setup_args = dict(
     name             = "pelutils",
-    version          = "0.5.0",
+    version          = "0.5.1",
     description      = "Utility functions that are often useful",
     long_description_content_type = "text/markdown",
     long_description = README + "\n\n" + HISTORY,
