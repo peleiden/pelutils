@@ -107,6 +107,9 @@ class _Logger:
     @property
     def _level(self):
         return self._level_mgr.level
+    @property
+    def _with_print(self):
+        return self._loggers[self._selected_logger]["with_print"]
 
     def __init__(self):
         self._log_errors = _LogErrors(self)
@@ -126,6 +129,7 @@ class _Logger:
         logger            = "default",    # Name of logger
         append            = False,        # Set to True to append to old log file instead of overwriting it
         default_level     = Levels.INFO,  # Default level when using __call__ to log
+        with_print        = True,         # Whether or not to default to printing log
     ):
         """ Configure a logger. This must be called before the logger can be used """
         if logger in self._loggers:
@@ -141,6 +145,7 @@ class _Logger:
         self._loggers[logger]["default_sep"] = default_seperator
         self._loggers[logger]["include_micros"] = include_micros
         self._loggers[logger]["level_mgr"] = _LevelManager(default_level)
+        self._loggers[logger]["with_print"] = with_print
 
         exists = os.path.exists(fpath)
         with open(fpath, "a" if append else "w", encoding="utf-8") as logfile:
@@ -169,7 +174,7 @@ class _Logger:
     def log_errors(self):
         return self._log_errors
 
-    def __call__(self, *tolog, with_info=True, sep=None, with_print=True, level: Levels=None):
+    def __call__(self, *tolog, with_info=True, sep=None, with_print=None, level: Levels=None):
         self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 
     def _write_to_log(self, content: RichString):
@@ -180,13 +185,14 @@ class _Logger:
     def _format(s: str, format: str) -> str:
         return f"[{format}]{s}[/]"
 
-    def _log(self, *tolog, level: Levels=None, with_info=True, sep=None, with_print=True):
+    def _log(self, *tolog, level: Levels=None, with_info=True, sep=None, with_print=None):
         if not self._loggers:
             return
         level = level if level is not None else self._level
         if self._level_mgr.is_active and level < self._level_mgr.level:
             return
         sep = sep or self._default_sep
+        with_print = self._with_print if with_print is None else with_print
         time = get_timestamp()
         tolog = sep.join([str(x) for x in tolog])
         time_spaces = len(time) * " "
@@ -275,24 +281,24 @@ class _Logger:
         self._loggers = defaultdict(dict)
         self._selected_logger = "default"
 
-    def section(self, *tolog, with_info=True, sep=None, with_print=True, newline=True):
+    def section(self, *tolog, with_info=True, sep=None, with_print=None, newline=True):
         if newline:
             self._log("")
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.SECTION)
 
-    def critical(self, *tolog, with_info=True, sep=None, with_print=True):
+    def critical(self, *tolog, with_info=True, sep=None, with_print=None):
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.CRITICAL)
 
-    def error(self, *tolog, with_info=True, sep=None, with_print=True):
+    def error(self, *tolog, with_info=True, sep=None, with_print=None):
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.ERROR)
 
-    def warning(self, *tolog, with_info=True, sep=None, with_print=True):
+    def warning(self, *tolog, with_info=True, sep=None, with_print=None):
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.WARNING)
 
-    def info(self, *tolog, with_info=True, sep=None, with_print=True):
+    def info(self, *tolog, with_info=True, sep=None, with_print=None):
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.INFO)
 
-    def debug(self, *tolog, with_info=True, sep=None, with_print=True):
+    def debug(self, *tolog, with_info=True, sep=None, with_print=None):
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.DEBUG)
 
 

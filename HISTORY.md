@@ -1,5 +1,9 @@
 # History
 
+## 0.5.2
+
+- Allowed disabling printing by default in logger
+
 ## 0.5.1
 
 - Fixed accidental rich formatting in logger
