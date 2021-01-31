@@ -1,5 +1,9 @@
 # History
 
+## 0.5.3
+
+- Fixed missing regex requirement
+
 ## 0.5.2
 
 - Allowed disabling printing by default in logger

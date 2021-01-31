@@ -26,7 +26,7 @@ class install(install_):
 
 setup_args = dict(
     name             = "pelutils",
-    version          = "0.5.2",
+    version          = "0.5.3",
     description      = "Utility functions that are often useful",
     long_description_content_type = "text/markdown",
     long_description = README + "\n\n" + HISTORY,
@@ -38,7 +38,7 @@ setup_args = dict(
     keywords         = [ "utility", "logger", "parser", "profiling"],
     url              = "https://github.com/peleiden/pelutils",
     download_url     = "https://pypi.org/project/pelutils/",
-    install_requires = [ "numpy", "gitpython", "rich" ],
+    install_requires = [ "numpy", "gitpython", "rich", "regex" ],
     extras_require   = { "ds": ["torch", "matplotlib", "scipy"] },
     cmdclass         = { "install": install },
 )
