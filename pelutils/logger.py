@@ -25,8 +25,8 @@ _TIMESTAMP_COLOR = "#72b9e0"
 _INPUT_PROMPT_COLOR = "dark_goldenrod"
 _LEVEL_FORMAT = {
     Levels.SECTION:  "bright_yellow",
-    Levels.CRITICAL: "bright_red",
-    Levels.ERROR:    "orange3",
+    Levels.CRITICAL: "red1",
+    Levels.ERROR:    "red3",
     Levels.WARNING:  "gold3",
     Levels.INFO:     "chartreuse3",
     Levels.DEBUG:    "deep_sky_blue1",
