@@ -1,0 +1,36 @@
+name: pytest
+
+on:
+  push:
+    branches: [ master ]
+    paths: 
+        - pelutils
+        - tests
+        - Makefile
+        - .github/workflows
+  pull_request:
+    branches: [ master, develop ]
+    paths:
+        - pelutils
+        - tests
+        - Makefile
+        - .github/workflows
+    workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Set up PyPi dependencies
+        run: |
+          pip install pytest-cov
+          python setup.py install --user
+
+      - name: Run test
+        run: pytest --cov
