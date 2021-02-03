@@ -1,5 +1,9 @@
 # History
 
+## 0.5.4
+
+- Change log error colour
+
 ## 0.5.3
 
 - Fixed missing regex requirement
