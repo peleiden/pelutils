@@ -21,7 +21,7 @@ from pelutils import c_ptr
 
 
 _so_error = NotImplementedError("unique function is currently only supported on x86_64 Linux")
-if platform.platform().count("Linux") and platform.platform().count("x86_64"):
+if all(substr in platform.platform().lower() for substr in ("linux", "x86_64")):
     _lib = ctypes.cdll.LoadLibrary(f"{_base_path}/ds.so")
 def unique(array: np.ndarray, *, return_index=False, return_inverse=False, return_counts=False)\
     -> np.ndarray | Iterable[np.ndarray]:

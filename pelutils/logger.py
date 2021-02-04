@@ -12,17 +12,17 @@ from .format import RichString
 
 
 class Levels(IntEnum):
-    SECTION  = 5
-    CRITICAL = 4
-    ERROR    = 3
-    WARNING  = 2
-    INFO     = 1
-    DEBUG    = 0
+    """ Logging levels by priority. Don't set any to 0, as falsiness is used in the code """
+    SECTION  = 6
+    CRITICAL = 5
+    ERROR    = 4
+    WARNING  = 3
+    INFO     = 2
+    DEBUG    = 1
 
 
 # https://rich.readthedocs.io/en/stable/appendix/colors.html
 _TIMESTAMP_COLOR = "#72b9e0"
-_INPUT_PROMPT_COLOR = "dark_goldenrod"
 _LEVEL_FORMAT = {
     Levels.SECTION:  "bright_yellow",
     Levels.CRITICAL: "red1",
@@ -45,10 +45,6 @@ class _LevelManager:
     level: Levels
     is_active = False
 
-    def __init__(self, level: Levels):
-        self.level = level
-        self.default_level = level
-
     def with_level(self, level: Levels) -> _LevelManager:
         self.level = level
         return self
@@ -58,7 +54,7 @@ class _LevelManager:
 
     def __exit__(self, *args):
         self.is_active = False
-        self.level = self.default_level
+        del self.level  # Prevent silent failures by having level accidentally set
 
 
 class _LogErrors:
@@ -93,23 +89,26 @@ class _Logger:
     _spacing = 4 * " "
 
     @property
-    def _fpath(self):
-        return self._loggers[self._selected_logger]["fpath"]
+    def _logger(self) -> dict:
+        return self._loggers[self._selected_logger]
     @property
-    def _default_sep(self):
-        return self._loggers[self._selected_logger]["default_sep"]
+    def _fpath(self) -> str:
+        return self._logger["fpath"]
     @property
-    def _include_micros(self):
-        return self._loggers[self._selected_logger]["include_micros"]
+    def _default_sep(self) -> str:
+        return self._logger["default_sep"]
     @property
-    def _level_mgr(self):
-        return self._loggers[self._selected_logger]["level_mgr"]
+    def _include_micros(self) -> bool:
+        return self._logger["include_micros"]
     @property
-    def _level(self):
+    def _print_level(self) -> Levels:
+        return self._logger["print_level"]
+    @property
+    def _level_mgr(self) -> _LevelManager:
+        return self._logger["level_mgr"]
+    @property
+    def _level(self) -> Levels:
         return self._level_mgr.level
-    @property
-    def _with_print(self):
-        return self._loggers[self._selected_logger]["with_print"]
 
     def __init__(self):
         self._log_errors = _LogErrors(self)
@@ -128,8 +127,7 @@ class _Logger:
         log_commit        = False,        # Log commit of git repository
         logger            = "default",    # Name of logger
         append            = False,        # Set to True to append to old log file instead of overwriting it
-        default_level     = Levels.INFO,  # Default level when using __call__ to log
-        with_print        = True,         # Whether or not to default to printing log
+        print_level       = Levels.INFO,  # Highest level that will be printed. All will be logged. None for no print
     ):
         """ Configure a logger. This must be called before the logger can be used """
         if logger in self._loggers:
@@ -144,8 +142,8 @@ class _Logger:
         self._loggers[logger]["fpath"] = fpath
         self._loggers[logger]["default_sep"] = default_seperator
         self._loggers[logger]["include_micros"] = include_micros
-        self._loggers[logger]["level_mgr"] = _LevelManager(default_level)
-        self._loggers[logger]["with_print"] = with_print
+        self._loggers[logger]["level_mgr"] = _LevelManager()
+        self._loggers[logger]["print_level"] = print_level or max(Levels) + 1
 
         exists = os.path.exists(fpath)
         with open(fpath, "a" if append else "w", encoding="utf-8") as logfile:
@@ -174,7 +172,7 @@ class _Logger:
     def log_errors(self):
         return self._log_errors
 
-    def __call__(self, *tolog, with_info=True, sep=None, with_print=None, level: Levels=None):
+    def __call__(self, *tolog, with_info=True, sep=None, with_print=None, level: Levels=Levels.INFO):
         self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 
     def _write_to_log(self, content: RichString):
@@ -185,14 +183,13 @@ class _Logger:
     def _format(s: str, format: str) -> str:
         return f"[{format}]{s}[/]"
 
-    def _log(self, *tolog, level: Levels=None, with_info=True, sep=None, with_print=None):
+    def _log(self, *tolog, level=Levels.INFO, with_info=True, sep=None, with_print=None):
         if not self._loggers:
             return
-        level = level if level is not None else self._level
         if self._level_mgr.is_active and level < self._level_mgr.level:
             return
         sep = sep or self._default_sep
-        with_print = self._with_print if with_print is None else with_print
+        with_print = level >= self._print_level if with_print is None else with_print
         time = get_timestamp()
         tolog = sep.join([str(x) for x in tolog])
         time_spaces = len(time) * " "
@@ -201,7 +198,6 @@ class _Logger:
         logs = tolog.split("\n")
         rs = RichString()
         if with_info and tolog:
-            a = f"{time}{self._spacing}{level_format}{self._spacing}{logs[0]}".rstrip()
             rs.add_string(
                 f"{time}{self._spacing}{level_format}{self._spacing}{logs[0]}".rstrip(),
                 (self._format(time, _TIMESTAMP_COLOR) +\

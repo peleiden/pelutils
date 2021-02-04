@@ -1,8 +1,12 @@
 # History
 
-## 0.5.4
+## 0.5.4 - Breaking changes
 
 - Change log error colour
+- Replace default log level with print level that defaults to `Levels.INFO`
+
+  `__call__` now always defaults to `Levels.INFO`
+- Print microseconds as `us` instead of `mus`
 
 ## 0.5.3
 

@@ -21,12 +21,12 @@ int compare(const void* elem1, const void* elem2, void* udata) {
     return memcmp(e1->p_elem, e2->p_elem, *e1->p_stride);
 }
 
-size_t unique(size_t n,     // Number of array elements
-            size_t stride,  // Number of bytes between elements on primary axis
-            void* array,    // Non-empty, contiguous array of any shape
-            long* index,    // Array of size n to put unique values
-            long* inverse,  // Array of size n to put inverse values
-            long* counts    // Array of size n to put number of each unique element
+size_t unique(size_t n,       // Number of array elements
+              size_t stride,  // Number of bytes between elements on primary axis
+              void* array,    // Non-empty, contiguous array of any shape
+              long* index,    // Array of size n to put unique values
+              long* inverse,  // Array of size n to put inverse values
+              long* counts    // Array of size n to put number of each unique element
 ) {
     if (index == NULL)
         return 0;
