@@ -7,7 +7,7 @@ from pelutils.format import Table
 
 class TimeUnit:
     nanosecond  = ("ns",  1e9)
-    microsecond = ("mus", 1e6)
+    microsecond = ("us",  1e6)
     millisecond = ("ms",  1e3)
     second      = ("s",   1)
     minute      = ("min", 1/60)
@@ -109,7 +109,7 @@ class TickTock:
         return dt
 
     def fuse(self, tt):
-        """Fuses a TickTock instance into self"""
+        """ Fuses a TickTock instance into self """
         for profile in tt.profiles.values():
             if profile.name in self.profiles.keys():
                 self.profiles[profile.name]._hits += profile.hits
@@ -117,7 +117,7 @@ class TickTock:
                 self.profiles[profile.name] = profile
 
     def remove_outliers(self, threshold=2):
-        # For all profiles, remove hits longer than threshold * average hit
+        """ For all profiles, remove hits longer than threshold * average hit """
         for profile in self.profiles.values():
             profile.remove_outliers(threshold)
 

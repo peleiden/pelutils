@@ -19,13 +19,14 @@ Useful for parametric methods such as machine learning.
 A file `main.py` could contain:
 ```py
 options = {
-    "location": { "default": "local_train", "help": "save_location", "type": str },
     "learning-rate": { "default": 1.5e-3, "help": "Controls size of parameter update", "type": float },
     "gamma": { "default": 1, "help": "Use of generator network in updating", "type": float },
     "initialize-zeros": { "help": "Whether to initialize all parameters to 0", "action": "store_true" },
 }
 parser = Parser(options)
+location = parser.location  # Experiments are stored here
 experiments = parser.parse()
+parser.document_settings()  # Save a config file to reproduce the experiment
 ```
 
 This could then by run by
