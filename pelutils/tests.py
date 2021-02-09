@@ -1,7 +1,7 @@
 import os
 from shutil import rmtree
 
-from . import log
+from . import log, Levels
 
 
 class MainTest:
@@ -25,7 +25,12 @@ class MainTest:
     @classmethod
     def setup_class(cls):
         os.makedirs(cls.test_dir, exist_ok = True)
-        log.configure(os.path.join(cls.test_dir, "tests.log"), "Test", append=True)
+        log.configure(
+            os.path.join(cls.test_dir, "tests.log"),
+            "Test: %s" % cls.__name__,
+            append=True,
+            print_level=Levels.DEBUG,
+        )
 
     @classmethod
     def teardown_class(cls):

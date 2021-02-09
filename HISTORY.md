@@ -1,5 +1,9 @@
 # History
 
+## 0.5.5
+
+- Test logging now uses `Levels.DEBUG` by default
+
 ## 0.5.4 - Breaking changes
 
 - Change log error colour
