@@ -3,6 +3,8 @@
 ## 0.5.5
 
 - Test logging now uses `Levels.DEBUG` by default
+- Added `TickTock.fuse_multiple` for combining several `TickTock` instances
+- Fixed bugs when using multiple `TickTock` instances
 
 ## 0.5.4 - Breaking changes
 

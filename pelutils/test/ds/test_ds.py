@@ -1,6 +1,7 @@
 import numpy as np
+import pytest
 
-from pelutils import set_seeds, throws
+from pelutils import set_seeds
 from pelutils.ds import unique
 
 set_seeds(sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀"))
@@ -43,5 +44,6 @@ def test_unique():
     assert np.max(counts) == 2
 
     # Check error handling
-    assert throws(ValueError, unique, np.array([]))
+    with pytest.raises(ValueError):
+        unique(np.array([]))
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
+from copy import deepcopy
 from time import perf_counter
+from typing import Iterable
 
 from pelutils import thousand_seps
 from pelutils.format import Table
@@ -74,9 +76,11 @@ class TickTock:
     tt.end_profile()
     ```
     """
-    _start = 0
-    profiles: dict[str, Profile] = {}
-    _profile_stack: list[Profile] = list()
+
+    def __init__(self):
+        self._start = 0
+        self.profiles: dict[str, Profile] = {}
+        self._profile_stack: list[Profile] = list()
 
     def tick(self) -> float:
         self._start = perf_counter()
@@ -102,19 +106,33 @@ class TickTock:
         Return time passed since .profile was called """
         end = perf_counter()
         dt = end - self._profile_stack[-1].start
+        if name is not None and name != self._profile_stack[-1].name:
+            raise NameError(f"Expected to pop profile '{self._profile_stack[-1].name}', received '{name}'")
         self._profile_stack[-1].hits.append(dt)
-        profile = self._profile_stack.pop()
-        if name is not None:
-            assert name == profile.name, f"Expected to pop profile '{profile.name}', received '{name}'"
+        self._profile_stack.pop()
         return dt
 
-    def fuse(self, tt):
+    def fuse(self, tt: TickTock):
         """ Fuses a TickTock instance into self """
+        if len(self._profile_stack) or len(tt._profile_stack):
+            raise ValueError("Unable to fuse while some profiles are still unfinished")
         for profile in tt.profiles.values():
-            if profile.name in self.profiles.keys():
-                self.profiles[profile.name]._hits += profile.hits
+            existing = self.profiles.get(profile.name)
+            if existing:
+                existing._hits += profile.hits
             else:
                 self.profiles[profile.name] = profile
+
+    @staticmethod
+    def fuse_multiple(tts: list[TickTock]) -> TickTock:
+        """ Combine multiple TickTocks """
+        ticktock = TickTock()
+        ids = set(id(tt) for tt in tts)
+        if len(ids) < len(tts):
+            raise ValueError("Some TickTocks are the same instance, which is not allowed")
+        for tt in tts:
+            ticktock.fuse(tt)
+        return ticktock
 
     def remove_outliers(self, threshold=2):
         """ For all profiles, remove hits longer than threshold * average hit """
