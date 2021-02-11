@@ -103,6 +103,10 @@ for i in range(100):
     tt.end_profile()
     tt.end_profile()
 print(tt)  # Prints a table view of profiled code sections
+
+# Alternative syntax using with statement
+with tt.profile("The best task"):
+    <some task>
 ```
 
 ## Data Storage

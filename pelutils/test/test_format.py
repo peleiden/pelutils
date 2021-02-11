@@ -1,10 +1,13 @@
-from pelutils import Table, throws
+import pytest
+
+from pelutils import Table
 
 def test_table():
     t = Table()
     h = ["a", "69"]
     t.add_header(h)
-    assert throws(ValueError, t.add_row, [1, 2, 3])
+    with pytest.raises(ValueError):
+        t.add_row([1, 2, 3])
     t.add_row([12, 2], [True, False])
     assert str(t) == "\n".join([
         "a  | 69",
