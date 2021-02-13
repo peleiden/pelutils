@@ -88,6 +88,9 @@ class _Logger:
     _maxlen = max(len(l.name) for l in Levels)
     _spacing = 4 * " "
 
+    _yes = { "j", "y" }
+    _no = { "n" }
+
     @property
     def _logger(self) -> dict:
         return self._loggers[self._selected_logger]
@@ -256,6 +259,15 @@ class _Logger:
             return self._input(prompt)
         else:
             return (self._input(p) for p in prompt)
+
+    @classmethod
+    def bool_input(cls, inp: str, default=True) -> bool:
+        """ Parse a yes/no user input """
+        inp = inp.lower()
+        if default:
+            return inp[0] not in cls._no if inp else True
+        else:
+            return inp[0] in cls._yes if inp else False
 
     def _reset_collected(self):
         self._collected_log = list()

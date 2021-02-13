@@ -6,6 +6,7 @@
 - Added `TickTock.fuse_multiple` for combining several `TickTock` instances
 - Fixed bugs when using multiple `TickTock` instances
 - Now possible to profile using `with` statement
+- Added method to logger to parse boolean user input
 
 ## 0.5.4 - Breaking changes
 
