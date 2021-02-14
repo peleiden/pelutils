@@ -7,6 +7,7 @@
 - Fixed bugs when using multiple `TickTock` instances
 - Now possible to profile using `with` statement
 - Added method to logger to parse boolean user input
+- Added method to `Table` for adding vertical lines manually
 
 ## 0.5.4 - Breaking changes
 

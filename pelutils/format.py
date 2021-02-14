@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any
+from typing import Any, Iterable
 import regex
 
 from rich.console import Console
@@ -45,25 +45,29 @@ class RichString:
 class Table:
 
     def __init__(self):
-        self.width: int = None  # Number of elements in each row. Set when first row or header added
-        self.header: list[Any] = list()  # Header elements
-        self.rows: list[list[Any]] = list()   # All non-header rows
-        self.left_aligns: list[list[bool]] = list()  # True for left align, False for right align
+        self._width:       int = None  # Number of elements in each row. Set when first row or header added
+        self._header:      list[Any] = list()  # Header elements
+        self._rows:        list[list[Any]] = list()   # All non-header rows
+        self._left_aligns: list[Iterable[bool]] = list()  # True for left align, False for right align
+        self._vlines:      set[int] = set()  # Row indexes that are followed by a vertical line
 
     def _set_and_check_width(self, row: list[Any]):
-        if self.width is not None and len(row) != self.width:
-            raise ValueError("Given row has %i elements, but width is %i" % (len(row), self.width))
-        if self.width is None:
-            self.width = len(row)
+        if self._width is not None and len(row) != self._width:
+            raise ValueError("Given row has %i elements, but width is %i" % (len(row), self._width))
+        if self._width is None:
+            self._width = len(row)
 
     def add_header(self, header: list[Any]):
         self._set_and_check_width(header)
-        self.header = header
+        self._header = header
 
-    def add_row(self, row: list[Any], left_align: list[bool]=None):
+    def add_row(self, row: list[Any], left_align: Iterable[bool]=None):
         self._set_and_check_width(row)
-        self.rows.append(row)
-        self.left_aligns.append(left_align or [True] * self.width)
+        self._rows.append(row)
+        self._left_aligns.append(left_align or [True] * self._width)
+
+    def add_vline(self):
+        self._vlines.add(len(self._rows)-1)
 
     @staticmethod
     def _format_element(element: Any, width: int, left_align: bool) -> str:
@@ -74,18 +78,21 @@ class Table:
             return " " * (width - len(element)) + element
 
     def __str__(self) -> str:
-        all_rows = [self.header, *self.rows] if self.header else self.rows
-        widths = [max(len(str(all_rows[i][j])) for i in range(len(all_rows))) for j in range(self.width)]
+        all_rows = [self._header, *self._rows] if self._header else self._rows
+        widths = [max(len(str(all_rows[i][j])) for i in range(len(all_rows))) for j in range(self._width)]
+        vline = "+".join(
+            "-" * (width + 1 + (0 < i < self._width-1)) for i, width in enumerate(widths)
+        )
         strs = list()
-        if self.header:
+        if self._header:
             strs.append(" | ".join(
-                self._format_element(elem, width, True) for elem, width in zip(self.header, widths)
+                self._format_element(elem, width, True) for elem, width in zip(self._header, widths)
             ))
-            strs.append("+".join(
-                "-" * (width+1+(0 < i < self.width-1)) for i, width in enumerate(widths)
-            ))
-        for row, left_align in zip(self.rows, self.left_aligns):
+            strs.append(vline)
+        for i, (row, left_align) in enumerate(zip(self._rows, self._left_aligns)):
             strs.append(" | ".join(
                 self._format_element(elem, width, la) for elem, width, la in zip(row, widths, left_align)
             ))
+            if i in self._vlines:
+                strs.append(vline)
         return "\n".join(strs)
