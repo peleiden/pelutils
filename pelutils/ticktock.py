@@ -92,8 +92,9 @@ class TickTock:
 
     def __init__(self):
         self._start = 0
-        self.profiles: dict[str, Profile] = {}
+        self.profiles:       dict[str, Profile] = {}
         self._profile_stack: list[Profile] = list()
+        self._nhits:         list[int] = list()
 
     def tick(self) -> float:
         self._start = perf_counter()
@@ -103,8 +104,12 @@ class TickTock:
         end = perf_counter()
         return end - self._start
 
-    def profile(self, name: str) -> _ProfileContext:
-        """ Begin profile with given name """
+    def profile(self, name: str, *, hits=1) -> _ProfileContext:
+        """
+        Begin profile with given name
+        Optionally it is possible to register this as several hits that sum to the total time
+        This is usual when execution a multiprocessing mapping operation
+        """
         if name not in self.profiles:
             self.profiles[name] = Profile(
                 name,
@@ -112,8 +117,10 @@ class TickTock:
                 self._profile_stack[-1] if self._profile_stack else None
             )
         self._profile_stack.append(self.profiles[name])
+        self._nhits.append(hits)
+        pc = _ProfileContext(self, name)
         self.profiles[name].start = perf_counter()
-        return _ProfileContext(self, name)
+        return pc
 
     def end_profile(self, name: str=None) -> float:
         """ End profile. If name given, it is checked that it matches latest started profile
@@ -122,7 +129,8 @@ class TickTock:
         dt = end - self._profile_stack[-1].start
         if name is not None and name != self._profile_stack[-1].name:
             raise NameError(f"Expected to pop profile '{self._profile_stack[-1].name}', received '{name}'")
-        self._profile_stack[-1].hits.append(dt)
+        nhits = self._nhits.pop()
+        self._profile_stack[-1].hits.extend([dt/nhits] * nhits)
         self._profile_stack.pop()
         return dt
 

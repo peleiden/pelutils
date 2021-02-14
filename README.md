@@ -107,6 +107,10 @@ print(tt)  # Prints a table view of profiled code sections
 # Alternative syntax using with statement
 with tt.profile("The best task"):
     <some task>
+
+# When using multiprocessing, it can be useful to simulate multiple hits of the same profile
+with mp.Pool() as p, tt.profile("Processing 100 items on multiple threads", hits=100):
+    p.map(100 items)
 ```
 
 ## Data Storage
