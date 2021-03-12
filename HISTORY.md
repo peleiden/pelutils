@@ -1,5 +1,8 @@
 # History
 
+## 0.5.6
+- DataStorage can save all picklable formats + torch specifically
+
 ## 0.5.5
 
 - Test logging now uses `Levels.DEBUG` by default
