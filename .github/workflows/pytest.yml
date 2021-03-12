@@ -27,10 +27,10 @@ jobs:
         with:
           python-version: 3.7
 
-      - name: Set up PyPi dependencies
+      - name: Set up PyPi dependencies and install package
         run: |
           pip install pytest-cov
-          python setup.py install --user
+          pip install .[ds]
 
       - name: Run test
         run: pytest --cov
