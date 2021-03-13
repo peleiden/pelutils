@@ -1,12 +1,13 @@
 from __future__ import annotations
 import os
-import sys
 import traceback as tb
 from collections import defaultdict
 from enum import IntEnum
 from functools import update_wrapper
 from itertools import chain
 from typing import Any, Callable, DefaultDict, Generator, Iterable
+
+from tqdm import tqdm as _tqdm
 
 from pelutils import get_timestamp, get_repo
 from .format import RichString
@@ -147,7 +148,7 @@ class _Logger:
         self._loggers[logger]["default_sep"] = default_seperator
         self._loggers[logger]["include_micros"] = include_micros
         self._loggers[logger]["level_mgr"] = _LevelManager()
-        self._loggers[logger]["print_level"] = print_level or max(Levels) + 1
+        self._loggers[logger]["print_level"] = print_level or len(Levels) + 1
 
         exists = os.path.exists(fpath)
         with open(fpath, "a" if append else "w", encoding="utf-8") as logfile:
@@ -260,6 +261,14 @@ class _Logger:
             return self._input(prompt)
         else:
             return (self._input(p) for p in prompt)
+
+    def tqdm(self, iterable: _tqdm) -> Generator:
+        """ Disable printing while iterating over a tqdm object """
+        orig_level = self._print_level
+        self._logger["print_level"] = len(Levels) + 1
+        for elem in iterable:
+            yield elem
+        self._logger["print_level"] = orig_level
 
     @classmethod
     def bool_input(cls, inp: str, default=True) -> bool:

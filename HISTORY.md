@@ -1,8 +1,9 @@
 # History
 
-## 0.6.0
+## 0.5.7
 
 - Logger prints to `stderr` instead of `stdout` at level WARNING or above
+- Added `log.tqdm` that disables printing while looping over a `tqdm` object
 
 ## 0.5.6
 

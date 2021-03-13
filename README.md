@@ -1,6 +1,6 @@
 # pelutils
 
-Various utilities useful for python projects. Features include
+Various utilities useful for Python projects. Features include
 
 - Feature-rich logger using `Rich` for colourful printing
 - Parsing for combining config files and command-line arguments - especially useful for parametric methods
@@ -11,40 +11,7 @@ Various utilities useful for python projects. Features include
 - Data-science submodule with extra utilities for statistics, plotting, and machine learning using `PyTorch`
 - `unique` function similar to `np.unique` but in linear time (currently Linux x86_64 only)
 
-## Parsing
-
-A combination of parsing CLI and config file arguments which allows for a powerful, easy-to-use workflow.
-Useful for parametric methods such as machine learning.
-
-A file `main.py` could contain:
-```py
-options = {
-    "learning-rate": { "default": 1.5e-3, "help": "Controls size of parameter update", "type": float },
-    "gamma": { "default": 1, "help": "Use of generator network in updating", "type": float },
-    "initialize-zeros": { "help": "Whether to initialize all parameters to 0", "action": "store_true" },
-}
-parser = Parser(options)
-location = parser.location  # Experiments are stored here
-experiments = parser.parse()
-parser.document_settings()  # Save a config file to reproduce the experiment
-```
-
-This could then by run by
-`python main.py data/my-big-experiment --learning_rate 1e-5`
-or by
-`python main.py data/my-big-experiment --config cfg.ini`
-where `cfg.ini` could contain
-
-```
-[DEFAULT]
-gamma = 0.95
-[RUN1]
-learning-rate = 1e-4
-initialize-zeros
-[RUN2]
-learning-rate = 1e-5
-gamma = 0.9
-```
+`pelutils` supports Python 3.7+.
 
 ## Logging
 
@@ -83,6 +50,10 @@ def fun():
     log("General Kenobi!")
 with mp.Pool() as p:
     p.map(collect_logs(fun), args)
+
+# Disable printing when using tqdm so as to not print a million progress bars
+for i in log.tqdm(tqdm(range(100))):
+    log(i)  # i will be logged to logfile but not printed
 ```
 
 ## Time Taking and Profiling
@@ -138,6 +109,41 @@ yoda.save("old")
 # }
 # There will also be a file named numbers.npy
 yoda = Person.load("old")
+```
+
+## Parsing
+
+A combination of parsing CLI and config file arguments which allows for a powerful, easy-to-use workflow.
+Useful for parametric methods such as machine learning.
+
+A file `main.py` could contain:
+```py
+options = {
+    "learning-rate": { "default": 1.5e-3, "help": "Controls size of parameter update", "type": float },
+    "gamma": { "default": 1, "help": "Use of generator network in updating", "type": float },
+    "initialize-zeros": { "help": "Whether to initialize all parameters to 0", "action": "store_true" },
+}
+parser = Parser(options)
+location = parser.location  # Experiments are stored here
+experiments = parser.parse()
+parser.document_settings()  # Save a config file to reproduce the experiment
+```
+
+This could then by run by
+`python main.py data/my-big-experiment --learning_rate 1e-5`
+or by
+`python main.py data/my-big-experiment --config cfg.ini`
+where `cfg.ini` could contain
+
+```
+[DEFAULT]
+gamma = 0.95
+[RUN1]
+learning-rate = 1e-4
+initialize-zeros
+[RUN2]
+learning-rate = 1e-5
+gamma = 0.9
 ```
 
 # pelutils.ds
