@@ -1,6 +1,11 @@
 # History
 
+## 0.6.0
+
+- Logger prints to `stderr` instead of `stdout` at level WARNING or above
+
 ## 0.5.6
+
 - DataStorage can save all picklable formats + torch specifically
 
 ## 0.5.5

@@ -5,6 +5,9 @@ import regex
 from rich.console import Console
 
 
+_stdout_console = Console(highlight=False)
+_stderr_console = Console(highlight=False, stderr=True)
+
 class RichString:
 
     """
@@ -12,11 +15,10 @@ class RichString:
     This allows for printing and logging without rich syntax causing issues
     """
 
-    console = Console(highlight=False)
-
-    def __init__(self):
+    def __init__(self, stderr=False):
         self.strings: list[str] = list()  # Normal strings
         self.riches:  list[str] = list()  # Corresponding strings with rich syntax
+        self.console = _stderr_console if stderr else _stdout_console
 
     def add_string(self, s: str, rich: str=None):
         """ Add a new string and optionally a rich string equivalent """
