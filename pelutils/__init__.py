@@ -121,6 +121,6 @@ from .logger import _Logger
 log: _Logger  # Make sure type hinting works when importing
 from .parse import *
 from .ticktock import *
-from .datahandling import *
+from .datahandler import *
 from .tests import *
 from .format import *

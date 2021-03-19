@@ -111,13 +111,14 @@ class DataStorage:
         fields = dict()
         # List of fields non-loadable using the SERIALIZATIONS functions
         generals = list()
-        for key, field in cls.__dict__["__dataclass_fields__"].items():
-            for datatype in SERIALIZATIONS:
-                if field.type  == datatype:
-                    _, load, ext = SERIALIZATIONS[datatype]
-                    fields[key] = load(os.path.join(loc, f"{key}.{ext}"))
+        for field_name in cls.__dict__["__dataclass_fields__"]:
+            for _, load, ext in SERIALIZATIONS.values():
+                datapath = os.path.join(loc, f"{field_name}.{ext}")
+                if os.path.exists(datapath):
+                    fields[field_name] = load(datapath)
                     break
-            else: generals.append(key)
+            else:
+                generals.append(field_name)
         # Check if the field was saved with pickle
         any_json = False
         for key in generals:

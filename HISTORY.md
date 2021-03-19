@@ -4,10 +4,11 @@
 
 - Logger prints to `stderr` instead of `stdout` at level WARNING or above
 - Added `log.tqdm` that disables printing while looping over a `tqdm` object
+- Fixed `from __future__ import annotations` breaking `DataStorage`
 
 ## 0.5.6
 
-- DataStorage can save all picklable formats + torch specifically
+- DataStorage can save all picklable formats + `torch.Tensor` specifically
 
 ## 0.5.5
 

@@ -5,8 +5,8 @@ from dataclasses import dataclass
 import numpy as np
 import torch
 
-from pelutils.tests import MainTest
-from pelutils.datahandling import DataStorage
+from pelutils import MainTest, DataStorage
+
 
 @dataclass
 class T(DataStorage):
@@ -15,6 +15,7 @@ class T(DataStorage):
     c: str
     d: dict[tuple[int], int]
 
+
 class TestDatahandler(MainTest):
     def test_saveload(self):
         # Use dict data that is not json serializable
@@ -22,7 +23,6 @@ class TestDatahandler(MainTest):
         t = T(**datas)
         t.save(self.test_dir)
         for f in ("a.npy", "b.pt", "data.json", "d.p"):
-            print(f)
             assert os.path.isfile(os.path.join(self.test_dir, f))
         t = T.load(self.test_dir)
         for n, d in datas.items():
