@@ -114,6 +114,11 @@ def c_ptr(arr: np.ndarray) -> ctypes.c_void_p:
     return ctypes.c_void_p(arr.ctypes.data if arr is not None else None)
 
 
+def split_path(path: str) -> list[str]:
+    """ Splits a path into components """
+    return os.path.normpath(path).split(os.sep)
+
+
 # To allow imports directly from utils #
 # Currently to be placed lower because get_timestamp is needed by logger #
 from .logger import *

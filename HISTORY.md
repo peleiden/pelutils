@@ -1,5 +1,9 @@
 # History
 
+## 0.5.8
+
+- Add `split_path` function which splits a path into components
+
 ## 0.5.7
 
 - Logger prints to `stderr` instead of `stdout` at level WARNING or above
