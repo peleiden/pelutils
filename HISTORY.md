@@ -1,5 +1,10 @@
 # History
 
+## 0.5.9
+
+- Add `split_path` function which splits a path into components
+- Fix bug in `MainTest` where test files where not deleted
+
 ## 0.5.7
 
 - Logger prints to `stderr` instead of `stdout` at level WARNING or above
@@ -133,7 +138,7 @@
 ## 0.2.7
 
 - Fix error where the full stacktrace was not printed by log.throw
-- set_seeds now checks if torch is available
+- `set_seeds` now checks if torch is available
 
   This means torch seeds are still set without needing it as a dependency
 
@@ -156,9 +161,9 @@
 
 ## 0.2.0 - Breaking changes
 
-- Logger is now a global variable
+- Logger is now a global variable, `log`
 
-  Logging should happen by importing the log variable and calling .configure to set it up
+  Logging should happen by importing the log variable and calling `.configure` to set it up
 
   To reset the logger, `.clean` can be called
 - It is still possible to just import `Logger` and use it in the traditional way, though `.configure` should be called first
@@ -168,15 +173,15 @@
 ## 0.1.2
 
 - Update documentation for logger and ticktock
-- Fix bug where seperator was not an argument to Logger.__call__
+- Fix bug where seperator was not an argument to `Logger.__call__`
 
 ## 0.1.0
 
-- Include DataStorage
+- Include `DataStorage`
 - Logger can throw errors and handle seperators
 - TickTock includes time handling and units
 - Minor parser path changes
 
 ## 0.0.1
 
-- Logger, Parser, TickTock added from previous projects
+- Logger, Parser, and TickTock added from previous projects

@@ -140,7 +140,7 @@ class _Logger:
         if self._collect:
             raise LoggingException("Cannot configure a new logger while collecting")
         self._selected_logger = logger
-        dirs = os.path.join(*os.path.split(fpath)[:-1])
+        dirs = os.path.split(fpath)[0]
         if dirs:
             os.makedirs(dirs, exist_ok=True)
 

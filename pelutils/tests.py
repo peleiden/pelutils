@@ -35,7 +35,7 @@ class MainTest:
     @classmethod
     def teardown_class(cls):
         log.clean()
-        # rmtree(cls.test_dir, onerror=cls.ignore_absentee)
+        rmtree(cls.test_dir, onerror=cls.ignore_absentee)
 
     @staticmethod
     def ignore_absentee(_, __, exc_inf):

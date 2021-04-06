@@ -89,7 +89,6 @@ with mp.Pool() as p, tt.profile("Processing 100 items on multiple threads", hits
 A data class that saves/loads its fields from disk.
 Anything that can be saved to a `json` file will be.
 Other data types will be saved to relevant file formats.
-Currently, `numpy` arrays is the only supported data type that is not saved to the `json` file.
 
 ```py
 @dataclass
