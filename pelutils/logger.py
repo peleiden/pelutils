@@ -72,11 +72,11 @@ class _LogErrors:
     def __enter__(self):
         pass
 
-    def __exit__(self, et, ev, tb):
+    def __exit__(self, et, ev, tb_):
         if et and self._log._collect:
             self._log.log_collected()
         if et:
-            self._log.throw(ev, _tb=tb)
+            self._log._throw(ev, tb_)
 
 
 class LoggingException(Exception):
@@ -234,9 +234,8 @@ class _Logger:
             if with_print:
                 self._collected_print.append(rs)
 
-    def _format_tb(self, error: Exception, _tb) -> list[str]:
-        stack = tb.format_stack()[:-2] if _tb is None else tb.format_tb(_tb)
-        stack = list(chain.from_iterable([elem.split("\n") for elem in stack]))
+    def _format_tb(self, error: Exception, tb_) -> list[str]:
+        stack = list(chain.from_iterable([elem.split("\n") for elem in tb.format_tb(tb_)]))
         stack = [line for line in stack if line.strip()]
         return [
             "ERROR: %s thrown with stacktrace" % type(error).__name__,
@@ -244,12 +243,20 @@ class _Logger:
             "%s: %s" % (type(error).__name__, error),
         ]
 
-    def throw(self, error: Exception, _tb=None):
-        try:
-            raise error
-        except:
-            stack = self._format_tb(error, _tb)
-            self.critical(*stack, with_print=False)
+    def _throw(self, error: Exception, tb_=None):
+        stack = list()
+        has_cause = error.__cause__ is not None
+        cur_error = error.__context__
+        while cur_error:
+            stack += self._format_tb(cur_error, cur_error.__traceback__)
+            if has_cause:
+                stack += ["", "The above exception was the direct cause of the following exception:", ""]
+            else:
+                stack += ["", "During handling of the above exception, another exception occurred:", ""]
+            has_cause = cur_error.__cause__ is not None
+            cur_error = cur_error.__context__
+        stack += self._format_tb(error, tb_)
+        self.critical(*stack, with_print=False)
         raise error
 
     def _input(self, prompt: str) -> str:
