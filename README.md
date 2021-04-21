@@ -34,11 +34,15 @@ with log.unverbose:
     log.verbose("Will not be logged")
 
 # Error handling
-# This explicitly logs a ValueError and then raises it
-log.throw(ValueError("Your value is bad, and you should feel bad"))
-# The zero-division error is logged
+# The zero-division error and stacktrace is logged
 with log.log_errors:
     0 / 0
+# Entire chained stacktrace is logged
+with log.log_errors:
+    try:
+        0 / 0
+    except ZeroDivisionError as e:
+        raise ValueError("Denominator must be non-zero") from e
 
 # Disable printing if using tqdm
 # Do not do this if the loop may be ended by a break statement!
