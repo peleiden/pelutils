@@ -1,7 +1,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from time import perf_counter
-from typing import Iterable
+from typing import Generator, Iterable
 
 from pelutils import thousand_seps
 from pelutils.format import Table
@@ -135,6 +135,16 @@ class TickTock:
         self._profile_stack[-1].hits.extend([dt/nhits] * nhits)
         self._profile_stack.pop()
         return dt
+
+    def profile_iter(self, it: Iterable, name: str) -> Generator:
+        """
+        tqdm-like method for profiling a for loop
+        Do not use this for for loops that are ended with break statements!
+        """
+        for elem in it:
+            self.profile(name)
+            yield elem
+            self.end_profile(name)
 
     def fuse(self, tt: TickTock):
         """ Fuses a TickTock instance into self """
