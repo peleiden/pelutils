@@ -33,11 +33,11 @@ class RichString:
         """ Print rich text """
         self.console.print("".join(r for r in self.riches))
 
-    @classmethod
-    def multiprint(cls, rss: list[RichString]):
+    @staticmethod
+    def multiprint(rss: list[RichString]):
         """ Print content of multiple RichStrings at once """
-        p = "\n".join("".join(r for r in rs.riches) for rs in rss)
-        cls.console.print(p)
+        for rs in rss:
+            rs.print()
 
     def __str__(self) -> str:
         """ Return non-rich string """
