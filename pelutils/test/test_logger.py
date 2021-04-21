@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from pelutils.logger import Levels, log
+from pelutils.logger import Levels, log, _STDERR_LEVELS
 from pelutils.tests import MainTest
 
 
@@ -25,7 +25,7 @@ class TestLogger(MainTest):
         for level in Levels:
             log(test_str, level=level)
             out, err = capfd.readouterr()
-            if level >= Levels.WARNING:
+            if level in _STDERR_LEVELS:
                 assert not out and test_str in err
             else:
                 assert not err and test_str in out
