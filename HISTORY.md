@@ -1,5 +1,17 @@
 # History
 
+## 0.6.0 - Breaking changes
+
+- A global instance of `TickTock`, `TT`, has been added - similar to `log`
+- Added `TickTock.profile_iter` for performing profiling over a for loop
+- Fixed wrong error being thrown when keyboard interrupting within `with TT.profile(...)`
+- All collected logs are now logged upon an exception being thrown when using `log.log_errors` and `collect_logs`
+- Made `log.log_errors` capable of handling chained exeptions
+- Made `log.throw` private, as it had little use and could be exploited
+- `get_repo` no longer throws an error if a repository has not been found
+- Added utility functions for reading and writing `.jsonl` files
+- Fixed incorrect `torch` installations breaking importing `pelutils`
+
 ## 0.5.9
 
 - Add `split_path` function which splits a path into components
