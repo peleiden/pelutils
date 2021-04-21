@@ -8,7 +8,7 @@ import numpy as np
 try:
     import torch
     _has_torch = True
-except ModuleNotFoundError:
+except:
     _has_torch = False
 
 # The special serializations that DataStorage supports.
