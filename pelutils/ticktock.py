@@ -188,3 +188,5 @@ class TickTock:
     def __str__(self) -> str:
         return self.stringify_sections(TimeUnit.second)
 
+
+TT = TickTock()
