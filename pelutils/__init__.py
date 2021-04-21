@@ -123,9 +123,10 @@ def split_path(path: str) -> list[str]:
 # Currently to be placed lower because get_timestamp is needed by logger #
 from .logger import *
 from .logger import _Logger
-log: _Logger  # Make sure type hinting works when importing
+log: _Logger  # Make sure type hinting works when importing global instances
 from .parse import *
 from .ticktock import *
+TT: TickTock
 from .datahandler import *
 from .tests import *
 from .format import *

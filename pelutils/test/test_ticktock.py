@@ -1,6 +1,6 @@
 import pytest
 
-from pelutils import TickTock
+from pelutils import TickTock, TT
 
 def test_ticktock():
     """ Test base functionality """
@@ -62,3 +62,5 @@ def test_fuse():
     tt = TickTock.fuse_multiple([tt2, tt3])
     assert len(tt.profiles) == 2
 
+def test_global_tt():
+    assert isinstance(TT, TickTock)
