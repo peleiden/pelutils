@@ -41,6 +41,14 @@ def test_context_profiling():
         with tt.profile("Hello there"):
             tt.profile("General Kenobi!")
 
+def test_iter_profiling():
+    tt = TickTock()
+    for _ in tt.profile_iter(range(5), "I'll try looping, that's a good trick!"):
+        pass
+    assert len(tt._profile_stack) == 0
+    assert "I'll try looping, that's a good trick!" in tt.profiles
+    assert len(tt.profiles["I'll try looping, that's a good trick!"]._hits) == 5
+
 def test_fuse():
     tt1 = TickTock()
     tt2 = TickTock()

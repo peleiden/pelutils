@@ -270,7 +270,10 @@ class _Logger:
             return (self._input(p) for p in prompt)
 
     def tqdm(self, iterable: _tqdm) -> Generator:
-        """ Disable printing while iterating over a tqdm object """
+        """
+        Disable printing while iterating over a tqdm object
+        Do not use this for for loops that are ended with break statements
+        """
         orig_level = self._print_level
         self._logger["print_level"] = len(Levels) + 1
         for elem in iterable:

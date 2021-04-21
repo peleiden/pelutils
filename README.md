@@ -40,6 +40,11 @@ log.throw(ValueError("Your value is bad, and you should feel bad"))
 with log.log_errors:
     0 / 0
 
+# Disable printing if using tqdm
+# Do not do this if the loop may be ended by a break statement!
+for elem in log.tqdm(tqdm(range(5))):
+    log(elem)  # Will be logged, but not printed
+
 # User input
 inp = log.input("WHAT... is your favourite colour? ")
 
@@ -61,22 +66,26 @@ for i in log.tqdm(tqdm(range(100))):
 Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
 
 ```py
-tt = TickTock()
-tt.tick()
+TT.tick()
 <some task>
-seconds_used = tt.tock()
+seconds_used = TT.tock()
 
 for i in range(100):
-    tt.profile("Repeated code")
+    TT.profile("Repeated code")
     <some task>
-    tt.profile("Subtask")
+    TT.profile("Subtask")
     <some subtask>
-    tt.end_profile()
-    tt.end_profile()
-print(tt)  # Prints a table view of profiled code sections
+    TT.end_profile()
+    TT.end_profile()
+print(TT)  # Prints a table view of profiled code sections
 
 # Alternative syntax using with statement
-with tt.profile("The best task"):
+with TT.profile("The best task"):
+    <some task>
+
+# Profile a loop
+# Do not do this if the loop may be ended by a break statement!
+for elem in TT.profile_iter(range(100), "The second best task"):
     <some task>
 
 # When using multiprocessing, it can be useful to simulate multiple hits of the same profile
