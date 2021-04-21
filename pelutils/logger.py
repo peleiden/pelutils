@@ -73,7 +73,9 @@ class _LogErrors:
         pass
 
     def __exit__(self, et, ev, tb):
-        if et is not None:
+        if et and self._log._collect:
+            self._log.log_collected()
+        if et:
             self._log.throw(ev, _tb=tb)
 
 
