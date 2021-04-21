@@ -22,6 +22,8 @@ class Levels(IntEnum):
     INFO     = 2
     DEBUG    = 1
 
+_STDERR_LEVELS = { Levels.CRITICAL, Levels.ERROR, Levels.WARNING }
+
 
 # https://rich.readthedocs.io/en/stable/appendix/colors.html
 _TIMESTAMP_COLOR = "#72b9e0"
@@ -201,7 +203,7 @@ class _Logger:
         level_format = level.name + (self._maxlen - len(level.name)) * " "
         space = self._spacing + self._maxlen * " " + self._spacing
         logs = tolog.split("\n")
-        rs = RichString(stderr=level>=Levels.WARNING)  # Send warning
+        rs = RichString(stderr=level in _STDERR_LEVELS)  # Send warning
         if with_info and tolog:
             rs.add_string(
                 f"{time}{self._spacing}{level_format}{self._spacing}{logs[0]}".rstrip(),
