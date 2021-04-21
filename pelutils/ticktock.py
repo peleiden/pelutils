@@ -68,7 +68,9 @@ class _ProfileContext:
     def __enter__(self):
         ...
 
-    def __exit__(self, *args):
+    def __exit__(self, et, ev, tb):
+        if et == KeyboardInterrupt:
+            return
         self.tt.end_profile(self.profile_name)
 
 
