@@ -15,7 +15,6 @@ on:
         - tests
         - Makefile
         - .github/workflows
-    workflow_dispatch:
 
 jobs:
   build:
