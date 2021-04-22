@@ -1,5 +1,9 @@
 # History
 
+## 0.6.1
+
+- Added `subfolder` argument to `Parser.document_settings`
+
 ## 0.6.0 - Breaking changes
 
 - A global instance of `TickTock`, `TT`, has been added - similar to `log`

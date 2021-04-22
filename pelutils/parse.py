@@ -185,11 +185,11 @@ class Parser:
 
         return experiments, "config" in cli_args
 
-    def document_settings(self):
+    def document_settings(self, subfolder=""):
         """ Saves all settings used for experiments for reproducability """
-        os.makedirs(self.location, exist_ok = True)
+        os.makedirs(os.path.join(self.location, subfolder), exist_ok = True)
 
-        with open(os.path.join(self.location, self.name + "_config.ini"), "w") as f:
+        with open(os.path.join(self.location, subfolder, self.name + "_config.ini"), "w") as f:
             if self.with_config:
                 self.configparser.write(f)
             f.write(f"\n# Run command\n# {' '.join(sys.argv)}\n")
