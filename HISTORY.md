@@ -1,5 +1,10 @@
 # History
 
+## 0.6.2
+
+- `TickTock.__str__` now raises a `ValueError` if profiling is still ongoing to prevent incorrect calculations
+- Printing a `TickTock` instance now indents percentage of time spent to indicate task subsets
+
 ## 0.6.1
 
 - Added `subfolder` argument to `Parser.document_settings`

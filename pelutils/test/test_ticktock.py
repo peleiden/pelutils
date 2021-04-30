@@ -72,3 +72,8 @@ def test_fuse():
 
 def test_global_tt():
     assert isinstance(TT, TickTock)
+
+def test_throw():
+    tt = TickTock()
+    with tt.profile("Hello there"), pytest.raises(ValueError):
+        str(tt)

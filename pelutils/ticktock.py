@@ -183,6 +183,9 @@ class TickTock:
 
     def stringify_sections(self, unit: tuple[str, float]=TimeUnit.second) -> str:
         """ Returns a pretty print of profiles """
+        if self._profile_stack:
+            raise ValueError("TickTock instance cannot be stringified while profiling is still ongoing. Please end all profiles first")
+
         table = Table()
         table.add_header(["Profile", "Total time", "Percentage", "Hits", "Average"])
         total_time = sum(p.sum() for p in self.profiles.values() if p.depth == 0)
@@ -190,7 +193,7 @@ class TickTock:
             table.add_row([
                 "  " * v.depth + kw,
                 self.stringify_time(v.sum(), unit),
-                "%.3f %%" % (100 * v.sum() / (v.parent.sum() if v.parent else total_time)),
+                "%.3f" % (100 * v.sum() / (v.parent.sum() if v.parent else total_time)) + (" <" if v.depth else "") + "--" * (v.depth-1),
                 thousand_seps(len(v)),
                 self.stringify_time(v.mean(), TimeUnit.millisecond)
             ], [True, False, False, False, False])

@@ -28,10 +28,10 @@ for i in range(70):  # Nice
 # Sections
 log.section("New section in the logfile")
 
-# Verbose logging for less important things
-log.verbose("Will be logged")
-with log.unverbose:
-    log.verbose("Will not be logged")
+# Adjust logging levels
+log.warning("Will be logged")
+with log.level(Levels.ERROR):  # Only log at ERROR level or above
+    log.warning("Will not be logged")
 
 # Error handling
 # The zero-division error and stacktrace is logged
