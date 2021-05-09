@@ -7,13 +7,29 @@ from pelutils import thousand_seps
 from pelutils.format import Table
 
 
-class TimeUnit:
-    nanosecond  = ("ns",  1e9)
-    microsecond = ("us",  1e6)
-    millisecond = ("ms",  1e3)
+class TimeUnits:
+    """ Enum-like list of out-of-the-box available units. Format: (suffix, length) """
+    nanosecond  = ("ns",  1e-9)
+    microsecond = ("us",  1e-6)
+    millisecond = ("ms",  1e-3)
     second      = ("s",   1)
-    minute      = ("min", 1/60)
-    hour        = ("h",   1/3600)
+    minute      = ("min", 60)
+    hour        = ("h",   3600)
+
+    @classmethod
+    def units(cls) -> list[tuple[str, float]]:
+        """ List all time units """
+        return [unit for name, unit in cls.__dict__.items() if not callable(getattr(cls, name)) and not name.startswith("__")]
+
+    @classmethod
+    def next_bigger(cls, unit: tuple[str, float]) -> tuple[str, float]:
+        """ Get smallest available time unit bigger than given """
+        return min((u for u in cls.units() if u[1] > unit[1]), key=lambda x: x[1])
+
+    @classmethod
+    def next_smaller(cls, unit: tuple[str, float]) -> tuple[str, float]:
+        """ Get largest available time unit smaller than given """
+        return max((u for u in cls.units() if u[1] < unit[1]), key=lambda x: x[1])
 
 
 class Profile:
@@ -25,6 +41,9 @@ class Profile:
         self.name = name
         self.depth = depth
         self.parent = parent
+        if self.parent is not None:
+            self.parent.children.append(self)
+        self.children = list()
 
     @property
     def hits(self):
@@ -58,6 +77,12 @@ class Profile:
     def __len__(self) -> int:
         return len(self._hits)
 
+    def __iter__(self) -> Generator[Profile, None, None]:
+        """ yields a generator that is first self and then all descendants """
+        yield self
+        for child in self.children:
+            yield from child
+
 
 class _ProfileContext:
 
@@ -72,6 +97,10 @@ class _ProfileContext:
         if et == KeyboardInterrupt:
             return
         self.tt.end_profile(self.profile_name)
+
+
+class TickTockException(RuntimeError):
+    pass
 
 
 class TickTock:
@@ -170,38 +199,49 @@ class TickTock:
 
     def remove_outliers(self, threshold=2):
         """ For all profiles, remove hits longer than threshold * average hit """
-        for profile in self.profiles.values():
+        for profile in self:
             profile.remove_outliers(threshold)
 
-    def reset(self):
-        self.profiles = {}
-
     @staticmethod
-    def stringify_time(dt: float, unit: tuple[str, float]=TimeUnit.millisecond) -> str:
-        str_ = f"{dt*unit[1]:.3f} {unit[0]}"
+    def stringify_time(dt: float, unit: tuple[str, float]=TimeUnits.millisecond) -> str:
+        str_ = f"{dt/unit[1]:.3f} {unit[0]}"
         return thousand_seps(str_)
 
-    def stringify_sections(self, unit: tuple[str, float]=TimeUnit.second) -> str:
+    def stringify_sections(self, unit: tuple[str, float]=TimeUnits.second, with_std=False) -> str:
         """ Returns a pretty print of profiles """
         if self._profile_stack:
             raise ValueError("TickTock instance cannot be stringified while profiling is still ongoing. Please end all profiles first")
 
         table = Table()
-        table.add_header(["Profile", "Total time", "Percentage", "Hits", "Average"])
+        h = ["Profile", "Total time", "Percentage", "Hits", "Average"]
+        if with_std:
+            h.append("Std.")
+        table.add_header(h)
         total_time = sum(p.sum() for p in self.profiles.values() if p.depth == 0)
-        for kw, v in self.profiles.items():
-            table.add_row([
-                "  " * v.depth + kw,
-                self.stringify_time(v.sum(), unit),
-                "%.3f" % (100 * v.sum() / (v.parent.sum() if v.parent else total_time)) + (" <" if v.depth else "") + "--" * (v.depth-1),
-                thousand_seps(len(v)),
-                self.stringify_time(v.mean(), TimeUnit.millisecond)
-            ], [True, False, False, False, False])
+        for profile in self:
+            row = [
+                "  " * profile.depth + profile.name,
+                self.stringify_time(profile.sum(), unit),
+                "%.3f" % (100 * profile.sum() / (profile.parent.sum() if profile.parent else total_time))
+                    + (" <" if profile.depth else "") + "--" * (profile.depth-1),
+                thousand_seps(len(profile)),
+                self.stringify_time(profile.mean(), TimeUnits.next_smaller(unit))
+            ]
+            if with_std:
+                row.append(self.stringify_time(profile.std(), TimeUnits.next_smaller(unit)))
+            table.add_row(row, [True] + [False] * (len(row)-1))
 
         return str(table)
 
     def __str__(self) -> str:
-        return self.stringify_sections(TimeUnit.second)
+        return self.stringify_sections(TimeUnits.second)
+
+    def __len__(self) -> int:
+        return len(self.profiles)
+
+    def __iter__(self) -> Generator[Profile, None, None]:
+        for profile in (p for p in self.profiles.values() if p.depth == 0):
+            yield from profile
 
 
 TT = TickTock()
