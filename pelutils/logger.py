@@ -79,7 +79,7 @@ class _LogErrors:
             self._log._throw(ev, tb_)
 
 
-class LoggingException(Exception):
+class LoggingException(RuntimeError):
     pass
 
 

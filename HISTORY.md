@@ -1,5 +1,14 @@
 # History
 
+## 0.6.3 - Breaking changes
+
+- Fixed bug where TickTock profiles would sometimes not be printed in the correct order
+- Removed `TickTock.reset`
+- Added `__len__` and `__iter__` methods to `TickTock`
+- Added option to print standard deviation for profiles
+- Renamed `TimeUnit` to `TimeUnits` to follow `enum` naming scheme
+- Time unit lengths are now given in units/s rather than s/unit
+
 ## 0.6.2
 
 - `TickTock.__str__` now raises a `ValueError` if profiling is still ongoing to prevent incorrect calculations

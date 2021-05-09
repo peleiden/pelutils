@@ -1,6 +1,7 @@
 import pytest
 
-from pelutils import TickTock, TT
+from pelutils import TickTock, TT, TimeUnits
+
 
 def test_ticktock():
     """ Test base functionality """
@@ -77,3 +78,9 @@ def test_throw():
     tt = TickTock()
     with tt.profile("Hello there"), pytest.raises(ValueError):
         str(tt)
+
+def test_timeunits():
+    assert TimeUnits.next_bigger(("nice", 69)) == TimeUnits.hour
+    assert TimeUnits.next_smaller(("nice", 69)) == TimeUnits.minute
+    assert TimeUnits.next_bigger(TimeUnits.second) == TimeUnits.minute
+    assert TimeUnits.next_smaller(TimeUnits.second) == TimeUnits.millisecond
