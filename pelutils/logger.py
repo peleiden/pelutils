@@ -163,12 +163,12 @@ class _Logger:
         if log_commit:
             repo, commit = get_repo()
             if repo is not None:
-                self.section(
+                self.debug(
                     "Executing in repository %s" % repo,
                     "Commit: %s\n" % commit,
                 )
             else:
-                self.section("Unable to find repository that code was executed in")
+                self.debug("Unable to find repository that code was executed in")
 
     def set_logger(self, logger: str):
         if logger not in self._loggers:
