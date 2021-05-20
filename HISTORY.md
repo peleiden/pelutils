@@ -1,5 +1,11 @@
 # History
 
+## 0.6.4 - Breaking changes
+
+- Commit is now logged as `DEBUG`
+- Removed `BatchFeedForward.update_net`
+- `BatchFeedForward` no longer requires batch size and increase factor as an argument
+
 ## 0.6.3 - Breaking changes
 
 - Fixed bug where TickTock profiles would sometimes not be printed in the correct order
