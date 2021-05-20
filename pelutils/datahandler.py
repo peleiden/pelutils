@@ -1,8 +1,9 @@
 from __future__ import annotations
 from collections import defaultdict
-import os
+import inspect
 import json
 import pickle
+import os
 
 import numpy as np
 try:
@@ -31,6 +32,8 @@ class DataStorage:
 
     The field `subfolder` is the directory in which to place all saved date
     `json_name` chooses the name of the single json data file including all jsonifiable data
+    `ignore_missing` sets fields not present in stored data to None instead of throwing an error
+    This can be useful for backwards compatibility when loading data saved by older DataStorage instances
 
     Usage example
     ```
@@ -42,6 +45,7 @@ class DataStorage:
 
         subfolder = 'gamedata'
         json_name = 'game.json'
+        ignore_missing = False
 
     rdata = ResultData(shots=1, goalscorers=["Max Fenger"], dists=np.ones(22)*10)
     rdata.save()
@@ -53,9 +57,10 @@ class DataStorage:
     ```
     """
 
-    subfolder = ""
-    json_name = "data.json"
-    pickle_ext = "p"
+    subfolder      = ""
+    json_name      = "data.json"
+    pickle_ext     = "p"
+    ignore_missing = False
 
     def save(self, loc: str = '') -> list[str]:
         """
@@ -83,6 +88,7 @@ class DataStorage:
                     to_json[key] = data
                 except TypeError:
                     to_pickle[key] = data
+
         # Save data
         paths = list()
         if to_json:
@@ -98,6 +104,7 @@ class DataStorage:
             for key, data in datas.items():
                 paths.append(os.path.join(loc, f"{key}.{ext}"))
                 save(paths[-1], data)
+
         return paths
 
     @classmethod
@@ -111,6 +118,7 @@ class DataStorage:
         fields = dict()
         # List of fields non-loadable using the SERIALIZATIONS functions
         generals = list()
+
         for field_name in cls.__dict__["__dataclass_fields__"]:
             for _, load, ext in SERIALIZATIONS.values():
                 datapath = os.path.join(loc, f"{field_name}.{ext}")
@@ -119,6 +127,7 @@ class DataStorage:
                     break
             else:
                 generals.append(field_name)
+
         # Check if the field was saved with pickle
         any_json = False
         for key in generals:
@@ -126,10 +135,19 @@ class DataStorage:
             if os.path.isfile(pfile):
                 with open(pfile, "rb") as f:
                     fields[key] = pickle.load(f)
-            else: any_json = True
+            else:
+                any_json = True
+
         if any_json:
             with open(os.path.join(loc, cls.json_name), encoding="utf-8") as f:
                 fields.update(json.load(f))
+
+        # Set missing parameters to None
+        if cls.ignore_missing:
+            for parameter in inspect.signature(cls.__init__).parameters:
+                if parameter != "self":
+                    fields[parameter] = fields.get(parameter)
+
         return cls(**fields)
 
     @classmethod
