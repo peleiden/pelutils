@@ -57,12 +57,6 @@ def unique(array: np.ndarray, *, return_index=False, return_inverse=False, retur
         ret.append(counts[index])
     return tuple(ret) if len(ret) > 1 else ret[0]
 
-def reset_cuda():
-    """ Clear cache and synchronize cuda """
-    torch.cuda.empty_cache()
-    if torch.cuda.is_available():
-        torch.cuda.synchronize()
-
 def no_grad(fun: Callable) -> Callable:
     """
     Decorator for running functions without pytorch tracking gradients, e.g.
