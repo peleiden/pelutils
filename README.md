@@ -186,10 +186,9 @@ def infer():
 # Feed forward in batches to prevent using too much memory
 # Every time a memory allocation error is encountered, the number of batches is doubled
 # Same as using y = net(x), but without risk of running out of memory
-bff = BatchFeedForward(net, len(x))
+# Gradients are not tracked
+bff = BatchFeedForward(net)
 y = bff(x)
-# Change to another network
-bff.update_net(net2)
 ```
 
 ## Statistics

@@ -3,7 +3,7 @@ import os
 import ctypes
 import functools
 import platform
-from typing import Callable, Iterable, Type
+from typing import Callable, Generator, Iterable, Type
 
 import numpy as np
 
@@ -83,25 +83,23 @@ class BatchFeedForward:
     """
     This class handles feedforwarding large batches that would otherwise cause memory overflow
     It works by splitting it into smaller batches, if it encounters a memory error
-    Only works when gradient should not be tracked
+    Does not track gradients
+    Notice that while this works for batches of varying sizes, this is not recommended usage, as it can be inefficient
     """
 
-    def __init__(self, net: Type[torch.nn.Module], data_points: int, increase_factor=2):
+    def __init__(self, net: Type[torch.nn.Module]):
         """
         net: torch network
-        data_points: Number of data points in each feed forward
-        increase_factor: Multiply number of batches with this each time a memory error occurs
         """
         self.net = net
-        self.data_points = data_points
-        self.increase_factor = increase_factor
+        self.increase_factor = 2
         self.batches = 1
 
     @no_grad
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         while True:
             try:
-                output_parts = [self.net(x[slice_]) for slice_ in self._get_slices()]
+                output_parts = [self.net(x[slice_]) for slice_ in self._get_slices(x)]
                 output = torch.cat(output_parts)
                 break
             # Usually caused by running out of vram. If not, the error is still raised, else batch size is reduced
@@ -114,14 +112,10 @@ class BatchFeedForward:
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         return self.forward(x)
 
-    def update_net(self, net: Type[torch.nn.Module]):
-        self.net = net
-
     def _more_batches(self):
         self.batches *= self.increase_factor
 
-    def _get_slices(self):
-        slice_size = self.data_points // self.batches + 1
+    def _get_slices(self, x: torch.Tensor) -> Generator:
+        slice_size = len(x) // self.batches + 1
         # Final slice may have overflow, however this is simply ignored when indexing
-        slices = [slice(i*slice_size, (i+1)*slice_size) for i in range(self.batches)]
-        return slices
+        return (slice(i*slice_size, (i+1)*slice_size) for i in range(self.batches))
