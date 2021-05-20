@@ -174,9 +174,6 @@ pip install pelutils\[ds\]
 All PyTorch functions work independently of whether CUDA is available or not.
 
 ```py
-# Clear CUDA cache and synchronize
-reset_cuda()
-
 # Inference only: No gradients should be tracked in the following function
 # Same as putting entire function body inside with torch.no_grad()
 @no_grad
