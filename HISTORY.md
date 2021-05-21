@@ -13,7 +13,7 @@
 - Removed `BatchFeedForward.update_net`
 - `BatchFeedForward` no longer requires batch size and increase factor as an argument
 - Removed `reset_cuda` function, as was a too small and obscure function and broke distributed training
-- Add `ignore_missing` field to `DataStorage` for ignoring missing fields in stored data
+- Added `ignore_missing` field to `DataStorage` for ignoring missing fields in stored data
 
 ## 0.6.3 - Breaking changes
 

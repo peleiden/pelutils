@@ -32,4 +32,4 @@ jobs:
           pip install .[ds]
 
       - name: Run test
-        run: pytest --cov
+        run: pytest --cov=pelutils
