@@ -3,6 +3,7 @@
 ## 0.6.5 - Breaking changes
 
 - Return only single job from `Parser.parse` if `multiple_jobs` is set to False
+- Improve logger error messages
 
 ## 0.6.4 - Breaking changes
 
