@@ -1,5 +1,9 @@
 # History
 
+## 0.6.5 - Breaking changes
+
+- Return only single job from `Parser.parse` if `multiple_jobs` is set to False
+
 ## 0.6.4 - Breaking changes
 
 - Commit is now logged as `DEBUG`
