@@ -114,8 +114,8 @@ class Parser:
             known_args[argname] = value
         return known_args
 
-    def parse(self) -> list[dict[str, Any]]:
-        """ Parse arguments and return a dict for each """
+    def parse(self) -> list[dict[str, Any]] | dict[str, Any]:
+        """ Parse arguments and return a dict for each. Only a single dict is returned if multiple_jobs is False """
         # Parse command line arguments
         args = self._parse_known_args()
         self.location = args["location"]
@@ -133,7 +133,7 @@ class Parser:
         for i in range(len(experiments)):
             experiments[i] = { kw.replace("-", "_"): v for kw, v in experiments[i].items() }
 
-        return experiments
+        return experiments if self.multiple_jobs else experiments
 
     def _set_bools_in_dict(self, d: dict[str, Any]):
         """ Boolean arguments present are set to the negation of their default values

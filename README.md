@@ -139,6 +139,16 @@ parser = Parser(options)
 location = parser.location  # Experiments are stored here
 experiments = parser.parse()
 parser.document_settings()  # Save a config file to reproduce the experiment
+# Run each experiment
+for args in experiments:
+    run_experiment(location, args)
+
+# Alternatively, if there is only ever a single job
+parser = Parser(options, multiple_jobs=False)
+location = parser.location
+args = parser.parse()
+parser.document_settings()
+run_experiment(location, args)
 ```
 
 This could then by run by
