@@ -26,7 +26,7 @@ class install(install_):
 
 setup_args = dict(
     name             = "pelutils",
-    version          = "0.6.4",
+    version          = "0.6.5",
     description      = "Utility functions that are often useful",
     long_description_content_type = "text/markdown",
     long_description = README + "\n\n" + HISTORY,
@@ -35,7 +35,7 @@ setup_args = dict(
     package_data     = { "pelutils.ds": ["ds/ds.so"] },
     author           = "Søren Winkel Holm, Asger Laurits Schultz",
     author_email     = "swholm@protonmail.com",
-    keywords         = [ "utility", "logger", "parser", "profiling"],
+    keywords         = [ "utility", "logger", "parser", "profiling" ],
     url              = "https://github.com/peleiden/pelutils",
     download_url     = "https://pypi.org/project/pelutils/",
     install_requires = [ "numpy", "gitpython", "rich", "regex", "tqdm" ],
