@@ -48,6 +48,7 @@ class Parser:
 
     with_config: bool
     location: str
+    explicit_args: list[set[str]]
 
     def __init__(
         self,
@@ -91,7 +92,7 @@ class Parser:
                 settings["help"] += f"\n  Default = {self.defaults[argname]}"
 
             # Add abbreviation if no conflict
-            abbrv = f"-{argname[0]}"  # TODO: Use 3.8 syntax (walrus)
+            abbrv = f"-{argname[0]}"
             if abbrv in abbrvs:
                 self.argparser.add_argument(f"--{argname}", **settings)
             else:
@@ -107,9 +108,7 @@ class Parser:
         args = vars(args)
         known_args = dict()
         for argname, value in args.items():
-            if value is None:
-                continue
-            elif argname in self._bool_opts and self._bool_opts[argname] == value:
+            if value is None or (argname in self._bool_opts and self._bool_opts[argname] == value):
                 continue
             known_args[argname] = value
         return known_args
@@ -119,35 +118,41 @@ class Parser:
         # Parse command line arguments
         args = self._parse_known_args()
         self.location = args["location"]
+        explicit_cli_args = set(args)
 
         # Parse config files
-        experiments, self.with_config = self._read_config(args)
+        experiments, explicit_config_args = self._read_config(args)
+        self.with_config = bool(experiments)
 
         if not self.with_config:  # If CLI arguments only
-            args = { **self.defaults, **args }  # TODO: Use 3.9 syntax
-            args["location"] = os.path.join(self.location, self.name)\
-                if self.multiple_jobs else self.location
+            args = { **self.defaults, **args }
+            if self.multiple_jobs:
+                args["location"] = os.path.join(self.location, self.name)
             experiments.append({"name": self.name, **args})
+            self.explicit_args = [explicit_cli_args]
+        else:
+            self.explicit_args = [set.union(explicit_cli_args, conf_args) for conf_args in explicit_config_args]
 
         # Replace - with _ as argparse also does. This allows parsing experiments to a function using **
         for i in range(len(experiments)):
             experiments[i] = { kw.replace("-", "_"): v for kw, v in experiments[i].items() }
 
-        return experiments if self.multiple_jobs else experiments
+        return experiments if self.multiple_jobs else experiments[0]
 
     def _set_bools_in_dict(self, d: dict[str, Any]):
         """ Boolean arguments present are set to the negation of their default values
         Those not present are set to default values """
         for argname, default_value in self._bool_opts.items():
-            if argname in d:
-                if isinstance(d[argname], bool):
-                    continue
+            if argname in d and not isinstance(d[argname], bool):
                 d[argname] = not default_value
             else:
                 d[argname] = default_value
 
-    def _read_config(self, cli_args: dict) -> tuple[list, bool]:
+    def _read_config(self, cli_args: dict) -> tuple[list[dict], list[set]]:
+        """ Parses a configuration file. Options in cli_args override config files
+        Returns a list of experiments and a list of explicitly given config arguments """
         experiments = list()
+        explicit_config_args = list()
 
         if "config" in cli_args:
             if not self.configparser.read([cli_args["config"]]):
@@ -164,8 +169,14 @@ class Parser:
             # Each other section corresponds to an experiment
             for experiment_name in self.configparser.sections() if self.configparser.sections() else ["DEFAULT"]:
                 config_items = dict(self.configparser.items(experiment_name))
-                config_items = { kw: self.options[kw]["type"](v) for kw, v in config_items.items() if "type" in self.options[kw] }
-                options = {**self.defaults, **config_items}  # TODO: Use 3.9 syntax
+                explicit_config_args.append(
+                    set.union(set(default_config_items), config_items)
+                )
+                config_items = {
+                    kw: self.options[kw]["type"](v) if "type" in self.options[kw] else v
+                    for kw, v in config_items.items()
+                }
+                options = { **self.defaults, **config_items }  # TODO: Use 3.9 syntax
                 self._set_bools_in_dict(options)
 
                 experiment_name = experiment_name if experiment_name != "DEFAULT" else self.name
@@ -183,7 +194,7 @@ class Parser:
                     "location": location,
                 })
 
-        return experiments, "config" in cli_args
+        return experiments, explicit_config_args
 
     def document_settings(self, subfolder=""):
         """ Saves all settings used for experiments for reproducability """
@@ -196,3 +207,7 @@ class Parser:
             str_defaults = pformat(self.defaults).replace("\n", "\n# ")
             f.write(f"\n# Default configuration values at runtime\n# {str_defaults}")
 
+    def is_explicit(self, argname: str, job: int=None) -> bool:
+        """ Checks whether a given argument was set explicitly in a config file or from cli
+        If multiple_jobs is False, job should not be given. Otherwise, a job number must be given """
+        return argname in self.explicit_args[job if self.multiple_jobs else 0]

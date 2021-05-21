@@ -2,8 +2,10 @@
 
 ## 0.6.5 - Breaking changes
 
-- Return only single job from `Parser.parse` if `multiple_jobs` is set to False
-- Improve logger error messages
+- `Parser.parse` now returns only a single experiment dict if `multiple_jobs` is False
+- Improved logger error messages
+- Added `Parser.is_explicit` to check if an argument was given explicitly, either from CLI or a config file
+- Fixed bug in parser, where if a type was not given, values from config files would not be used
 
 ## 0.6.4 - Breaking changes
 

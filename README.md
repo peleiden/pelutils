@@ -149,20 +149,27 @@ location = parser.location
 args = parser.parse()
 parser.document_settings()
 run_experiment(location, args)
+
+# Check if an argument has been given explictly, either from cli or config file, or if default value is used
+parser.is_explicit("learning-rate")
 ```
 
 This could then by run by
-`python main.py data/my-big-experiment --learning_rate 1e-5`
+`python main.py data/my-big-experiment --learning-rate 1e-5`
 or by
 `python main.py data/my-big-experiment --config cfg.ini`
+or using a combination where CLI args takes precedence:
+`python main.py data/my-big-experiment --config cfg.ini --learning-rate 1e-5`
 where `cfg.ini` could contain
 
 ```
 [DEFAULT]
 gamma = 0.95
+
 [RUN1]
 learning-rate = 1e-4
 initialize-zeros
+
 [RUN2]
 learning-rate = 1e-5
 gamma = 0.9
