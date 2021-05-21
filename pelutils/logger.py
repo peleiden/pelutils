@@ -140,9 +140,9 @@ class _Logger:
     ):
         """ Configure a logger. This must be called before the logger can be used """
         if logger in self._loggers:
-            raise LoggingException("Logger '%s' already exists" % logger)
+            raise LoggingException("Logger '%s' already exists. Did you call log.configure(...) twice?" % logger)
         if self._collect:
-            raise LoggingException("Cannot configure a new logger while collecting")
+            raise LoggingException("Cannot configure a new logger while using collect_logs")
         self._selected_logger = logger
         dirs = os.path.split(fpath)[0]
         if dirs:
@@ -172,9 +172,9 @@ class _Logger:
 
     def set_logger(self, logger: str):
         if logger not in self._loggers:
-            raise LoggingException("Logger '%s' does not exist" % logger)
+            raise LoggingException("Logger '%s' does not exist. Available loggers: %s" % (logger, list(self._loggers)))
         if self._collect:
-            raise LoggingException("Cannot configure a new logger while collecting")
+            raise LoggingException("Cannot configure a new logger while using collect_logs")
         self._selected_logger = logger
 
     def level(self, level: Levels):
