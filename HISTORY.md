@@ -6,6 +6,7 @@
 - Improved logger error messages
 - Added `Parser.is_explicit` to check if an argument was given explicitly, either from CLI or a config file
 - Fixed bug in parser, where if a type was not given, values from config files would not be used
+- Made `pelutils.ds.unique` slightly faster
 
 ## 0.6.4 - Breaking changes
 

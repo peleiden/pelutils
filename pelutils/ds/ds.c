@@ -4,21 +4,21 @@
 // Contains a pointer to an array element and a reference to the stride
 struct elem {
     void* p_elem;
-    size_t* p_stride;
+    size_t stride;
 };
 
 typedef struct hashmap hashmap;
 
 uint64_t hash(const void* elem, uint64_t seed0, uint64_t seed1) {
     const struct elem* e = elem;
-    return hashmap_sip(e->p_elem, *e->p_stride, seed0, seed1);
+    return hashmap_murmur(e->p_elem, e->stride, seed0, seed1);
 }
 
 int compare(const void* elem1, const void* elem2, void* udata) {
     // Compares two array elements
     const struct elem* e1 = elem1;
     const struct elem* e2 = elem2;
-    return memcmp(e1->p_elem, e2->p_elem, *e1->p_stride);
+    return memcmp(e1->p_elem, e2->p_elem, e1->stride);
 }
 
 size_t unique(size_t n,       // Number of array elements
@@ -36,7 +36,7 @@ size_t unique(size_t n,       // Number of array elements
         // Construct element
         struct elem this_elem = {
             .p_elem = array + stride * i,
-            .p_stride = &stride,
+            .stride = stride,
         };
         // Check if already in map
         struct elem* p_found_elem = hashmap_get(map, &this_elem);
