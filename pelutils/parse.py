@@ -46,7 +46,7 @@ class Parser:
     ```
     """
 
-    with_config: bool
+    _with_config: bool
     location: str
     explicit_args: list[set[str]]
 
@@ -68,43 +68,43 @@ class Parser:
         self.options = options
         self._bool_opts = { argname: settings["action"] == "store_false" for argname, settings
             in options.items() if settings.get("action") in ("store_false", "store_true") }
-        self.defaults = dict()  # { argname: default value }
+        self._defaults = dict()  # { argname: default value }
         self.name = name
         self.multiple_jobs = multiple_jobs
 
         # Main parser for CLI arguments
-        self.argparser = ArgumentParser(
+        self._argparser = ArgumentParser(
             description = description,
             formatter_class = RawTextHelpFormatter,
         )
-        self.argparser.add_argument("location", help="Location of output", type=str)
-        self.argparser.add_argument("-c", "--config",
+        self._argparser.add_argument("location", help="Location of output", type=str)
+        self._argparser.add_argument("-c", "--config",
             help="Location of configuration file to use (if any). Config file should follow .ini format.", metavar="FILE")
         if description_last:
-            self.argparser.epilog = description
-            self.argparser.description = None
+            self._argparser.epilog = description
+            self._argparser.description = None
 
-        abbrvs = set(["-h", "-c"])  # -h is reserved for --help and -c for --config
+        abbrvs = {"-h", "-c"}  # -h is reserved for --help and -c for --config
         for argname, settings in self.options.items():
-            self.defaults[argname] = settings.pop("default") if argname not in self._bool_opts else self._bool_opts[argname]
+            self._defaults[argname] = settings.pop("default") if argname not in self._bool_opts else self._bool_opts[argname]
 
             if show_defaults and "help" in settings:
-                settings["help"] += f"\n  Default = {self.defaults[argname]}"
+                settings["help"] += f"\n  Default = {self._defaults[argname]}"
 
-            # Add abbreviation if no conflict
+            # Add argument and optionally abbrevation if no conflict
             abbrv = f"-{argname[0]}"
             if abbrv in abbrvs:
-                self.argparser.add_argument(f"--{argname}", **settings)
+                self._argparser.add_argument(f"--{argname}", **settings)
             else:
-                self.argparser.add_argument(abbrv, f"--{argname}", **settings)
+                self._argparser.add_argument(abbrv, f"--{argname}", **settings)
                 abbrvs.add(abbrv)
 
         # Parser for config file
-        self.configparser = ConfigParser(allow_no_value=True)
+        self._configparser = ConfigParser(allow_no_value=True)
 
     def _parse_known_args(self) -> dict[str, Any]:
         """ Returns a dict containing the arguments given explicitly from the command line """
-        args, __ = self.argparser.parse_known_args()
+        args, __ = self._argparser.parse_known_args()
         args = vars(args)
         known_args = dict()
         for argname, value in args.items():
@@ -122,10 +122,10 @@ class Parser:
 
         # Parse config files
         experiments, explicit_config_args = self._read_config(args)
-        self.with_config = bool(experiments)
+        self._with_config = bool(experiments)
 
-        if not self.with_config:  # If CLI arguments only
-            args = { **self.defaults, **args }
+        if not self._with_config:  # If CLI arguments only
+            args = { **self._defaults, **args }
             if self.multiple_jobs:
                 args["location"] = os.path.join(self.location, self.name)
             experiments.append({"name": self.name, **args})
@@ -155,20 +155,20 @@ class Parser:
         explicit_config_args = list()
 
         if "config" in cli_args:
-            if not self.configparser.read([cli_args["config"]]):
+            if not self._configparser.read([cli_args["config"]]):
                 raise FileNotFoundError(f"Could not find config file {cli_args['config']}")
 
             # User set DEFAULT section should overwrite the defaults
-            default_config_items = dict(self.configparser.items("DEFAULT"))
-            self.defaults = {**self.defaults,  **default_config_items}  # TODO: Use 3.9 syntax
+            default_config_items = dict(self._configparser.items("DEFAULT"))
+            self._defaults = {**self._defaults,  **default_config_items}  # TODO: Use 3.9 syntax
 
-            if len(self.configparser) > 1 and not self.multiple_jobs:
+            if len(self._configparser) > 1 and not self.multiple_jobs:
                 raise ValueError("Multiple jobs are given in the config file, "
                     "however the parser has been configured for a single job")
 
             # Each other section corresponds to an experiment
-            for experiment_name in self.configparser.sections() if self.configparser.sections() else ["DEFAULT"]:
-                config_items = dict(self.configparser.items(experiment_name))
+            for experiment_name in self._configparser.sections() if self._configparser.sections() else ["DEFAULT"]:
+                config_items = dict(self._configparser.items(experiment_name))
                 explicit_config_args.append(
                     set.union(set(default_config_items), config_items)
                 )
@@ -176,7 +176,7 @@ class Parser:
                     kw: self.options[kw]["type"](v) if "type" in self.options[kw] else v
                     for kw, v in config_items.items()
                 }
-                options = { **self.defaults, **config_items }  # TODO: Use 3.9 syntax
+                options = { **self._defaults, **config_items }  # TODO: Use 3.9 syntax
                 self._set_bools_in_dict(options)
 
                 experiment_name = experiment_name if experiment_name != "DEFAULT" else self.name
@@ -201,10 +201,10 @@ class Parser:
         os.makedirs(os.path.join(self.location, subfolder), exist_ok = True)
 
         with open(os.path.join(self.location, subfolder, self.name + "_config.ini"), "w") as f:
-            if self.with_config:
-                self.configparser.write(f)
+            if self._with_config:
+                self._configparser.write(f)
             f.write(f"\n# Run command\n# {' '.join(sys.argv)}\n")
-            str_defaults = pformat(self.defaults).replace("\n", "\n# ")
+            str_defaults = pformat(self._defaults).replace("\n", "\n# ")
             f.write(f"\n# Default configuration values at runtime\n# {str_defaults}")
 
     def is_explicit(self, argname: str, job: int=None) -> bool:
