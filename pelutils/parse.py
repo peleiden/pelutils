@@ -136,6 +136,7 @@ class Parser:
         # Replace - with _ as argparse also does. This allows parsing experiments to a function using **
         for i in range(len(experiments)):
             experiments[i] = { kw.replace("-", "_"): v for kw, v in experiments[i].items() }
+            self.explicit_args[i] = { arg.replace("-", "_") for arg in self.explicit_args[i] }
 
         return experiments if self.multiple_jobs else experiments[0]
 
@@ -160,11 +161,12 @@ class Parser:
 
             # User set DEFAULT section should overwrite the defaults
             default_config_items = dict(self._configparser.items("DEFAULT"))
-            self._defaults = {**self._defaults,  **default_config_items}  # TODO: Use 3.9 syntax
+            self._defaults = { **self._defaults,  **default_config_items }
 
             if len(self._configparser) > 1 and not self.multiple_jobs:
-                raise ValueError("Multiple jobs are given in the config file, "
-                    "however the parser has been configured for a single job")
+                raise ValueError(
+                    "Multiple jobs are given in the config file, however the parser has been configured for a single job"
+                )
 
             # Each other section corresponds to an experiment
             for experiment_name in self._configparser.sections() if self._configparser.sections() else ["DEFAULT"]:
@@ -176,7 +178,7 @@ class Parser:
                     kw: self.options[kw]["type"](v) if "type" in self.options[kw] else v
                     for kw, v in config_items.items()
                 }
-                options = { **self._defaults, **config_items }  # TODO: Use 3.9 syntax
+                options = { **self._defaults, **config_items }
                 self._set_bools_in_dict(options)
 
                 experiment_name = experiment_name if experiment_name != "DEFAULT" else self.name
