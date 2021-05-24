@@ -211,5 +211,5 @@ class Parser:
 
     def is_explicit(self, argname: str, job: int=None) -> bool:
         """ Checks whether a given argument was set explicitly in a config file or from cli
-        If multiple_jobs is False, job should not be given. Otherwise, a job number must be given """
+        If self.multiple_jobs is False, job should not be given. Otherwise, a job number must be given """
         return argname in self.explicit_args[job if self.multiple_jobs else 0]
