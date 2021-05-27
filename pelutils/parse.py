@@ -126,9 +126,11 @@ class Parser:
 
         if not self._with_config:  # If CLI arguments only
             args = { **self._defaults, **args }
+            # Allow us to overwrite the hard coded name by adding a `name` CLI arg
+            name = args.get("name", self.name)
             if self.multiple_jobs:
-                args["location"] = os.path.join(self.location, self.name)
-            experiments.append({"name": self.name, **args})
+                args["location"] = os.path.join(self.location, name)
+            experiments.append({"name": name, **args})
             self.explicit_args = [explicit_cli_args]
         else:
             self.explicit_args = [set.union(explicit_cli_args, conf_args) for conf_args in explicit_config_args]
