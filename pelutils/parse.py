@@ -126,9 +126,10 @@ class Parser:
 
         if not self._with_config:  # If CLI arguments only
             args = { **self._defaults, **args }
+            name = args.get("name", self.name)
             if self.multiple_jobs:
-                args["location"] = os.path.join(self.location, self.name)
-            experiments.append({"name": self.name, **args})
+                args["location"] = os.path.join(self.location, name)
+            experiments.append({"name": name, **args})
             self.explicit_args = [explicit_cli_args]
         else:
             self.explicit_args = [set.union(explicit_cli_args, conf_args) for conf_args in explicit_config_args]
@@ -181,7 +182,7 @@ class Parser:
                 options = { **self._defaults, **config_items }
                 self._set_bools_in_dict(options)
 
-                experiment_name = experiment_name if experiment_name != "DEFAULT" else self.name
+                experiment_name = experiment_name if experiment_name != "DEFAULT" else cli_args.get("name",  self.name)
 
                 # Put experiments into single subfolders
                 location = os.path.join(self.location, experiment_name)\

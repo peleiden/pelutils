@@ -1,5 +1,10 @@
 # History
 
+## 0.6.6
+
+- Fix parser naming when using config files and not `multiple_jobs`
+- Fix parser naming when using cli only and `multiple_jobs`
+
 ## 0.6.5 - Breaking changes
 
 - `Parser.parse` now returns only a single experiment dict if `multiple_jobs` is False
