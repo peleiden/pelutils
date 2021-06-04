@@ -154,9 +154,9 @@ class _Logger:
         self._loggers[logger]["level_mgr"] = _LevelManager()
         self._loggers[logger]["print_level"] = print_level or len(Levels) + 1
 
-        exists = os.path.exists(fpath)
-        with open(fpath, "a" if append else "w", encoding="utf-8") as logfile:
-            logfile.write("\n\n" if append and exists else "")
+        if append and os.path.exists(fpath):
+            with open(fpath, "a", encoding="utf-8") as logfile:
+                logfile.write("\n\n")
 
         if title:
             self.section(title + "\n")
