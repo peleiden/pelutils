@@ -100,12 +100,12 @@ class Person(DataStorage):
     name: str
     age: int
     numbers: np.ndarray
-    subfolder = "older"  # Save in this subfolder within folder given to .save and .load. Don't set for no subfolder
+
     json_name = "yoda.json"
 
 yoda = Person(name="Yoda", age=900, numbers=np.array([69, 420]))
-yoda.save("old")  # Save to 'old' folder
-# Saved data at old/older/yoda.json
+yoda.save("high/on/ketamine")  # Save to 'old' folder
+# Saved data at high/on/ketamine/yoda.json
 # {
 #     "name": "Yoda",
 #     "age": 900
