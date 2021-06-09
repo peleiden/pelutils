@@ -30,20 +30,18 @@ class DataStorage:
         * Any json serializable type - that is, it should be savable by json.dump
     * All other data structures are pickled
 
-    The field `subfolder` is the directory in which to place all saved date
     `json_name` chooses the name of the single json data file including all jsonifiable data
     `ignore_missing` sets fields not present in stored data to None instead of throwing an error
     This can be useful for backwards compatibility when loading data saved by older DataStorage instances
 
     Usage example
     ```
-    @dataclass
+    @dataclass  # dataclass decoration is important for this to work
     class ResultData(DataStorage):
         shots: int
         goalscorers: list
         dists: np.ndarray
 
-        subfolder = 'gamedata'
         json_name = 'game.json'
         ignore_missing = False
 
@@ -57,21 +55,15 @@ class DataStorage:
     ```
     """
 
-    subfolder      = ""
     json_name      = "data.json"
     pickle_ext     = "p"
     ignore_missing = False
 
-    def save(self, loc: str = '') -> list[str]:
+    def save(self, loc: str) -> list[str]:
         """
         Saves all the fields of the instatiated data classes as either json, pickle or designated serialization function
-
-        :param str loc: Save location to place the subfolder in
-        :return: list (with length = # of saved files) of full save paths
+        :param str loc: Path to directory in which to save data
         """
-        loc = self._get_loc(loc)
-        if loc:
-            os.makedirs(loc, exist_ok=True)
 
         # Split data by whether it should be saved using a known function or using pickle or json
         func_serialize = defaultdict(dict)
@@ -108,13 +100,13 @@ class DataStorage:
         return paths
 
     @classmethod
-    def load(cls, loc: str = ''):
+    def load(cls, loc: str):
         """
         Instantiates the DataStorage-inherited class by loading all files saved by `save` of that same class.
-        :param str loc: Save location used
+        :param str loc: Path to directory from which to load data
         :return: An instance of this class with the content of the files
         """
-        loc = cls._get_loc(loc)
+
         fields = dict()
         # List of fields non-loadable using the SERIALIZATIONS functions
         generals = list()
@@ -149,7 +141,3 @@ class DataStorage:
                     fields[parameter] = fields.get(parameter)
 
         return cls(**fields)
-
-    @classmethod
-    def _get_loc(cls, loc: str):
-        return os.path.join(loc, cls.subfolder) if cls.subfolder else loc
