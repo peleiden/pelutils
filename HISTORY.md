@@ -12,6 +12,7 @@
 - Added `examples` directory
 
   Currently only has plotting examples
+- Removed `subfolder` attribute on `DataStorage` as this was cause for much confusion and many issues
 
 ## 0.6.7
 
