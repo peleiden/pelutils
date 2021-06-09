@@ -38,7 +38,7 @@ setup_args = dict(
     keywords         = [ "utility", "logger", "parser", "profiling" ],
     url              = "https://github.com/peleiden/pelutils",
     download_url     = "https://pypi.org/project/pelutils/",
-    install_requires = [ "numpy", "gitpython", "rich", "regex", "tqdm" ],
+    install_requires = [ "numpy", "gitpython", "rich", "regex" ],
     extras_require   = { "ds": ["torch", "matplotlib", "scipy"] },
     cmdclass         = { "install": install },
 )

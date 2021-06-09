@@ -7,8 +7,6 @@ from functools import update_wrapper
 from itertools import chain
 from typing import Any, Callable, DefaultDict, Generator, Iterable, Optional
 
-from tqdm import tqdm as _tqdm
-
 from pelutils import get_timestamp, get_repo
 from .format import RichString
 
@@ -277,17 +275,6 @@ class _Logger:
             return self._input(prompt)
         else:
             return (self._input(p) for p in prompt)
-
-    def tqdm(self, iterable: _tqdm) -> Generator:
-        """
-        Disable printing while iterating over a tqdm object
-        Do not use this for for loops that are ended with break statements
-        """
-        orig_level = self._print_level
-        self._logger["print_level"] = len(Levels) + 1
-        for elem in iterable:
-            yield elem
-        self._logger["print_level"] = orig_level
 
     @classmethod
     def bool_input(cls, inp: str, default=True) -> bool:
