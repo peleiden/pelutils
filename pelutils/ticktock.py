@@ -78,7 +78,7 @@ class Profile:
         return len(self._hits)
 
     def __iter__(self) -> Generator[Profile, None, None]:
-        """ yields a generator that is first self and then all descendants """
+        """ Yields a generator that is first self and then all descendants """
         yield self
         for child in self.children:
             yield from child
@@ -123,15 +123,17 @@ class TickTock:
 
     def __init__(self):
         self._start = 0
-        self.profiles:       dict[str, Profile] = {}
+        self.profiles:       dict[str, Profile] = dict()
         self._profile_stack: list[Profile] = list()
         self._nhits:         list[int] = list()
 
     def tick(self) -> float:
+        """ Start a timer """
         self._start = perf_counter()
         return self._start
 
     def tock(self) -> float:
+        """ End current timer """
         end = perf_counter()
         return end - self._start
 
@@ -204,6 +206,7 @@ class TickTock:
 
     @staticmethod
     def stringify_time(dt: float, unit: tuple[str, float]=TimeUnits.millisecond) -> str:
+        """ Stringify a time given in seconds with a given unit """
         str_ = f"{dt/unit[1]:.3f} {unit[0]}"
         return thousand_seps(str_)
 
@@ -237,9 +240,11 @@ class TickTock:
         return self.stringify_sections(TimeUnits.second)
 
     def __len__(self) -> int:
+        """ Returns number of profiles """
         return len(self.profiles)
 
     def __iter__(self) -> Generator[Profile, None, None]:
+        """ Recursively returns all profiles in the tree """
         for profile in (p for p in self.profiles.values() if p.depth == 0):
             yield from profile
 
