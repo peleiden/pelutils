@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pelutils.ds.plot import linear_binning, log_binning, normal_binning, get_bins, figsize_wide, rc_params_small, update_rc_params
+from pelutils.ds.plots import linear_binning, log_binning, normal_binning, get_bins, figsize_wide, rc_params_small, update_rc_params
 from pelutils.ds.distributions import norm, lognorm
 
 

@@ -127,10 +127,10 @@ def split_path(path: str) -> list[str]:
 from .logger import *
 from .logger import _Logger
 log: _Logger  # Make sure type hinting works when importing global instances
-from .parse import *
+from .parser import *
 from .ticktock import *
 TT: TickTock
-from .datahandler import *
+from .datastorage import *
 from .tests import *
 from .format import *
 from .jsonl import *
