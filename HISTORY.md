@@ -7,6 +7,7 @@
 ## 0.7.0 - Breaking changes
 
 - Removed `log.tqdm`
+- Added binning functions to `pelutils.ds.plot`
 
 ## 0.6.7
 
