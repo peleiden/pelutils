@@ -44,12 +44,7 @@ with log.log_errors:
     except ZeroDivisionError as e:
         raise ValueError("Denominator must be non-zero") from e
 
-# Disable printing if using tqdm
-# Do not do this if the loop may be ended by a break statement!
-for elem in log.tqdm(tqdm(range(5))):
-    log(elem)  # Will be logged, but not printed
-
-# User input
+# User input - acts like built-in input but logs both prompt and user input
 inp = log.input("WHAT... is your favourite colour? ")
 
 # Log all logs from a function at the same time
@@ -59,10 +54,6 @@ def fun():
     log("General Kenobi!")
 with mp.Pool() as p:
     p.map(collect_logs(fun), args)
-
-# Disable printing when using tqdm so as to not print a million progress bars
-for i in log.tqdm(tqdm(range(100))):
-    log(i)  # i will be logged to logfile but not printed
 ```
 
 ## Time Taking and Profiling

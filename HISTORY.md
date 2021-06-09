@@ -1,9 +1,13 @@
 # History
 
+## 0.7.0 - Breaking changes
+
+- Removed `log.tqdm`
+
 ## 0.6.6
 
-- Fix parser naming when using config files and not `multiple_jobs`
-- Fix parser naming when using cli only and `multiple_jobs`
+- Fixed parser naming when using config files and not `multiple_jobs`
+- Fixed parser naming when using cli only and `multiple_jobs`
 
 ## 0.6.5 - Breaking changes
 
