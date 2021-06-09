@@ -9,6 +9,7 @@
 
   Currently only has plotting examples
 - Removed `subfolder` attribute on `DataStorage` as this was cause for much confusion and many issues
+- Made naming of different submodules consistent
 
 ## 0.6.6
 
