@@ -4,6 +4,7 @@
 
 - Removed `log.tqdm`
 - Added binning functions to `pelutils.ds.plot`
+- Added `pelutils.ds.distributions` with `scipy` distributions that use same notation as Jim Pitman's "Probability"
 
 ## 0.6.6
 
