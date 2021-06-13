@@ -13,6 +13,8 @@ Various utilities useful for Python projects. Features include
 
 `pelutils` supports Python 3.7+.
 
+[![pytest](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml/badge.svg?branch=master)](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml)
+
 ## Logging
 
 Easy to use logger which fits common needs.
