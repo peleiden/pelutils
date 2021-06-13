@@ -8,7 +8,7 @@ on:
         - tests/**.py
         - Makefile
         - .github/workflows
-      
+
   pull_request:
     branches: [ master, develop ]
     paths:
@@ -22,7 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
+
+      - name: Build C extensions
+        shell: bash
+        run: |
+          git submodule update --init --recursive
+          make clean && make
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -30,8 +36,9 @@ jobs:
 
       - name: Set up PyPi dependencies and install package
         run: |
+          pip install --upgrade setuptools wheel
           pip install pytest-cov
-          pip install .[ds]
+          pip install -e .[ds]
 
       - name: Run test
         run: pytest --cov=pelutils
