@@ -1,5 +1,9 @@
 # History
 
+## 0.6.7
+
+- Logger can now be used without writing to file
+
 ## 0.6.6
 
 - Fix parser naming when using config files and not `multiple_jobs`
