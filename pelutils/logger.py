@@ -5,7 +5,7 @@ from collections import defaultdict
 from enum import IntEnum
 from functools import update_wrapper
 from itertools import chain
-from typing import Any, Callable, DefaultDict, Generator, Iterable
+from typing import Any, Callable, DefaultDict, Generator, Iterable, Optional
 
 from tqdm import tqdm as _tqdm
 
@@ -128,15 +128,14 @@ class _Logger:
 
     def configure(
         self,
-        fpath: str,  # Path to place logger. Any missing directories are created
-        title: str,  # Title on first line of logfile
-        *,
-        default_seperator = "\n",
-        include_micros    = False,        # Include microseconds in timestamps
-        log_commit        = False,        # Log commit of git repository
-        logger            = "default",    # Name of logger
-        append            = False,        # Set to True to append to old log file instead of overwriting it
-        print_level       = Levels.INFO,  # Highest level that will be printed. All will be logged. None for no print
+        fpath: Optional[str] = None,         # Path to place logger. Any missing directories are created
+        title: Optional[str] = None,         # Title on first line of logfile
+        default_seperator    = "\n",
+        include_micros       = False,        # Include microseconds in timestamps
+        log_commit           = False,        # Log commit of git repository
+        logger               = "default",    # Name of logger
+        append               = False,        # Set to True to append to old log file instead of overwriting it
+        print_level          = Levels.INFO,  # Highest level that will be printed. All will be logged. None for no print
     ):
         """ Configure a logger. This must be called before the logger can be used """
         if logger in self._loggers:
@@ -144,9 +143,6 @@ class _Logger:
         if self._collect:
             raise LoggingException("Cannot configure a new logger while using collect_logs")
         self._selected_logger = logger
-        dirs = os.path.split(fpath)[0]
-        if dirs:
-            os.makedirs(dirs, exist_ok=True)
 
         self._loggers[logger]["fpath"] = fpath
         self._loggers[logger]["default_sep"] = default_seperator
@@ -154,12 +150,17 @@ class _Logger:
         self._loggers[logger]["level_mgr"] = _LevelManager()
         self._loggers[logger]["print_level"] = print_level or len(Levels) + 1
 
-        exists = os.path.exists(fpath)
-        with open(fpath, "a" if append else "w", encoding="utf-8") as logfile:
-            logfile.write("\n\n" if append and exists else "")
+        if fpath is not None:
+            dirs = os.path.split(fpath)[0]
+            if dirs:
+                os.makedirs(dirs, exist_ok=True)
+            exists = os.path.exists(fpath)
+            with open(fpath, "a" if append else "w", encoding="utf-8") as logfile:
+                logfile.write("\n\n" if append and exists else "")
 
-        if title:
+        if title is not None:
             self.section(title + "\n")
+
         if log_commit:
             repo, commit = get_repo()
             if repo is not None:
@@ -188,8 +189,9 @@ class _Logger:
         self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 
     def _write_to_log(self, content: RichString):
-        with open(self._fpath, "a", encoding="utf-8") as logfile:
-            logfile.write(f"{content}\n")
+        if self._fpath is not None:
+            with open(self._fpath, "a", encoding="utf-8") as logfile:
+                logfile.write(f"{content}\n")
 
     @staticmethod
     def _format(s: str, format: str) -> str:
