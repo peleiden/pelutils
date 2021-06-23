@@ -29,7 +29,8 @@ setup_args = dict(
     url              = "https://github.com/peleiden/pelutils",
     download_url     = "https://pypi.org/project/pelutils/",
     install_requires = [ "numpy>=1.18.0", "gitpython>=3.1.0", "rich>=10.0.0", "regex>=2021.4.0", "click>=7.0.0" ],
-    extras_require   = { "ds": ["torch", "matplotlib", "scipy"] },
+    extras_require   = { "ds": ["torch", "matplotlib", "scipy", "tqdm>=4.0.0"] },
+    entry_points     = { "console_scripts": ["linecounter = pelutils.ds._linecounter:linecounter"] },
     cmdclass         = { "install": install },
 )
 
