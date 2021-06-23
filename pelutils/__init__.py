@@ -1,11 +1,8 @@
 from __future__ import annotations
 import os
 import ctypes
-import json
-import platform
 import random
 from datetime import datetime
-from typing import TextIO, Iterable
 
 import git
 import numpy as np
@@ -29,7 +26,7 @@ def set_seeds(seed: int = 0):
 
 def get_repo(path: str=None) -> tuple[str | None, str | None]:
     """
-    Returns full path of git repository and commit SHA
+    Returns absolute path of git repository and commit SHA
     Searches for repo by searching upwards from given directory (if None: uses working dir).
     If it cannot find a repository, returns (None, None)
     """
@@ -41,7 +38,7 @@ def get_repo(path: str=None) -> tuple[str | None, str | None]:
         cdir = pdir
         try:  # Check if repository
             repo = git.Repo(cdir)
-            return cdir, str(repo.head.commit)
+            return os.path.realpath(cdir), str(repo.head.commit)
         except git.InvalidGitRepositoryError:
             pass
         pdir = os.path.dirname(cdir)
