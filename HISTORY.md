@@ -14,6 +14,8 @@
   Currently only has plotting examples
 - Removed `subfolder` attribute on `DataStorage` as this was cause for much confusion and many issues
 - Made naming of different submodules consistent
+- Added `linecounter` entry point that allows plotting development of code in repositories over time
+- Made `get_repo` return the absolute repository path
 
 ## 0.6.7
 
