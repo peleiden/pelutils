@@ -12,8 +12,8 @@ import numpy as np
 
 # All rc params are available here
 # https://matplotlib.org/3.2.1/tutorials/introductory/customizing.html#customizing-with-matplotlibrc-files
-rc_params       = { "font.size": 24, "legend.fontsize": 22, "legend.framealpha": 0.5 }  # matplotlib settings
-rc_params_small = { **rc_params, "font.size": 20, "legend.fontsize": 18 }  # Same but with smaller font
+rc_params       = { "font.size": 26, "legend.fontsize": 24, "legend.framealpha": 1, "legend.edgecolor": (0, 0, 0, 1) }
+rc_params_small = { **rc_params, "font.size": 22, "legend.fontsize": 20 }  # Same but with smaller font
 
 def update_rc_params(rc_params: dict[str, Any]):
     plt.rcParams.update(rc_params)
