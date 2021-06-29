@@ -15,6 +15,7 @@
 - Made logger use absolute instead of relative paths preventing issues with changing working directory
 - Renamed `vline` to `hline` in `Table` as the line was horizontal rather than vertical
 - Added `jsonl.dumps` and `jsonl.loads` and made all functions in `jsonl` module use same naming scheme as `json`
+- Added support for Pytorch tensors to `c_ptr`
 
 ## 0.6.7
 
