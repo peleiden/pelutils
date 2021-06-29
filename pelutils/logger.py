@@ -142,7 +142,7 @@ class _Logger:
             raise LoggingException("Cannot configure a new logger while using collect_logs")
         self._selected_logger = logger
 
-        self._loggers[logger]["fpath"] = fpath
+        self._loggers[logger]["fpath"] = os.path.realpath(fpath)
         self._loggers[logger]["default_sep"] = default_seperator
         self._loggers[logger]["include_micros"] = include_micros
         self._loggers[logger]["level_mgr"] = _LevelManager()
