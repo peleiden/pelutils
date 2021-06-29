@@ -10,8 +10,9 @@ with open("HISTORY.md") as history_file:
 
 class install(install_):
     def run(self):
-        subprocess.call(["make", "clean"])
-        subprocess.call(["make"])
+        subprocess.call("git submodule update --init --recursive".split())
+        subprocess.call("make clean".split())
+        subprocess.call("make".split())
         super().run()
 
 setup_args = dict(
