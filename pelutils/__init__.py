@@ -53,7 +53,9 @@ def get_timestamp(for_file = False, include_micros = False) -> str:
     Set include_micros to include microseconds in time stamp (only if for_file is false)
     Returns a time stamp for current time either in datetime format or, if for_file, in YYYY-MM-DD_HH-MM-SS
     """
-    d_string = str(datetime.now()) if include_micros else str(datetime.now())[:-3]
+    d_string = str(datetime.now())
+    if not include_micros:
+        d_string = d_string[:-3]
     if for_file:
         d_string = "-".join(d_string.split(".")[0].split(":")).replace(" ", "_")
     return d_string
@@ -106,13 +108,16 @@ class EnvVars:
             else:
                 os.environ[var] = value
 
-def c_ptr(arr: np.ndarray) -> ctypes.c_void_p:
+def c_ptr(arr: np.ndarray | torch.Tensor) -> ctypes.c_void_p:
     """
-    Returns a c pointer that can be used to import a contiguous numpy array into a c function
-    Set arr to None for null pointer
+    Returns a c pointer that can be used to import a contiguous numpy array or torch tensor into a c function
+    Returns null pointer if unable to resolve pointer, including if arr is None
     """
-    return ctypes.c_void_p(arr.ctypes.data if arr is not None else None)
-
+    if isinstance(arr, np.ndarray):
+        return ctypes.c_void_p(arr.ctypes.data)
+    elif _has_torch and isinstance(arr, torch.Tensor):
+        return ctypes.c_void_p(arr.data_ptr())
+    return ctypes.c_void_p(None)
 
 def split_path(path: str) -> list[str]:
     """ Splits a path into components """
