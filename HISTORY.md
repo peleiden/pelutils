@@ -14,6 +14,7 @@
 - Made `get_repo` return the absolute repository path
 - Made logger use absolute instead of relative paths preventing issues with changing working directory
 - Renamed `vline` to `hline` in `Table` as the line was horizontal rather than vertical
+- Added `jsonl.dumps` and `jsonl.loads` and made all functions in `jsonl` module use same naming scheme as `json`
 
 ## 0.6.7
 
