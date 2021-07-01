@@ -20,6 +20,8 @@
 - Renamed `vline` to `hline` in `Table` as the line was horizontal rather than vertical
 - Added `jsonl.dumps` and `jsonl.loads` and made all functions in `jsonl` module use same naming scheme as `json`
 - Added support for Pytorch tensors to `c_ptr`
+- Added `log.no_log` for disabling logging
+- Renamed `Levels` to `LogLevels` as that makes it clearer in usage context
 
 ## 0.6.7
 

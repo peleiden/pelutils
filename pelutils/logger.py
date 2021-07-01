@@ -11,7 +11,7 @@ from pelutils import get_timestamp, get_repo
 from .format import RichString
 
 
-class Levels(IntEnum):
+class LogLevels(IntEnum):
     """ Logging levels by priority. Don't set any to 0, as falsiness is used in the code """
     SECTION  = 6
     CRITICAL = 5
@@ -20,18 +20,18 @@ class Levels(IntEnum):
     INFO     = 2
     DEBUG    = 1
 
-_STDERR_LEVELS = { Levels.CRITICAL, Levels.ERROR, Levels.WARNING }
+_STDERR_LEVELS = { LogLevels.CRITICAL, LogLevels.ERROR, LogLevels.WARNING }
 
 
 # https://rich.readthedocs.io/en/stable/appendix/colors.html
 _TIMESTAMP_COLOR = "#72b9e0"
 _LEVEL_FORMAT = {
-    Levels.SECTION:  "bright_yellow",
-    Levels.CRITICAL: "red1",
-    Levels.ERROR:    "red3",
-    Levels.WARNING:  "gold3",
-    Levels.INFO:     "chartreuse3",
-    Levels.DEBUG:    "deep_sky_blue1",
+    LogLevels.SECTION:  "bright_yellow",
+    LogLevels.CRITICAL: "red1",
+    LogLevels.ERROR:    "red3",
+    LogLevels.WARNING:  "gold3",
+    LogLevels.INFO:     "chartreuse3",
+    LogLevels.DEBUG:    "deep_sky_blue1",
 }
 
 
@@ -44,10 +44,10 @@ class _LevelManager:
         log.info("This will not be logged")
     """
 
-    level: Levels
+    level: LogLevels
     is_active = False
 
-    def with_level(self, level: Levels) -> _LevelManager:
+    def with_level(self, level: LogLevels | int) -> _LevelManager:
         self.level = level
         return self
 
@@ -89,7 +89,7 @@ class _Logger:
 
     _loggers: DefaultDict[str, dict[str, Any]]
     _selected_logger: str
-    _maxlen = max(len(l.name) for l in Levels)
+    _maxlen = max(len(l.name) for l in LogLevels)
     _spacing = 4 * " "
 
     _yes = { "j", "y" }
@@ -108,13 +108,13 @@ class _Logger:
     def _include_micros(self) -> bool:
         return self._logger["include_micros"]
     @property
-    def _print_level(self) -> Levels:
+    def _print_level(self) -> LogLevels:
         return self._logger["print_level"]
     @property
     def _level_mgr(self) -> _LevelManager:
         return self._logger["level_mgr"]
     @property
-    def _level(self) -> Levels:
+    def _level(self) -> LogLevels:
         return self._level_mgr.level
 
     def __init__(self):
@@ -133,7 +133,7 @@ class _Logger:
         log_commit           = False,        # Log commit of git repository
         logger               = "default",    # Name of logger
         append               = False,        # Set to True to append to old log file instead of overwriting it
-        print_level          = Levels.INFO,  # Highest level that will be printed. All will be logged. None for no print
+        print_level          = LogLevels.INFO,  # Highest level that will be printed. All will be logged. None for no print
     ):
         """ Configure a logger. This must be called before the logger can be used """
         if logger in self._loggers:
@@ -146,7 +146,7 @@ class _Logger:
         self._loggers[logger]["default_sep"] = default_seperator
         self._loggers[logger]["include_micros"] = include_micros
         self._loggers[logger]["level_mgr"] = _LevelManager()
-        self._loggers[logger]["print_level"] = print_level or len(Levels) + 1
+        self._loggers[logger]["print_level"] = print_level or len(LogLevels) + 1
 
         if fpath is not None:
             dirs = os.path.split(fpath)[0]
@@ -176,14 +176,20 @@ class _Logger:
             raise LoggingException("Cannot configure a new logger while using collect_logs")
         self._selected_logger = logger
 
-    def level(self, level: Levels):
+    def level(self, level: LogLevels):
+        """ Log only at given level and above. Use with a with block """
         return self._level_mgr.with_level(level)
+
+    @property
+    def no_log(self):
+        """ Disable logging inside a with block """
+        return self._level_mgr.with_level(max(LogLevels)+1)
 
     @property
     def log_errors(self):
         return self._log_errors
 
-    def __call__(self, *tolog, with_info=True, sep=None, with_print=None, level: Levels=Levels.INFO):
+    def __call__(self, *tolog, with_info=True, sep=None, with_print=None, level: LogLevels=LogLevels.INFO):
         self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 
     def _write_to_log(self, content: RichString):
@@ -195,7 +201,7 @@ class _Logger:
     def _format(s: str, format: str) -> str:
         return f"[{format}]{s}[/]"
 
-    def _log(self, *tolog, level=Levels.INFO, with_info=True, sep=None, with_print=None):
+    def _log(self, *tolog, level=LogLevels.INFO, with_info=True, sep=None, with_print=None):
         if not self._loggers:
             return
         if self._level_mgr.is_active and level < self._level_mgr.level:
@@ -308,22 +314,22 @@ class _Logger:
     def section(self, *tolog, with_info=True, sep=None, with_print=None, newline=True):
         if newline:
             self._log("")
-        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.SECTION)
+        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.SECTION)
 
     def critical(self, *tolog, with_info=True, sep=None, with_print=None):
-        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.CRITICAL)
+        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.CRITICAL)
 
     def error(self, *tolog, with_info=True, sep=None, with_print=None):
-        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.ERROR)
+        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.ERROR)
 
     def warning(self, *tolog, with_info=True, sep=None, with_print=None):
-        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.WARNING)
+        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.WARNING)
 
     def info(self, *tolog, with_info=True, sep=None, with_print=None):
-        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.INFO)
+        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.INFO)
 
     def debug(self, *tolog, with_info=True, sep=None, with_print=None):
-        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=Levels.DEBUG)
+        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.DEBUG)
 
 
 log = _Logger()
