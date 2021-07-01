@@ -32,8 +32,10 @@ log.section("New section in the logfile")
 
 # Adjust logging levels
 log.warning("Will be logged")
-with log.level(Levels.ERROR):  # Only log at ERROR level or above
+with log.level(LogLevels.ERROR):  # Only log at ERROR level or above
     log.warning("Will not be logged")
+with log.no_log():
+    log.section("I will not be logged")
 
 # Error handling
 # The zero-division error and stacktrace is logged

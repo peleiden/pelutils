@@ -1,7 +1,7 @@
 import os
 from shutil import rmtree
 
-from . import log, Levels
+from . import log, LogLevels
 
 
 class MainTest:
@@ -29,7 +29,7 @@ class MainTest:
             os.path.join(cls.test_dir, "tests.log"),
             "Test: %s" % cls.__name__,
             append=True,
-            print_level=Levels.DEBUG,
+            print_level=LogLevels.DEBUG,
         )
 
     @classmethod
