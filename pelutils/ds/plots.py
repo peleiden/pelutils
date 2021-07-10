@@ -16,6 +16,7 @@ rc_params       = { "font.size": 26, "legend.fontsize": 24, "legend.framealpha":
 rc_params_small = { **rc_params, "font.size": 22, "legend.fontsize": 20 }  # Same but with smaller font
 
 def update_rc_params(rc_params: dict[str, Any]):
+    """ Update matplotlib parameters - utility function for preventing always having to look it up """
     plt.rcParams.update(rc_params)
 
 # Colours
@@ -26,6 +27,20 @@ colours:      list[str] = tab_colours[:-2] + base_colours[:-1]  # 15 unique matp
 # Common figure sizes
 figsize_std  = (15, 10)
 figsize_wide = (22, 10)
+
+def running_avg(x: np.ndarray, y: np.ndarray | None=None, *, neighbors=3) -> tuple[np.ndarray, np.ndarray]:
+    """ Calculates the running average assuming even spacing
+    If one array of size n is given, it is assumed to run from 0 to n-1 on the x axis
+    If two are given, the first are the x axis coordinates
+    Returns x and y coordinate arrays of same size """
+    if y is None:
+        y = x
+        x = np.arange(x.size)
+    x = x[neighbors-1:-neighbors+1]
+    kernel = np.arange(1, 2*neighbors+2)
+    kernel[-neighbors:] = np.arange(neighbors-1, 0, -1)
+    running = np.convolve(y, kernel, mode="valid")
+    return x, running
 
 # Utility functions for histograms
 def linear_binning(x: Iterable, bins: int) -> np.ndarray:
