@@ -3,6 +3,7 @@ import os
 import ctypes
 import random
 from datetime import datetime
+from typing import Iterable, TypeVar
 
 import git
 import numpy as np
@@ -11,6 +12,9 @@ try:
     _has_torch = True
 except:
     _has_torch = False
+
+
+T = TypeVar("T")
 
 
 def set_seeds(seed: int=0):
@@ -122,6 +126,25 @@ def c_ptr(arr: np.ndarray | torch.Tensor) -> ctypes.c_void_p:
 def split_path(path: str) -> list[str]:
     """ Splits a path into components """
     return os.path.normpath(path).split(os.sep)
+
+def binary_search(element: T, iterable: Iterable[T], *, _start=0, _end=-1) -> int | None:
+    """ Get the index of element in iterable using binary search
+    Assumes iterable is sorted in ascending order
+    Returns None if the element is not found """
+    if _end == -1:  # Entered on first call
+        _end = len(iterable)
+        # Make sure element actually exists in array
+        if not iterable[0] <= element <= iterable[-1]:
+            return None
+
+    # Perform bisection
+    index = (_start + _end) // 2
+    if element < iterable[index]:
+        return binary_search(element, iterable, _start=_start, _end=index-1)
+    elif element > iterable[index]:
+        return binary_search(element, iterable, _start=index+1, _end=_end)
+    else:
+        return index
 
 
 # To allow imports directly from utils #

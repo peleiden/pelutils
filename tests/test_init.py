@@ -1,5 +1,8 @@
 import os
-from pelutils import EnvVars, split_path
+
+import numpy as np
+
+from pelutils import EnvVars, split_path, binary_search
 from pelutils.tests import MainTest
 
 
@@ -25,3 +28,12 @@ class TestInit(MainTest):
         assert split_path(absolute + "/") == ["", "home", "senate"]
         relative = "use/pelutils/pls.py"
         assert split_path(relative) == ["use", "pelutils", "pls.py"]
+
+    def test_binary_search(self):
+        data = np.random.randint(0, 100, 100)
+        data = np.sort(data)
+        for elem in data:
+            assert binary_search(elem, data) is not None
+            assert data[binary_search(elem, data)] == elem
+        assert binary_search(-1, data) is None
+        assert binary_search(100, data) is None
