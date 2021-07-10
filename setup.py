@@ -2,6 +2,7 @@ import subprocess
 from setuptools import setup, find_packages
 from distutils.command.install import install as install_
 
+
 with open("README.md") as readme_file:
     README = readme_file.read()
 
@@ -30,11 +31,10 @@ setup_args = dict(
     url              = "https://github.com/peleiden/pelutils",
     download_url     = "https://pypi.org/project/pelutils/",
     install_requires = [ "numpy>=1.18.0", "gitpython>=3.1.0", "rich>=10.0.0", "click>=7.0.0" ],
-    extras_require   = { "ds": ["torch", "matplotlib", "scipy", "tqdm>=4.0.0"] },
+    extras_require   = { "ds": ["torch>=1.7.0", "matplotlib>=3.1.0", "scipy>=1.4.1", "tqdm>=4.0.0"] },
     entry_points     = { "console_scripts": ["linecounter = pelutils.ds._linecounter:linecounter"] },
     cmdclass         = { "install": install },
 )
-
 
 if __name__ == "__main__":
     setup(**setup_args)
