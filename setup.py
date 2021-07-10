@@ -32,7 +32,10 @@ setup_args = dict(
     download_url     = "https://pypi.org/project/pelutils/",
     install_requires = [ "numpy>=1.18.0", "gitpython>=3.1.0", "rich>=10.0.0", "click>=7.0.0" ],
     extras_require   = { "ds": ["torch>=1.7.0", "matplotlib>=3.1.0", "scipy>=1.4.1", "tqdm>=4.0.0"] },
-    entry_points     = { "console_scripts": ["linecounter = pelutils.ds._linecounter:linecounter"] },
+    entry_points     = { "console_scripts": [
+        "linecounter = pelutils.ds._linecounter:linecounter",
+        "pelexamples = examples.cli:run",
+    ] },
     cmdclass         = { "install": install },
 )
 
