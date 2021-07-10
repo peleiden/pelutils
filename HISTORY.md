@@ -23,6 +23,7 @@
 - Added `log.no_log` for disabling logging
 - Renamed `Levels` to `LogLevels` as that makes it clearer in usage context
 - `unique` can now take non-contiguous arrays and also has an `axis` argument
+- Added a command line entry to examples, `pelexamples`
 
 ### Bug fixes
 

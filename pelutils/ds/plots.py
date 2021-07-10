@@ -36,9 +36,10 @@ def running_avg(x: np.ndarray, y: np.ndarray | None=None, *, neighbors=3) -> tup
     if y is None:
         y = x
         x = np.arange(x.size)
-    x = x[neighbors-1:-neighbors+1]
+    x = x[neighbors:-neighbors]
     kernel = np.arange(1, 2*neighbors+2)
-    kernel[-neighbors:] = np.arange(neighbors-1, 0, -1)
+    kernel[-neighbors:] = np.arange(neighbors, 0, -1)
+    kernel = kernel / kernel.sum()
     running = np.convolve(y, kernel, mode="valid")
     return x, running
 

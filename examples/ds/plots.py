@@ -1,12 +1,18 @@
 """ Plotting examples using pelutils.ds.plot """
+import click
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pelutils.ds.plots import linear_binning, log_binning, normal_binning, get_bins, figsize_wide, rc_params_small, update_rc_params
+from pelutils.ds.plots import (
+    linear_binning, log_binning, normal_binning, get_bins,
+    figsize_wide, rc_params, rc_params_small, update_rc_params,
+    running_avg,
+)
 from pelutils.ds.distributions import norm, lognorm
 
 
-def plots_example():
+@click.command("plots-binning")
+def plots_binning():
     # Update params to make them fit nicely with the used figure size
     update_rc_params(rc_params_small)
 
@@ -47,5 +53,29 @@ def plots_example():
     plt.tight_layout()
     plt.show()
 
-if __name__ == "__main__":
-    plots_example()
+@click.command("plots-running")
+def plots_running():
+    update_rc_params(rc_params_small)
+    plt.figure(figsize=(30, 20))
+
+    # Generate noisy data
+    x = np.linspace(-3, 4)
+    y = np.sin(x)
+    y += np.random.randn(y.size) / 3
+
+    # Plot data with running average function and few neighbors
+    plt.subplot(221)
+    plt.plot(x, y)
+    plt.plot(*running_avg(x, y, neighbors=1))
+    plt.title("Running avg., low smoothing")
+    plt.grid()
+
+    # Same but with higher smoothing
+    plt.subplot(222)
+    plt.plot(x, y)
+    plt.plot(*running_avg(x, y, neighbors=4))
+    plt.title("Running avg., high smoothing")
+    plt.grid()
+
+    # plt.tight_layout()
+    plt.show()
