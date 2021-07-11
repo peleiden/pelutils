@@ -30,20 +30,19 @@ def test_unique():
     assert np.all(a == u[inverse])
     assert np.all(counts[argsort] == npcounts)
 
-    # Multidimensional array
-    a = np.random.randint(0, 10, (10, 5, 5))
+    # Axis and multidimensional array
+    a = np.random.randint(0, 5, (10, 5, 5))
     a[2] = a[4]
     a[3] = a[4]
     a[4] = a[6]
-    u, index, inverse, counts = unique(a, return_index=True, return_inverse=True, return_counts=True)
-    npu = np.unique(a, axis=0)
-    assert len(u) == len(npu)
-    assert u.shape == npu.shape
-    assert np.all(a[index] == u)
-    assert np.all(a == u[inverse])
-    assert np.max(counts) == 2
+    for axis in range(len(a.shape)):
+        u, index, inverse, counts = unique(a, return_index=True, return_inverse=True, return_counts=True, axis=axis)
+        npu, npcounts = np.unique(a, return_counts=True, axis=axis)
+        assert u.shape == npu.shape
+        assert np.all(a[(*[slice(None)]*axis, index)] == u)
+        assert np.all(a == u[(*[slice(None)]*axis, inverse)])
+        assert np.all(np.sort(counts) == np.sort(npcounts))
 
     # Check error handling
     with pytest.raises(ValueError):
         unique(np.array([]))
-

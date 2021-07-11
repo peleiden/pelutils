@@ -23,19 +23,37 @@ from pelutils import c_ptr
 _so_error = NotImplementedError("unique function is currently only supported on x86_64 Linux")
 if all(substr in platform.platform().lower() for substr in ("linux", "x86_64")):
     _lib = ctypes.cdll.LoadLibrary(f"{_base_path}/ds.so")
-def unique(array: np.ndarray, *, return_index=False, return_inverse=False, return_counts=False)\
-    -> np.ndarray | Iterable[np.ndarray]:
+def unique(
+    array: np.ndarray, *,
+    return_index=False,
+    return_inverse=False,
+    return_counts=False,
+    axis: int=0,
+) -> np.ndarray | Iterable[np.ndarray]:
     """
-    Similar to np.unique with axis=0, but in linear time and unsorted
+    Similar to np.unique, but in linear time and returns unsorted
     Currently only works properly on x86_64 Linux
-    On other platforms, it wraps np.unique, which returns a sorted array but otherwise has same output
+    On other platforms, it wraps np.unique, which returns a sorted array and is slower but otherwise has same output
     """
     if "_lib" not in globals():
-        raise _so_error
-    if not array.flags["C_CONTIGUOUS"]:
-        raise ValueError("Array must be contiguous row-major")
+        return np.unique(
+            array,
+            return_index=return_index,
+            return_inverse=return_inverse,
+            return_counts=return_counts,
+            axis=axis,
+        )
     if not array.size:
         raise ValueError("Array must be non-empty")
+
+    if axis:
+        axes = list(range(len(array.shape)))
+        axes[0] = axis
+        axes[axis] = 0
+        array = array.transpose(axes)
+    if not array.flags["C_CONTIGUOUS"]:
+        array = np.ascontiguousarray(array)
+
     index   = np.empty(len(array), dtype=int)
     inverse = np.empty(len(array), dtype=int) if return_inverse else None
     counts  = np.empty(len(array), dtype=int) if return_counts  else None
@@ -47,7 +65,12 @@ def unique(array: np.ndarray, *, return_index=False, return_inverse=False, retur
     c = _lib.unique(len(array), stride, c_ptr(array), c_ptr(index), c_ptr(inverse), c_ptr(counts))
 
     index = index[:c]
-    ret = [array[index]]
+    if axis:
+        array = array[index]
+        array = np.ascontiguousarray(array.transpose(axes))
+    else:
+        array = array[index]
+    ret = [array]
     if return_index:
         ret.append(index)
     if return_inverse:
@@ -81,10 +104,7 @@ class BatchFeedForward:
     Notice that while this works for batches of varying sizes, this is not recommended usage, as it can be inefficient
     """
 
-    def __init__(self, net: Type[torch.nn.Module]):
-        """
-        net: torch network
-        """
+    def __init__(self, net: torch.nn.Module):
         self.net = net
         self.increase_factor = 2
         self.batches = 1
