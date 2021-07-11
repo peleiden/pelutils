@@ -25,6 +25,7 @@
 - `unique` can now take non-contiguous arrays and also has an `axis` argument
 - Added a command line entry to examples, `pelexamples`
 - Added a `binary_search` for searching in ordered iterables in `log(n)` time
+- Added running average function and variations thereof for plotting noisy data
 
 ### Bug fixes
 

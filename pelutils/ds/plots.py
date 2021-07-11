@@ -43,6 +43,64 @@ def running_avg(x: np.ndarray, y: np.ndarray | None=None, *, neighbors=3) -> tup
     running = np.convolve(y, kernel, mode="valid")
     return x, running
 
+def exp_running_avg(x: np.ndarray, y: np.ndarray | None=None, *, alpha=0.2, reverse=False) -> np.ndarray:
+    """ Calculates the exponential running average
+    alpha is a smoothing factor between 0 and 1 - the lower the value, the smoother the curve
+    Returns two arrays of same size as y
+    This function also optionally takes x to stay similar to the other running avg. functions """
+    if y is None:
+        y = x
+        x = np.arange(x.size)
+    if reverse:
+        y = y[::-1]
+
+    exp = np.empty(y.size)
+    for i in range(y.size):
+        if i:
+            exp[i] = alpha * y[i] + (1 - alpha) * exp[i-1]
+        else:
+            exp[i] = y[i]
+    return x, exp if not reverse else exp[::-1]
+
+def running_avg_smoothing(
+    x: np.ndarray,
+    y: np.ndarray | None=None, *,
+    neighbors=12,
+    samples=200,
+) -> tuple[np.ndarray, np.ndarray]:
+    """ Running avg. function that produces smoother curves than normal running avg.
+    Also handles uneven data spacing better
+    If both x and y are given, x must be sorted """
+    if y is None:
+        y = x
+        x = np.arange(x.size)
+
+    # Sampled point along x axis
+    extra_sample = neighbors / samples
+    # Sample points along x axis
+    xx = np.linspace(
+        x[0] - extra_sample * (x[-1]-x[0]),
+        x[-1] + extra_sample * (x[-1]-x[0]),
+        samples + 2 * neighbors,
+    )
+    # Interpolated points
+    yy = np.empty_like(xx)
+    yy[:neighbors] = y[0]
+    yy[-neighbors:] = y[-1]
+
+    # Perform interpolations
+    x_index = 0
+    assert xx[samples+neighbors-1] < x[-1]
+    for i in range(neighbors, samples+neighbors):
+        if x[x_index+1] <= xx[i]:
+            x_index += 1
+
+        a = (y[x_index+1] - y[x_index]) / (x[x_index+1] - x[x_index])
+        b = y[x_index] - a * x[x_index]
+        yy[i] = a * xx[i] + b
+
+    return running_avg(xx, yy, neighbors=neighbors)
+
 # Utility functions for histograms
 def linear_binning(x: Iterable, bins: int) -> np.ndarray:
     """ Standard linear binning """
