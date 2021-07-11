@@ -2,6 +2,7 @@ from __future__ import annotations
 import os
 import ctypes
 import random
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Iterable, TypeVar
 
@@ -127,8 +128,8 @@ def split_path(path: str) -> list[str]:
     """ Splits a path into components """
     return os.path.normpath(path).split(os.sep)
 
-def binary_search(element: T, iterable: Iterable[T], *, _start=0, _end=-1) -> int | None:
-    """ Get the index of element in iterable using binary search
+def binary_search(element: T, iterable: Sequence[T], *, _start=0, _end=-1) -> int | None:
+    """ Get the index of element in sequence using binary search
     Assumes iterable is sorted in ascending order
     Returns None if the element is not found """
     if _end == -1:  # Entered on first call
