@@ -22,6 +22,7 @@
 - Added support for Pytorch tensors to `c_ptr`
 - Added `log.no_log` for disabling logging
 - Renamed `Levels` to `LogLevels` as that makes it clearer in usage context
+- Fixed a bug where a backslash would sometimes be printed from the logger before square brackets
 
 ## 0.6.7
 

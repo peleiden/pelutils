@@ -219,13 +219,13 @@ class _Logger:
         rs = RichString(stderr=level in _STDERR_LEVELS)  # Send warning
         if with_info and tolog:
             rs.add_string(
-                f"{time}{self._spacing}{level_format}{self._spacing}{logs[0]}".rstrip(),
-                (self._format(time, _TIMESTAMP_COLOR) +\
+                f"{time}{self._spacing}{level_format}{self._spacing}",
+                self._format(time, _TIMESTAMP_COLOR) +\
                     self._spacing +\
                     self._format(level_format, _LEVEL_FORMAT[level]) +\
-                    self._spacing +\
-                    logs[0]).rstrip(),
+                    self._spacing,
             )
+            rs.add_string(logs[0])
         else:
             rs.add_string(f"{time_spaces}{space}{logs[0]}".rstrip())
         for i in range(1, len(logs)):
