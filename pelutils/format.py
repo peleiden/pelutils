@@ -1,7 +1,8 @@
 from __future__ import annotations
 from typing import Any, Iterable
-import regex
+import re
 
+from rich.color import ANSI_COLOR_NAMES
 from rich.console import Console
 
 
@@ -15,6 +16,10 @@ class RichString:
     This allows for printing and logging without rich syntax causing issues
     """
 
+    _open_tag_regex = re.compile("(%s)" % "|".join(r"\[" + c + r"\]" for c in ANSI_COLOR_NAMES))
+    _close_tag_regex_1 = re.compile(r"\\(\[\/.*\])")
+    _close_tag_regex_2 = re.compile(r"(\[\/.*\])")
+
     def __init__(self, stderr=False):
         self.strings: list[str] = list()  # Normal strings
         self.riches:  list[str] = list()  # Corresponding strings with rich syntax
@@ -24,8 +29,9 @@ class RichString:
         """ Add a new string and optionally a rich string equivalent """
         if rich is None:
             # Escape beginning brackets to prevent accidental formatting when printing
-            rich = regex.sub(r"(\[[a-zA-Z\s]+\])", r"\\\1", s)
-            rich = regex.sub(r"(\[\/\])", r"\\\1", rich)
+            rich = re.sub(self._open_tag_regex, r"\\\1", s)
+            rich = re.sub(self._close_tag_regex_1, r"\1", rich)
+            rich = re.sub(self._close_tag_regex_2, r"\\\1", rich)
         self.strings.append(s)
         self.riches.append(rich)
 
