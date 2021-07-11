@@ -122,31 +122,33 @@ class _Logger:
         self._collect = False
         self._collected_log: list[RichString] = list()
         self._collected_print: list[RichString] = list()
+        self._loggers = defaultdict(dict)
         self.clean()
+        self.configure(logger_name="print_only", print_level=LogLevels.DEBUG)
 
     def configure(
         self,
-        fpath: Optional[str] = None,         # Path to place logger. Any missing directories are created
-        title: Optional[str] = None,         # Title on first line of logfile
+        fpath: Optional[str] = None,            # Path to place logger. Any missing directories are created
+        title: Optional[str] = None,            # Title on first line of logfile
         default_seperator    = "\n",
-        include_micros       = False,        # Include microseconds in timestamps
-        log_commit           = False,        # Log commit of git repository
-        logger               = "default",    # Name of logger
-        append               = False,        # Set to True to append to old log file instead of overwriting it
+        include_micros       = False,           # Include microseconds in timestamps
+        log_commit           = False,           # Log commit of git repository
+        logger_name          = "default",       # Name of logger
+        append               = False,           # Set to True to append to old log file instead of overwriting it
         print_level          = LogLevels.INFO,  # Highest level that will be printed. All will be logged. None for no print
     ):
-        """ Configure a logger. This must be called before the logger can be used """
-        if logger in self._loggers:
-            raise LoggingException("Logger '%s' already exists. Did you call log.configure(...) twice?" % logger)
+        """ Configure a logger. If not called, the logger will act like a print statement """
+        if logger_name in self._loggers:
+            raise LoggingException("Logger '%s' already exists. Did you call log.configure(...) twice?" % logger_name)
         if self._collect:
             raise LoggingException("Cannot configure a new logger while using collect_logs")
-        self._selected_logger = logger
+        self._selected_logger = logger_name
 
-        self._loggers[logger]["fpath"] = os.path.realpath(fpath)
-        self._loggers[logger]["default_sep"] = default_seperator
-        self._loggers[logger]["include_micros"] = include_micros
-        self._loggers[logger]["level_mgr"] = _LevelManager()
-        self._loggers[logger]["print_level"] = print_level or len(LogLevels) + 1
+        self._loggers[logger_name]["fpath"] = os.path.realpath(fpath) if fpath else None
+        self._loggers[logger_name]["default_sep"] = default_seperator
+        self._loggers[logger_name]["include_micros"] = include_micros
+        self._loggers[logger_name]["level_mgr"] = _LevelManager()
+        self._loggers[logger_name]["print_level"] = print_level or len(LogLevels) + 1
 
         if fpath is not None:
             dirs = os.path.split(fpath)[0]
@@ -308,6 +310,7 @@ class _Logger:
             RichString.multiprint(self._collected_print)
 
     def clean(self):
+        """ Resets the loggers and removes all existing logger configurations """
         self._loggers = defaultdict(dict)
         self._selected_logger = "default"
 

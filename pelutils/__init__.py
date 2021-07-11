@@ -13,7 +13,7 @@ except:
     _has_torch = False
 
 
-def set_seeds(seed: int = 0):
+def set_seeds(seed: int=0):
     np.random.seed(seed)
     random.seed(seed)
     if _has_torch:
@@ -24,7 +24,7 @@ def set_seeds(seed: int = 0):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-def get_repo(path: str=None) -> tuple[str | None, str | None]:
+def get_repo(path: str | None=None) -> tuple[str | None, str | None]:
     """
     Returns absolute path of git repository and commit SHA
     Searches for repo by searching upwards from given directory (if None: uses working dir).

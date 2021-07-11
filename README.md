@@ -20,8 +20,10 @@ Various utilities useful for Python projects. Features include
 Easy to use logger which fits common needs.
 
 ```py
+log("This is printed but not saved to a log file as the logger has not been configured")
+
 # Configure logger for the script
-log.configure("path/to/save/log.log", "Title of log")
+log.configure("path/to/save/log.log", "Optional title of log")
 
 # Start logging
 for i in range(70):  # Nice
