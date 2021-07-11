@@ -28,7 +28,11 @@ colours:      list[str] = tab_colours[:-2] + base_colours[:-1]  # 15 unique matp
 figsize_std  = (15, 10)
 figsize_wide = (22, 10)
 
-def running_avg(x: np.ndarray, y: np.ndarray | None=None, *, neighbors=3) -> tuple[np.ndarray, np.ndarray]:
+def running_avg(
+    x: np.ndarray,
+    y: np.ndarray | None = None, *,
+    neighbors            = 3,
+) -> tuple[np.ndarray, np.ndarray]:
     """ Calculates the running average assuming even spacing
     If one array of size n is given, it is assumed to run from 0 to n-1 on the x axis
     If two are given, the first are the x axis coordinates
@@ -43,11 +47,16 @@ def running_avg(x: np.ndarray, y: np.ndarray | None=None, *, neighbors=3) -> tup
     running = np.convolve(y, kernel, mode="valid")
     return x, running
 
-def exp_running_avg(x: np.ndarray, y: np.ndarray | None=None, *, alpha=0.2, reverse=False) -> np.ndarray:
+def exp_running_avg(
+    x: np.ndarray,
+    y: np.ndarray | None = None, *,
+    alpha                = 0.2,
+    reverse              = False,
+) -> np.ndarray:
     """ Calculates the exponential running average
     alpha is a smoothing factor between 0 and 1 - the lower the value, the smoother the curve
-    Returns two arrays of same size as y
-    This function also optionally takes x to stay similar to the other running avg. functions """
+    Returns two arrays of same size as x
+    This function optionally takes y as `running_avg` """
     if y is None:
         y = x
         x = np.arange(x.size)
@@ -62,44 +71,49 @@ def exp_running_avg(x: np.ndarray, y: np.ndarray | None=None, *, alpha=0.2, reve
             exp[i] = y[i]
     return x, exp if not reverse else exp[::-1]
 
-def running_avg_smoothing(
+def double_running_avg(
     x: np.ndarray,
-    y: np.ndarray | None=None, *,
-    neighbors=12,
-    samples=200,
+    y: np.ndarray | None = None, *,
+    inner_neighbors      =   1,
+    outer_neighbors      =  12,
+    samples              = 300,
 ) -> tuple[np.ndarray, np.ndarray]:
     """ Running avg. function that produces smoother curves than normal running avg.
     Also handles uneven data spacing better
-    If both x and y are given, x must be sorted """
+    This function optionally takes y as `running_avg`
+    If both x and y are given, x must be sorted in ascending order
+    inner_neighbors: How many neighbors to use for the initial running average
+    outer_neighbors: How many neighbors to use for for the second running average
+    samples: How many points to sample the running avg. at """
     if y is None:
         y = x
         x = np.arange(x.size)
-
+    x = np.pad(x, pad_width=inner_neighbors)
+    y = np.array([*[y[0]]*inner_neighbors, *y, *[y[-1]]*inner_neighbors])
+    x, y = running_avg(x, y, neighbors=inner_neighbors)
     # Sampled point along x axis
-    extra_sample = neighbors / samples
+    extra_sample = outer_neighbors / samples
     # Sample points along x axis
     xx = np.linspace(
         x[0] - extra_sample * (x[-1]-x[0]),
         x[-1] + extra_sample * (x[-1]-x[0]),
-        samples + 2 * neighbors,
+        samples + 2 * outer_neighbors,
     )
     # Interpolated points
-    yy = np.empty_like(xx)
-    yy[:neighbors] = y[0]
-    yy[-neighbors:] = y[-1]
+    yy = np.zeros_like(xx)
+    yy[:outer_neighbors] = y[0]
+    yy[-outer_neighbors:] = y[-1]
 
-    # Perform interpolations
+    # Perform interpolation
     x_index = 0
-    assert xx[samples+neighbors-1] < x[-1]
-    for i in range(neighbors, samples+neighbors):
-        if x[x_index+1] <= xx[i]:
+    for k, interp_x in enumerate(xx[outer_neighbors:outer_neighbors+samples], start=outer_neighbors):
+        if interp_x >= x[x_index+1]:
             x_index += 1
-
         a = (y[x_index+1] - y[x_index]) / (x[x_index+1] - x[x_index])
         b = y[x_index] - a * x[x_index]
-        yy[i] = a * xx[i] + b
+        yy[k] += (a * interp_x + b)
 
-    return running_avg(xx, yy, neighbors=neighbors)
+    return running_avg(xx, yy, neighbors=outer_neighbors)
 
 # Utility functions for histograms
 def linear_binning(x: Iterable, bins: int) -> np.ndarray:

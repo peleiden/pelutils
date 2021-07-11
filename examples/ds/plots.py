@@ -6,7 +6,7 @@ import numpy as np
 from pelutils.ds.plots import (
     linear_binning, log_binning, normal_binning, get_bins,
     figsize_wide, rc_params, rc_params_small, update_rc_params,
-    running_avg, exp_running_avg, running_avg_smoothing, tab_colours
+    running_avg, exp_running_avg, double_running_avg, tab_colours
 )
 from pelutils.ds.distributions import norm, lognorm
 
@@ -101,11 +101,10 @@ def plots_smoothing():
 
     # Generate noisy data
     n = 100
-    x = np.linspace(-3, 4, n)
+    x = np.linspace(-5, 5, n)
     y = np.sin(x)
     y += np.random.randn(n) / 3
     subsample = np.random.randint(0, 2, n).astype(bool)
-    subsample[n//2-10:n//2+5] = False
     x, y = x[subsample], y[subsample]
 
     # Plot data with running average function and few neighbors
@@ -125,15 +124,15 @@ def plots_smoothing():
     # Running avg. with smoothing
     plt.subplot(223)
     plt.scatter(x, y)
-    plt.plot(*running_avg_smoothing(x, y, neighbors=12, samples=300), c=tab_colours[1])
-    plt.title("With smoothing, n=12, samples=300")
+    plt.plot(*double_running_avg(x, y, outer_neighbors=10), c=tab_colours[1])
+    plt.title("Running avg. with smoothing, outer=10")
     plt.grid()
 
     # Running avg. with more smoothing
     plt.subplot(224)
     plt.scatter(x, y)
-    plt.plot(*running_avg_smoothing(x, y, neighbors=20, samples=300), c=tab_colours[1])
-    plt.title("With smoothing, n=20, samples=300")
+    plt.plot(*double_running_avg(x, y, outer_neighbors=20), c=tab_colours[1])
+    plt.title("Running avg. with smoothing, outer=20")
     plt.grid()
 
     plt.show()
