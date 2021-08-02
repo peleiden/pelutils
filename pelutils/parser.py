@@ -1,216 +1,237 @@
 from __future__ import annotations
-import os, sys
-from argparse import ArgumentParser, RawTextHelpFormatter
+from abc import ABC
+from argparse import ArgumentError, ArgumentParser, Namespace, SUPPRESS
 from configparser import ConfigParser
-from typing import Any
+from shutil import rmtree
+from typing import Any, Callable, Iterable, TypeVar, Union
+# TODO Support for nargs
+# Make sure that it works better than click that only allows one narg argument
+# TODO Choices
 
-from pprint import pformat
+# Challenges
+# 1 Explicitly given arguments. There does not seem to be a proper way to do this with argparse
+# Some possible solutions here: https://stackoverflow.com/questions/32056910/how-to-find-out-if-argparse-argument-has-been-actually-specified-on-command-line
+# Overwriting action may be the most elegant solution, but this should also work with bools
+# 2 Non-optional arguments. Setting non-optional arguments in argparse does not work as they then will have to be given explicitly from CLI
+# A way to solve this is to let them all be optional in argparse and checking if they are given explicitly after parsing. If not, an error is raised
+# Doing it this way also allows giving arguments using the keyword --argname syntax which is nicer
+# `location` should be ignored as that should always be given as the first argument from the CLI
+# This requires solving the above challenge
 
 
-class Parser:
-    """
-    Maintains multiple parsers to allow a workflow of mixing use of config files and CLI arguments.
+_T = TypeVar("_T")
 
-    Can read from single .ini file and CLI arguments. CLI arguments overwrite settings in all experiments defined if ini file.
-    In .ini file, defaults for all runs can be set in [DEFAULT] section and multiple runs can be added with their own section.
+def _fixdash(argname: str) -> str:
+    """ Replaces dashes in argument names with underscores """
+    return argname.replace("-", "_")
 
-    The parser returns a list of dicts of the parsed settings for the experiments.
+class AbstractArgument(ABC):
 
-    Quick example:
-    A file `main.py` could contain:
-    ```
-    options = {
-        "location": { "default": "local_train", "help": "save_location", "type": str },
-        "learning-rate": { "default": 1.5e-3, "help": "Controls size of parameter update", "type": float },
-        "gamma": { "default": 1, "help": "Use of generator network in updating", "type": float },
-        "initialize-zeros": { "help": "Whether to initialize all parameters to 0", "action": "store_true" },
-    }
-    parser = Parser(options)
-    experiments = parser.parse()
+    def __init__(self, name: str, abbrv: str | None, help: str | None, **kwargs):
+        self._validate(name, abbrv)
 
-    ```
-    This could then by run by
-    `python main.py data/my-big-experiment --learning_rate 1e-5`
-    or by
-    `python main.py data/my-big-experiment --config cfg.ini`
-    where `cfg.ini` could contain
-    ```
-    [DEFAULT]
-    gamma = 0.95
-    [RUN1]
-    learning-rate = 1e-4
-    initialize-zeros
-    [RUN2]
-    learning-rate = 1e-5
-    gamma = 0.9
-    ```
-    """
+        self.name   = name
+        self.abbrv  = abbrv
+        self.help   = help
+        self.kwargs = kwargs
 
-    _with_config: bool
-    location: str
-    explicit_args: list[set[str]]
+    @staticmethod
+    def _validate(name: str, abbrv: str | None):
+        if not name:
+            raise ValueError("name must not be an empty string")
+        if name.startswith("-"):
+            raise ValueError("Double dashes are automatically prepended and should not be given by user: '%s'" % name)
+        if isinstance(abbrv, str) and (len(abbrv) != 1 or not abbrv.isalpha()):
+            raise ValueError("abbrv must be an alpha character and have length 1: '%s'" % abbrv)
+
+    def name_or_flags(self) -> tuple[str, ...]:
+        if self.abbrv:
+            return ("-" + self.abbrv, "--" + self.name)
+        else:
+            return ("--" + self.name,)
+
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+class Argument(AbstractArgument):
 
     def __init__(
         self,
-        options: dict,
-        name = "Experiment",
-        description = "Run experiments with these options",
-        show_defaults = True,
-        description_last = False,
-        multiple_jobs = True,  # If this is True, all jobs are put in subfolders
+        name:    str, *,
+        type:    Callable[[str], _T] = str,
+        help:    str | None = None,
+        metavar: str | tuple[str, ...] | None = None,
+        **kwargs,
     ):
-        """
-        Receives a dict of options.
-        This should be a dict of dicts where each dict corresponds to an option with the key as the name.
-        In the dict for each option, the key "default" should store the default value and all other keys should correspond to
-        kwargs in ArgumentParser.add_argument.
-        """
-        self.options = options
-        self._bool_opts = { argname: settings["action"] == "store_false" for argname, settings
-            in options.items() if settings.get("action") in ("store_false", "store_true") }
-        self._defaults = dict()  # { argname: default value }
+        super().__init__(name, None, help=help, **kwargs)
+        self.type = type
+        self.metavar = metavar
+
+class Option(AbstractArgument):
+
+    def __init__(
+        self,
+        name:    str, *,
+        default: _T | None,
+        type:    Callable[[str], _T] = str,
+        abbrv:   str | None = None,
+        help:    str | None = None,
+        metavar: str | tuple[str, ...] | None = None,
+        **kwargs,
+    ):
+        super().__init__(name, abbrv, help, **kwargs)
+        self.default = default
+        self.type = type
+        self.metavar = metavar
+
+class Flag(AbstractArgument):
+
+    def __init__(
+        self,
+        name:  str, *,
+        abbrv: str | None = None,
+        help:  str | None = None,
+        **kwargs,
+    ):
+        super().__init__(name, abbrv, help, **kwargs)
+
+class JobArguments(Namespace):
+
+    def __init__(self, name: str, location: str):
         self.name = name
-        self.multiple_jobs = multiple_jobs
+        self.location = location
 
-        # Main parser for CLI arguments
-        self._argparser = ArgumentParser(
-            description = description,
-            formatter_class = RawTextHelpFormatter,
-        )
-        self._argparser.add_argument("location", help="Location of output", type=str)
-        self._argparser.add_argument("-c", "--config",
-            help="Location of configuration file to use (if any). Config file should follow .ini format.", metavar="FILE")
-        if description_last:
-            self._argparser.epilog = description
-            self._argparser.description = None
+    def todict(self) -> dict[str, Any]:
+        return vars(self)
 
-        abbrvs = {"-h", "-c"}  # -h is reserved for --help and -c for --config
-        for argname, settings in self.options.items():
-            self._defaults[argname] = settings.pop("default") if argname not in self._bool_opts else self._bool_opts[argname]
-
-            if show_defaults and "help" in settings:
-                settings["help"] += f"\n  Default = {self._defaults[argname]}"
-
-            # Add argument and optionally abbrevation if no conflict
-            abbrv = f"-{argname[0]}"
-            if abbrv in abbrvs:
-                self._argparser.add_argument(f"--{argname}", **settings)
-            else:
-                self._argparser.add_argument(abbrv, f"--{argname}", **settings)
-                abbrvs.add(abbrv)
-
-        # Parser for config file
-        self._configparser = ConfigParser(allow_no_value=True)
-
-    def _parse_known_args(self) -> dict[str, Any]:
-        """ Returns a dict containing the arguments given explicitly from the command line """
-        args, __ = self._argparser.parse_known_args()
-        args = vars(args)
-        known_args = dict()
-        for argname, value in args.items():
-            if value is None or (argname in self._bool_opts and self._bool_opts[argname] == value):
-                continue
-            known_args[argname] = value
-        return known_args
-
-    def parse(self) -> list[dict[str, Any]] | dict[str, Any]:
-        """ Parse arguments and return a dict for each. Only a single dict is returned if multiple_jobs is False """
-        # Parse command line arguments
-        args = self._parse_known_args()
-        self.location = args["location"]
-        explicit_cli_args = set(args)
-
-        # Parse config files
-        experiments, explicit_config_args = self._read_config(args)
-        self._with_config = bool(experiments)
-
-        if not self._with_config:  # If CLI arguments only
-            args = { **self._defaults, **args }
-            name = args.get("name", self.name)
-            if self.multiple_jobs:
-                args["location"] = os.path.join(self.location, name)
-            experiments.append({"name": name, **args})
-            self.explicit_args = [explicit_cli_args]
+    def __getitem__(self, key: str) -> Any:
+        if key in self.__dict__:
+            return self.__dict__[key]
+        elif _fixdash(key) in self.__dict__:
+            return self.__dict__[_fixdash(key)]
         else:
-            self.explicit_args = [set.union(explicit_cli_args, conf_args) for conf_args in explicit_config_args]
+            raise KeyError("No such job argument '%s'" % key)
 
-        # Replace - with _ as argparse also does. This allows parsing experiments to a function using **
-        for i in range(len(experiments)):
-            experiments[i] = { kw.replace("-", "_"): v for kw, v in experiments[i].items() }
-            self.explicit_args[i] = { arg.replace("-", "_") for arg in self.explicit_args[i] }
+ArgumentTypes = Union[Argument, Option, Flag]
 
-        return experiments if self.multiple_jobs else experiments[0]
+class Parser:
 
-    def _set_bools_in_dict(self, d: dict[str, Any]):
-        """ Boolean arguments present are set to the negation of their default values
-        Those not present are set to default values """
-        for argname, default_value in self._bool_opts.items():
-            if argname in d and not isinstance(d[argname], bool):
-                d[argname] = not default_value
+    location: str | None = None  # Set in `parse` method
+
+    _default_config_job = "DEFAULT"
+
+    _location_arg = Argument("location", help="Job folder if multiple_jobs is False else folder containing all job folders")
+    _location_arg.name_or_flags = lambda self: ("location",)
+    _name_arg = Option("name", default=None, abbrv="n", help="Name of the job")
+    _config_arg = Option("config", default=None, abbrv="c", help="Path to config file")
+
+    _reserved_arguments: set[ArgumentTypes] = { _location_arg, _name_arg, _config_arg }
+    reserved_names = { arg.name for arg in _reserved_arguments }
+    reserved_abbrvs = { arg.abbrv for arg in _reserved_arguments if arg.abbrv }
+
+    def __init__(
+        self,
+        arguments:   Iterable[ArgumentTypes],
+        description: str | None = None,
+        multiple_jobs = False,
+        clear_folders = True,
+    ):
+        arguments = tuple(arguments)
+        self._multiple_jobs = multiple_jobs
+        self._clear_folders = clear_folders
+
+        self._argparser = ArgumentParser(description=description)
+        self._configparser = ConfigParser()
+
+        # Ensure that no conflicts exist with reserved arguments
+        if any(arg.name in self.reserved_names for arg in arguments):
+            raise ArgumentError("An argument conflicted with one of the reserved arguments: %s" % self.reserved_names)
+        if any(arg.abbrv in self.reserved_abbrvs for arg in arguments):
+            raise ArgumentError("An argument conflicted with one of the reserved abbreviations: %s" % self.reserved_abbrvs)
+
+        # Add all arguments to argparser
+        # Map argument names to arguments with dashes replaced by underscores
+        self._arguments = { _fixdash(arg.name): arg for arg in self._reserved_arguments }
+        # Map argument abbreviations to arguments
+        self._abbrvs = { arg.abbrv: arg for arg in self._reserved_arguments if arg.abbrv }
+        for argument in self._arguments:
+            # Add abbreviation and maybe autogenerate one
+            if argument.abbrv and argument.abbrv not in self._abbrvs:
+                self._abbrvs[argument.abbrv] = argument
+            elif argument.abbrv and argument.abbrv in self._abbrvs:
+                raise ArgumentError("Abbreviation '%s' was used twice" % argument.abbrv)
+            elif not argument.abbrv:
+                # Autogenerate abbreviations, first with lower case and then upper case if lower is taken
+                if argument.name[0].lower() not in self._abbrvs:
+                    argument.abbrv = argument.name[0].lower()
+                    self._abbrvs[argument.abbrv] = argument
+                elif argument.name[0].upper() not in self._abbrvs:
+                    argument.abbrv = argument.name[0].upper()
+                    self._abbrvs[argument.abbrv] = argument
+
+            # Add argument
+            if isinstance(argument, Argument):
+                self._argparser.add_argument(
+                    *argument.name_or_flags(),
+                    type     = argument.type,
+                    help     = argument.help,
+                    metavar  = argument.metavar,
+                    required = True,
+                    **argument.kwargs,
+                )
+            elif isinstance(argument, Option):
+                self._argparser.add_argument(
+                    *argument.name_or_flags(),
+                    default  = argument.default,
+                    type     = argument.type,
+                    help     = argument.help,
+                    metavar  = argument.metavar,
+                    required = False,
+                    **argument.kwargs,
+                )
+            elif isinstance(argument, Flag):
+                self._argparser.add_argument(
+                    *argument.name_or_flags(),
+                    action   = "store_true",
+                    help     = argument.help,
+                    required = False,
+                    **argument.kwargs,
+                )
+            self._arguments[_fixdash(argument.name)] = argument
+
+    def _parse_explicit_cli_args(self) -> dict[str, Any]:
+        """ Returns a dictionary of arguments explicitly given from the command line """
+        # Create auxiliary parser to help determine if arguments are given explicitly from CLI
+        # Heavily inspired by this answer: https://stackoverflow.com/a/45803037/13196863
+        aux_parser = ArgumentParser(argument_default=SUPPRESS)
+        args = self._argparser.parse_args()
+        for argname in vars(args):
+            arg = self._arguments[argname]
+            if isinstance(arg, Flag):
+                aux_parser.add_argument(*arg.name_or_flags(), action="store_true")
             else:
-                d[argname] = default_value
+                aux_parser.add_argument(*arg.name_or_flags())
+        explicit_cli_args = aux_parser.parse_args()
 
-    def _read_config(self, cli_args: dict) -> tuple[list[dict], list[set]]:
-        """ Parses a configuration file. Options in cli_args override config files
-        Returns a list of experiments and a list of explicitly given config arguments """
-        experiments = list()
-        explicit_config_args = list()
+        return vars(explicit_cli_args)
 
-        if "config" in cli_args:
-            if not self._configparser.read([cli_args["config"]]):
-                raise FileNotFoundError(f"Could not find config file {cli_args['config']}")
+    def parse(self) -> JobArguments | list[JobArguments]:
+        """ Parses command line arguments and optionally a configuration file if given
+        If multiple_jobs was set to True in __init__, a list of job descriptions is returned
+        Otherwise, a single job description is returned """
+        job_descriptions: list[JobArguments] = list()
+        args = self._argparser.parse_args()
+        self.location = args.location
+        # TODO Create job descriptions
 
-            # User set DEFAULT section should overwrite the defaults
-            default_config_items = dict(self._configparser.items("DEFAULT"))
-            self._defaults = { **self._defaults,  **default_config_items }
+        if self._clear_folders:
+            for description in job_descriptions:
+                rmtree(description.location, ignore_errors=True)
 
-            if len(self._configparser) > 1 and not self.multiple_jobs:
-                raise ValueError(
-                    "Multiple jobs are given in the config file, however the parser has been configured for a single job"
-                )
+        return job_descriptions if self._multiple_jobs else job_descriptions[0]
 
-            # Each other section corresponds to an experiment
-            for experiment_name in self._configparser.sections() if self._configparser.sections() else ["DEFAULT"]:
-                config_items = dict(self._configparser.items(experiment_name))
-                explicit_config_args.append(
-                    set.union(set(default_config_items), config_items)
-                )
-                config_items = {
-                    kw: self.options[kw]["type"](v) if "type" in self.options[kw] else v
-                    for kw, v in config_items.items()
-                }
-                options = { **self._defaults, **config_items }
-                self._set_bools_in_dict(options)
-
-                experiment_name = experiment_name if experiment_name != "DEFAULT" else cli_args.get("name",  self.name)
-
-                # Put experiments into single subfolders
-                location = os.path.join(self.location, experiment_name)\
-                    if self.multiple_jobs else self.location
-
-                args = cli_args.copy()
-                del args["config"]
-                experiments.append({
-                    **options,
-                    **args,
-                    "name": experiment_name,
-                    "location": location,
-                })
-
-        return experiments, explicit_config_args
-
-    def document_settings(self, subfolder=""):
-        """ Saves all settings used for experiments for reproducability """
-        os.makedirs(os.path.join(self.location, subfolder), exist_ok = True)
-
-        with open(os.path.join(self.location, subfolder, self.name + "_config.ini"), "w") as f:
-            if self._with_config:
-                self._configparser.write(f)
-            f.write(f"\n# Run command\n# {' '.join(sys.argv)}\n")
-            str_defaults = pformat(self._defaults).replace("\n", "\n# ")
-            f.write(f"\n# Default configuration values at runtime\n# {str_defaults}")
-
-    def is_explicit(self, argname: str, job: int=None) -> bool:
-        """ Checks whether a given argument was set explicitly in a config file or from cli
-        If self.multiple_jobs is False, job should not be given. Otherwise, a job number must be given """
-        return argname in self.explicit_args[job if self.multiple_jobs else 0]
+    def document(self) -> str:
+        """ Saves the config file used to run the script containing the CLI command used to start the program as a comment
+        If no config file was used, the CLI command comment is still present
+        The path of the file is returned """
+        raise NotImplementedError
