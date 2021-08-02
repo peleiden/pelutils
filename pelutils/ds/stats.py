@@ -20,7 +20,7 @@ def z(alpha=0.05, two_sided=True, distribution=stats.norm(0, 1)):
     else:
         return distribution.ppf(1 - alpha)
 
-def corr_ci(x: Iterable, y: Iterable, alpha=0.05, output: Callable=None):
+def corr_ci(x: Iterable, y: Iterable, alpha=0.05, output: Callable | None=None):
     """
     A convenience function for getting a pearson correlation + confidence interval of it.
     Uses the method often called Fisher's z transformation: https://en.wikipedia.org/wiki/Fisher_transformation
@@ -34,7 +34,7 @@ def corr_ci(x: Iterable, y: Iterable, alpha=0.05, output: Callable=None):
     Returns
     float: Pearson's correlation coefficient
     float, float: The lower and upper bound of confidence intervals
-    float : The corresponding p value
+    float: The corresponding p value
 
     Inspired by https://zhiyzuo.github.io/Pearson-Correlation-CI-in-Python/
     """
