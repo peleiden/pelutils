@@ -18,7 +18,7 @@ on:
         - .github/workflows
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -27,7 +27,7 @@ jobs:
         shell: bash
         run: |
           git submodule update --init --recursive
-          make clean && make
+          make
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -37,8 +37,13 @@ jobs:
       - name: Set up PyPi dependencies and install package
         run: |
           pip install --upgrade setuptools wheel
-          pip install pytest-cov
+          pip install -r dev-requirements.txt
           pip install -e .[ds]
 
       - name: Run test
         run: pytest --cov=pelutils
+
+      - name: Upload coverage data to coveralls.io
+        run: coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

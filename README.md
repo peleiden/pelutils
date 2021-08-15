@@ -14,6 +14,7 @@ Various utilities useful for Python projects. Features include
 `pelutils` supports Python 3.7+.
 
 [![pytest](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml/badge.svg?branch=master)](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml)
+[![Coverage Status](https://coveralls.io/repos/github/peleiden/pelutils/badge.svg?branch=master)](https://coveralls.io/github/peleiden/pelutils?branch=master)
 
 ## Logging
 
