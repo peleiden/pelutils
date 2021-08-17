@@ -26,6 +26,7 @@
 - Added a command line entry to examples, `pelexamples`
 - Added a `binary_search` for searching in ordered iterables in `log(n)` time
 - Added running average function and variations thereof for plotting noisy data with uneven spacing
+- Made `TickTock.tick` void and `TickTock.tock` raise `TickTockException` if `.tick` not called first
 
 ### Bug fixes
 

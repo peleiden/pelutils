@@ -122,26 +122,27 @@ class TickTock:
     """
 
     def __init__(self):
-        self._start = 0
+        self._start:         float | None = None
         self.profiles:       dict[str, Profile] = dict()
         self._profile_stack: list[Profile] = list()
         self._nhits:         list[int] = list()
 
-    def tick(self) -> float:
+    def tick(self):
         """ Start a timer """
         self._start = perf_counter()
-        return self._start
 
     def tock(self) -> float:
         """ End current timer """
         end = perf_counter()
+        if self._start is None:
+            raise TickTockException("You must start the timer by calling .tick()")
         return end - self._start
 
     def profile(self, name: str, *, hits=1) -> _ProfileContext:
         """
         Begin profile with given name
         Optionally it is possible to register this as several hits that sum to the total time
-        This is usual when execution a multiprocessing mapping operation
+        This is usual when executing a multiprocessing mapping operation
         """
         if name not in self.profiles:
             self.profiles[name] = Profile(
