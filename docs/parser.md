@@ -13,7 +13,7 @@ class Parser:
         clear_folders = True
     ):
         ...
-    def parse(self) -> JobArguments | list[JobArguments]:
+    def parse(self) -> JobDescription | list[JobDescription]:
         ...
     def document(self) -> str:
         ...
@@ -62,7 +62,7 @@ class Flag(ArgumentDescription):
         self.default = False
         ...
 
-class JobArguments(Namespace):
+class JobDescription(Namespace):
     name: str
     location: str
     def todict(self) -> dict[str, Any]:
@@ -107,23 +107,23 @@ Reserved argument names: `location`, `-c/--config`, `-n/--name`
 
 ### `multiple_jobs` and config
 
-- `name` for each job is set by the config file section headers, which are declared using the  `[header-name]` syntax in the `.ini` format
-- Setting `name` from command line raises `argparse.ArgumentError`
-- Given `n` jobs, `n` subfolders will be located in `parser.location`
+- `name` for each job is set by the config file section headers, which are declared using the  `[HEADERNAME]` syntax in the `.ini` format
+- Setting `name` from command line raises `CLIError`
+- The path to each job is `parser.location/name`
 
 ### `multiple_jobs` and no config
 
 - If `name` is set from command line, a single job will be located at `parser.location/name`
-- If not `name` is set, then it will default to a timestamp including microseconds
+- If `name` is not set, it will default to a timestamp including microseconds
 
 ### `not multiple_jobs` and config
 
 - Only a single section is allowed in the config file
-- If multiple are given, `configparser.ParsingError` is raised
+- If multiple are given, `ConfigError` is raised
 - `name` must be given as a section name in the config file, but can be overwritten from the command line
-- The only effect of `name` is the documentation file and `JobArguments.name`, as it is not used as a subfolder
+- `name` has no effect
 
 ### `not multiple_jobs` and no config
 
 - `name` can be set explicitly from the command line and defaults to a timestamp including microseconds
-- The only effect of `name` is the documentation file and `JobArguments.name`, as it is not used as a subfolder
+- `name` has no effect
