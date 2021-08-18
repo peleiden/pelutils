@@ -50,7 +50,7 @@ def get_repo(path: str | None=None) -> tuple[str | None, str | None]:
 
     return None, None
 
-def get_timestamp(for_file = False, include_micros = False) -> str:
+def get_timestamp(*, for_file=False, include_micros=False) -> str:
     """ Returns a time stamp.
     If for_file is true, it can be used to save files and: YYYY-MM-DD_HH-mm-SS.
     Else the timestamp will be YYYY-MM-DD HH:mm:SS:milliseconds.
