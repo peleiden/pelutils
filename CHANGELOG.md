@@ -31,6 +31,7 @@
 - Renamed `throws` to `raises`
 - Reanedm `thousand_seps` to `thousands_seperators`
 - Renamed HISTORY.md to CHANGELOG.md
+- Made `get_timestamp` arguments keyword-only
 
 ### Bug fixes
 
