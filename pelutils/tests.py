@@ -1,7 +1,33 @@
 import os
+import sys
 from shutil import rmtree
 
 from . import log, LogLevels
+
+
+def restore_argv(fun):
+    """
+    Decorator function that restores sys.argv after function exits
+    This is useful for testing command line argument handling
+    ```
+    @restore_argv
+    def test_my_function():
+        sys.argv = ["test", "with", "different", "value", "of", "sys.argv"]
+        <tests>
+    # sys.argv has value x here
+    test_my_function()
+    # sys.argv still has value x here
+    ```
+    """
+    def wrapper(*args, **kwargs):
+        old_argv = sys.argv.copy()
+        try:
+            return fun(*args, **kwargs)
+        except:
+            raise
+        finally:
+            sys.argv = old_argv
+    return wrapper
 
 
 class MainTest:
