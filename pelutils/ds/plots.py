@@ -69,7 +69,7 @@ def exp_moving_avg(
             exp[i] = alpha * y[i] + (1 - alpha) * exp[i-1]
         else:
             exp[i] = y[i]
-    return x, exp if not reverse else exp[::-1]
+    return x, exp if not reverse else np.array(exp)[::-1]
 
 def double_moving_avg(
     x: np.ndarray,
