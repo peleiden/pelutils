@@ -1,39 +1,38 @@
 from __future__ import annotations
 from abc import ABC
 from argparse import ArgumentParser, Namespace, SUPPRESS
+from ast import literal_eval
 from configparser import ConfigParser
+from copy import deepcopy
 from shutil import rmtree
-from typing import Any, Callable, Iterable, TypeVar, Union
+from typing import Any, Callable, TypeVar, Union
 import os
+import re
 import sys
 
-from pelutils import get_timestamp
+from pelutils import get_timestamp, except_keys
 
 # TODO Support for nargs
 # Make sure that it works better than click that only allows one narg argument
-# TODO Choices
-
-# Challenges
-# 1 SOLVED Explicitly given arguments. There does not seem to be a proper way to do this with argparse
-# Some possible solutions here: https://stackoverflow.com/questions/32056910/how-to-find-out-if-argparse-argument-has-been-actually-specified-on-command-line
-# Overwriting action may be the most elegant solution, but this should also work with bools
-# 2 Non-optional arguments. Setting non-optional arguments in argparse does not work as they then will have to be given explicitly from CLI
-# A way to solve this is to let them all be optional in argparse and checking if they are given explicitly after parsing. If not, an error is raised
-# Doing it this way also allows giving arguments using the keyword --argname syntax which is nicer
-# `location` should be ignored as that should always be given as the first argument from the CLI
-# This requires solving the above challenge
+# TODO Assert that no unknown arguments are given
 
 
 _T = TypeVar("_T")
+_type = type  # Save `type` under different name to prevent name collisions
+
+_NargsTypes = Union[str, int, None]
 
 def _fixdash(argname: str) -> str:
     """ Replaces dashes in argument names with underscores """
     return argname.replace("-", "_")
 
-class CLIError(Exception):
+class ParserError(Exception):
     pass
 
-class ConfigError(Exception):
+class CLIError(ParserError):
+    pass
+
+class ConfigError(ParserError):
     pass
 
 class AbstractArgument(ABC):
@@ -56,6 +55,8 @@ class AbstractArgument(ABC):
             raise ValueError("Double dashes are automatically prepended and should not be given by user: '%s'" % name)
         if isinstance(abbrv, str) and (len(abbrv) != 1 or not abbrv.isalpha()):
             raise ValueError("abbrv must be an alpha character and have length 1: '%s'" % abbrv)
+        if re.search(r"\s", name):
+            raise ValueError("name cannot contain whitespace")
 
     def name_or_flags(self) -> tuple[str, ...]:
         if self.abbrv:
@@ -63,41 +64,71 @@ class AbstractArgument(ABC):
         else:
             return ("--" + self.name,)
 
+    @staticmethod
+    def _validate_nargs(nargs: _NargsTypes):
+        if type(nargs) not in _NargsTypes.__args__:
+            raise TypeError("'nargs' must be one of %s, not %s" % (_NargsTypes.__args__, type(nargs)))
+        if isinstance(nargs, str) and nargs not in { "?", "*", "+" }:
+            raise ValueError("When 'nargs' is a string, it must be one of the following: '?', '*', '+'")
+
+    def __str__(self) -> str:
+        vars_str = ", ".join(f"{name}={value}" for name, value in vars(self).items())
+        return f"{self.__class__.__name__}({vars_str})"
+
     def __hash__(self) -> int:
         return hash(self.name)
 
 class Argument(AbstractArgument):
-    """ Argument that must be given a value """
+    """ Argument that must be given a value
+    See documentation possible values of `nargs`
+    https://docs.python.org/3/library/argparse.html#nargs """
 
     def __init__(
         self,
         name:    str, *,
-        type:    Callable[[str], _T] = str,
-        help:    str | None = None,
+        type:    Callable[[str], _T]          = str,
+        abbrv:   str | None                   = None,
+        help:    str | None                   = None,
         metavar: str | tuple[str, ...] | None = None,
+        nargs:   _NargsTypes                  = None,
         **kwargs,
     ):
-        super().__init__(name, None, help=help, **kwargs)
+        super().__init__(name, abbrv, help=help, **kwargs)
+        self._validate_nargs(nargs)
+        if "default" in kwargs:
+            raise TypeError("Argument() does not accept keyword argument 'default'")
         self.type = type
         self.metavar = metavar
+        self.nargs = nargs
 
 class Option(AbstractArgument):
-    """ Optional argument with a default value """
+    """ Optional argument with a default value
+    See documentation possible values of `nargs`
+    https://docs.python.org/3/library/argparse.html#nargs """
 
     def __init__(
         self,
         name:    str, *,
         default: _T | None,
-        type:    Callable[[str], _T] = str,
-        abbrv:   str | None = None,
-        help:    str | None = None,
+        type:    Callable[[str], _T] | None   = None,
+        abbrv:   str | None                   = None,
+        help:    str | None                   = None,
         metavar: str | tuple[str, ...] | None = None,
+        nargs:   _NargsTypes                  = None,
         **kwargs,
     ):
         super().__init__(name, abbrv, help, **kwargs)
+        self._validate_nargs(nargs)
+
         self.default = default
-        self.type = type
+        if type is not None:
+            self.type = type
+        elif default is not None:
+            self.type = _type(default)
+        else:
+            self.type = str
         self.metavar = metavar
+        self.nargs = nargs
 
 class Flag(AbstractArgument):
     """ Boolean flag. Defaults to `False` when not given and `True` when given """
@@ -110,6 +141,10 @@ class Flag(AbstractArgument):
         **kwargs,
     ):
         super().__init__(name, abbrv, help, **kwargs)
+
+    @property
+    def default(self):
+        return False
 
 class JobDescription(Namespace):
 
@@ -139,7 +174,7 @@ class Parser:
     _default_config_job = "DEFAULT"
 
     _location_arg = Argument("location", help="Job folder if multiple_jobs is False else folder containing all job folders")
-    _location_arg.name_or_flags = lambda self: ("location",)
+    _location_arg.name_or_flags = lambda: ("location",)
     _name_arg = Option("name", default=None, abbrv="n", help="Name of the job")
     _encoding_sep = "::"
     _config_arg = Option(
@@ -150,60 +185,74 @@ class Parser:
                   "e.g. --config path/to/config.ini%sutf-8" % (_encoding_sep, _encoding_sep),
     )
 
-    _reserved_arguments: set[ArgumentTypes] = { _location_arg, _name_arg, _config_arg }
-    reserved_names  = { arg.name for arg in _reserved_arguments }
-    reserved_abbrvs = { arg.abbrv for arg in _reserved_arguments if arg.abbrv }
+    _reserved_arguments: tuple[ArgumentTypes] = (_location_arg, _name_arg, _config_arg)
+    _reserved_names  = { arg.name for arg in _reserved_arguments }
+    _reserved_abbrvs = { arg.abbrv for arg in _reserved_arguments if arg.abbrv }
+    @property
+    def reserved_names(self):
+        return self._reserved_names
+    @property
+    def reserved_abbrvs(self):
+        return self._reserved_abbrvs
 
     def __init__(
         self,
-        arguments:   Iterable[ArgumentTypes],
+        *arguments:  ArgumentTypes,
         description: str | None = None,
         multiple_jobs = False,
-        clear_folders = True,
     ):
-        arguments = tuple(arguments)
+        # Modifications are made to the argument objects, so make a deep copy
+        arguments = tuple(deepcopy(arg) for arg in arguments)
+
         self._multiple_jobs = multiple_jobs
-        self._clear_folders = clear_folders
 
         self._argparser = ArgumentParser(description=description)
         self._configparser = ConfigParser(allow_no_value=True)
 
         # Ensure that no conflicts exist with reserved arguments
-        if any(arg.name in self.reserved_names for arg in arguments):
-            raise CLIError("An argument conflicted with one of the reserved arguments: %s" % self.reserved_names)
-        if any(arg.abbrv in self.reserved_abbrvs for arg in arguments):
-            raise CLIError("An argument conflicted with one of the reserved abbreviations: %s" % self.reserved_abbrvs)
+        if any(arg.name in self._reserved_names for arg in arguments):
+            raise ParserError("An argument conflicted with one of the reserved arguments: %s" % self._reserved_names)
+        if any(arg.abbrv in self._reserved_abbrvs for arg in arguments):
+            raise ParserError("An argument conflicted with one of the reserved abbreviations: %s" % self._reserved_abbrvs)
 
-        # Add all arguments to argparser
         # Map argument names to arguments with dashes replaced by underscores
-        self._arguments = { _fixdash(arg.name): arg for arg in self._reserved_arguments }
-        # Contains all optional arguments mapped to their default values
-        # Flags default to `False`
-        self._default_values = dict()
-        # Map argument abbreviations to arguments
-        self._abbrvs = { arg.abbrv: arg for arg in self._reserved_arguments if arg.abbrv }
-        for argument in self._arguments.values():
-            # Add abbreviation and maybe autogenerate one
-            if argument.abbrv and argument.abbrv not in self._abbrvs:
-                self._abbrvs[argument.abbrv] = argument
-            elif argument.abbrv and argument.abbrv in self._abbrvs:
-                raise CLIError("Abbreviation '%s' was used twice" % argument.abbrv)
-            elif not argument.abbrv:
-                # Autogenerate abbreviations, first with lower case and then upper case if lower is taken
-                if argument.name[0].lower() not in self._abbrvs:
-                    argument.abbrv = argument.name[0].lower()
-                    self._abbrvs[argument.abbrv] = argument
-                elif argument.name[0].upper() not in self._abbrvs:
-                    argument.abbrv = argument.name[0].upper()
-                    self._abbrvs[argument.abbrv] = argument
+        self._arguments = { _fixdash(arg.name): arg for arg in self._reserved_arguments + arguments }
+        if len(self._arguments) != len(self._reserved_arguments) + len(arguments):
+            raise ParserError("Conflicting arguments found. Notice that '-' and '_' are counted the same,"
+                "so e.g. 'a-b' and 'a_b' would cause a conflict")
+        # Build abbrevations for arguments
+        # Those with explicit abbreviations are handled first to prevent being overwritten
+        _used_abbrvs = set()
+        _args_with_abbrvs_first = sorted(self._arguments, key=lambda arg: self._arguments[arg].abbrv is None)
+        for argname in _args_with_abbrvs_first:
+            argument = self._arguments[argname]
+            if argument.abbrv and argument.abbrv not in _used_abbrvs:
+                _used_abbrvs.add(argument.abbrv)
+            elif argument.abbrv:
+                raise ParserError("Abbreviation '%s' was used multiple times" % argument.abbrv)
+            else:
+                # Autogenerate abbreviation
+                # First argname[0] is tried. If it exists, the other casing is used if it does not exist
+                if argname[0] not in _used_abbrvs:
+                    argument.abbrv = argname[0]
+                    _used_abbrvs.add(argument.abbrv)
+                elif argname[0].swapcase() not in _used_abbrvs:
+                    argument.abbrv = argname[0].swapcase()
+                    _used_abbrvs.add(argument.abbrv)
 
+        # Finally, add all arguments to argparser
+        for argument in self._arguments.values():
             # Add argument
+            # FIXME nargs cannot be handled so explicitly by argparser
+            # Possible solution: Coerce some nargs values into less restrictive ones
+            # Then parse config, and finally check against original nargs values
             if isinstance(argument, Argument):
                 self._argparser.add_argument(
                     *argument.name_or_flags(),
                     type     = argument.type,
                     help     = argument.help,
                     metavar  = argument.metavar,
+                    nargs    = argument.nargs,
                     **argument.kwargs,
                 )
             elif isinstance(argument, Option):
@@ -213,9 +262,9 @@ class Parser:
                     type     = argument.type,
                     help     = argument.help,
                     metavar  = argument.metavar,
+                    nargs    = argument.nargs,
                     **argument.kwargs,
                 )
-                self._default_values[argument] = argument.default
             elif isinstance(argument, Flag):
                 self._argparser.add_argument(
                     *argument.name_or_flags(),
@@ -223,8 +272,14 @@ class Parser:
                     help     = argument.help,
                     **argument.kwargs,
                 )
-                self._default_values[argument] = False
-            self._arguments[_fixdash(argument.name)] = argument
+
+    def _get_default_values(self) -> dict[ArgumentTypes, Any]:
+        """ Builds a dictionary that maps argument names to their default values
+        Arguments without defaults values are not included """
+        return { argname: arg.default
+            for argname, arg
+            in self._arguments.items()
+            if hasattr(arg, "default") }
 
     def _parse_explicit_cli_args(self) -> set[str]:
         """ Returns a set of arguments explicitly given from the command line
@@ -259,17 +314,22 @@ class Parser:
             config_dict[section] = dict()
             for argname, value in arguments.items():
                 argname = _fixdash(argname)
-                if value is None:  # Flags
-                    config_dict[section][argname] = True
+                if value is None or value in ("True", "False"):  # Flags
+                    if isinstance(value, str):
+                        config_dict[section][argname] = literal_eval(value)
+                    else:
+                        config_dict[section][argname] = True
                 else:  # Arguments and options
                     config_dict[section][argname] = self._arguments[argname].type(value)
 
         return config_dict
 
-    def parse(self) -> JobDescription | list[JobDescription]:
+    def parse_args(self, *, clear_folders=False) -> JobDescription | list[JobDescription]:
         """ Parses command line arguments and optionally a configuration file if given
         If multiple_jobs was set to True in __init__, a list of job descriptions is returned
-        Otherwise, a single job description is returned """
+        Otherwise, a single job description is returned
+        If clear_folders is True, all job locations are cleared,
+        such that an empty directory for each job is guaranteed """
         job_descriptions: list[JobDescription] = list()
         args = self._argparser.parse_args()
         explicit_cli_args = self._parse_explicit_cli_args()
@@ -281,10 +341,12 @@ class Parser:
                 location = os.path.join(self.location, name)
             else:
                 location = self.location
+            arg_dict = vars(args)
             job_descriptions.append(JobDescription(
-                name = name,
-                location = location,
+                name          = name,
+                location      = location,
                 explicit_args = explicit_cli_args,
+                **except_keys(arg_dict, ("location", "name")),
             ))
         else:
             config_dict = self._parse_config_file(args.config)
@@ -292,11 +354,9 @@ class Parser:
             # In that case the DEFAULT is not used and is thus discarded
             if len(config_dict) > 1:
                 del config_dict["DEFAULT"]
-
-            # Ensure valid input
-            if len(config_dict) == 1 and self._multiple_jobs:
+            if len(config_dict) > 1 and not self._multiple_jobs:
                 raise ConfigError("Multiple sections found in config file, yet multiple_jobs has been set to `False`")
-            if self._multiple_jobs and self._location_arg.name in explicit_cli_args:
+            if self._multiple_jobs and self._name_arg.name in explicit_cli_args:
                 raise CLIError("When configuring multiple jobs, `name` cannot be set from the command line")
 
             # Create job descriptions section-wise
@@ -307,20 +367,38 @@ class Parser:
                 else:
                     name = section if self._name_arg.name not in explicit_cli_args else args.name
                     location = self.location
-                job_descriptions.append(JobDescription(
-                    name = name,
-                    location = location,
-                    explicit_args = { *config_args.keys(), *explicit_cli_args },
-                    # Final values of all arguments
-                    # No prepended dashes, but in-word dashes have been changed to underscores
-                    **self._default_values,
+                    print(location)
+
+                # Final values of all arguments
+                # No prepended dashes, but in-word dashes have been changed to underscores
+                value_dict = {
+                    **except_keys(
+                        self._get_default_values(),
+                        ("name", "config"),
+                    ),
                     **config_args,
-                    **{ argname: value for argname, value in vars(args).items() if argname in explicit_cli_args },
+                    **{ argname: value
+                        for argname, value
+                        in except_keys(vars(args), ("name", "location")).items()
+                        if argname in explicit_cli_args },
+                }
+                job_descriptions.append(JobDescription(
+                    name          = name,
+                    location      = location,
+                    explicit_args = { *config_args.keys(), *explicit_cli_args },
+                    **value_dict,
                 ))
 
-        if self._clear_folders:
+        # Check if any arguments are missing
+        for job in job_descriptions:
+            for argname in self._arguments:
+                if argname not in job:
+                    raise ParserError("Job '%s' missing argument '%s'" % (job.name, argname))
+
+        if clear_folders:
             for description in job_descriptions:
                 rmtree(description.location, ignore_errors=True)
+                os.makedirs(description.location)
 
         return job_descriptions if self._multiple_jobs else job_descriptions[0]
 
@@ -336,5 +414,5 @@ class Parser:
                 "\n" +
                 "# CLI command:\n" +
                 "# " + " ".join(sys.argv) + "\n" +
-                "# Defaults at runtime: %s\n" % self._default_values
+                "# Defaults at runtime: %s\n" % self._get_default_values()
             )
