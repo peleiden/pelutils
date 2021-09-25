@@ -16,7 +16,7 @@ except:
     _has_torch = False
 
 
-T = TypeVar("T")
+_T = TypeVar("_T")
 
 def set_seeds(seed: int=0):
     np.random.seed(seed)
@@ -138,7 +138,7 @@ def split_path(path: str) -> list[str]:
     """ Splits a path into components """
     return os.path.normpath(path).split(os.sep)
 
-def binary_search(element: T, iterable: Sequence[T], *, _start=0, _end=-1) -> int | None:
+def binary_search(element: _T, iterable: Sequence[_T], *, _start=0, _end=-1) -> int | None:
     """ Get the index of element in sequence using binary search
     Assumes iterable is sorted in ascending order
     Returns None if the element is not found """
@@ -197,6 +197,16 @@ def reverse_line_iterator(file: TextIO, chunksize=DEFAULT_BUFFER_SIZE, linesep=o
                 break
 
     yield "".join(reversed_contents)[::-1]
+
+def except_keys(d: dict[_T, Any], except_keys: Iterable[_T]) -> dict[_T, Any]:
+    """ Returns the given dictionary, but with given keys removed """
+    d = d.copy()
+    for key in except_keys:
+        try:
+            del d[key]
+        except KeyError:
+            pass
+    return d
 
 # To allow imports directly from utils #
 # Currently to be placed lower because get_timestamp is needed by logger #
