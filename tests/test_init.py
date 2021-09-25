@@ -5,7 +5,7 @@ import os
 
 import numpy as np
 
-from pelutils import EnvVars, reverse_line_iterator,\
+from pelutils import EnvVars, reverse_line_iterator, except_keys,\
     split_path, binary_search, raises, thousands_seperators
 from pelutils.tests import MainTest
 
@@ -115,3 +115,9 @@ class TestInit(MainTest):
                 size = os.path.getsize(path)
                 assert size <= prev_size
                 prev_size = size
+
+    def test_except_keys(self):
+        d = { "a": 3, "b": 5 }
+        d2 = except_keys(d, ["b", "c"])
+        assert "a" in d and "b" in d
+        assert "a" in d2 and "b" not in d2
