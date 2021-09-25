@@ -32,7 +32,8 @@
 - Reanedm `thousand_seps` to `thousands_seperators`
 - Renamed HISTORY.md to CHANGELOG.md
 - Made `get_timestamp` arguments keyword-only
-- Add `restore_argv` decorator that allows safe testing of simulated `sys.argv`
+- Added `restore_argv` decorator that allows safe testing of simulated `sys.argv`
+- Added `except_keys` function for removing a list of keys from a dictionary
 
 ### Bug fixes
 
