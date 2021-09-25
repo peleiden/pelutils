@@ -2,6 +2,11 @@ import subprocess
 from setuptools import setup, find_packages
 from distutils.command.install import install as install_
 
+with open("requirements.txt") as requirements_file:
+    requirements = requirements_file.read().splitlines()
+
+with open("ds-requirements.txt") as ds_requirements_file:
+    ds_requirements = ds_requirements_file.read().splitlines()
 
 with open("README.md") as readme_file:
     README = readme_file.read()
@@ -30,8 +35,8 @@ setup_args = dict(
     keywords         = [ "utility", "logger", "parser", "profiling" ],
     url              = "https://github.com/peleiden/pelutils",
     download_url     = "https://pypi.org/project/pelutils/",
-    install_requires = [ "numpy>=1.18.0", "gitpython>=3.1.0", "rich>=10.0.0", "click>=7.0.0" ],
-    extras_require   = { "ds": ["torch>=1.7.0", "matplotlib>=3.1.0", "scipy>=1.4.1", "tqdm>=4.0.0"] },
+    install_requires = [ requirements ],
+    extras_require   = { "ds": ds_requirements },
     entry_points     = { "console_scripts": [
         "linecounter = pelutils.ds._linecounter:linecounter",
         "pelexamples = examples.cli:run",
