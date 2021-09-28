@@ -2,8 +2,6 @@ import os
 import sys
 from shutil import rmtree
 
-from . import log, LogLevels
-
 
 def restore_argv(fun):
     """
@@ -32,14 +30,16 @@ def restore_argv(fun):
 
 class MainTest:
     """
-    A convenience class that you should inherit from when writing test classes using pytest.
+    A convenience class for inheriting from when writing test classes using pytest.
     This class ensures that test path is automatically created and deleted between tests.
 
     See this example for usage:
     ```
     class SomethingTest(MainTest):
         def test_somefun(self):
-            do_something(path=self.test_dir)
+            results = ...
+            with open("myresultfile.txt", "w") as f:
+                f.write(results)
             assert "myresultfile.txt" in os.listdir(self.test_dir)
     ```
     """
@@ -50,17 +50,10 @@ class MainTest:
 
     @classmethod
     def setup_class(cls):
-        os.makedirs(cls.test_dir, exist_ok = True)
-        log.configure(
-            os.path.join(cls.test_dir, "tests.log"),
-            "Test: %s" % cls.__name__,
-            append=True,
-            print_level=LogLevels.DEBUG,
-        )
+        os.makedirs(cls.test_dir, exist_ok=True)
 
     @classmethod
     def teardown_class(cls):
-        log.clean()
         rmtree(cls.test_dir, onerror=cls.ignore_absentee)
 
     @staticmethod
