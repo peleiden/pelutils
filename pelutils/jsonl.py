@@ -8,7 +8,7 @@ from typing import Generator, Iterable, TextIO
 
 def load_jsonl(f: TextIO) -> Generator:
     """ Returns a generator of parsed lines in a .jsonl file. Empty lines are ignored """
-    for line in f.readlines():
+    for line in f:
         stripped = line.strip()
         if stripped:
             yield json.loads(stripped)

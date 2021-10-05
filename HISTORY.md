@@ -1,5 +1,9 @@
 # History
 
+## 0.6.9 - Nice
+
+- Made `load_jsonl` load the file lazily
+
 ## 0.6.7
 
 - Logger can now be used without writing to file
