@@ -4,7 +4,8 @@ import ctypes
 import random
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Iterable, TypeVar
+from io import DEFAULT_BUFFER_SIZE
+from typing import Generator, TextIO, TypeVar
 
 import git
 import numpy as np
@@ -147,6 +148,46 @@ def binary_search(element: T, iterable: Sequence[T], *, _start=0, _end=-1) -> in
     else:
         return index
 
+def _read_file_chunk(file: TextIO, chunksize: int) -> str:
+    """ Reads a chunk starting from `chunksize` before file pointer and up to current file pointer
+    If `chunksize` is larger than the current file pointer, the file is read from the beginning
+    Returns the read content in reverse order and moves the file pointer to where the content starts
+    Reverse order is used, as it will be mostly faster to search for newlines,
+    especially if there are many lines in a given chunk """
+    mov = file.tell() - max(file.tell()-chunksize, 0)
+    file.seek(file.tell()-mov)
+    reversed_content = file.read(mov)[::-1]
+    file.seek(file.tell()-mov)
+    return reversed_content
+
+def reverse_line_iterator(file: TextIO, chunksize=DEFAULT_BUFFER_SIZE, linesep=os.linesep) -> Generator[str, None, None]:
+    """ Similar to file.readlines(), but lazily returns lines in reverse order
+    Will move file pointer (file.tell()) throughout execution, so be careful
+    When done, file pointer will be 0
+    This function is especially useful for large files,
+    as it will never take up more memory that size of largest line + chunksize """
+
+    # Go to end of file and read first chunk
+    file.seek(0, os.SEEK_END)
+    reversed_content = _read_file_chunk(file, chunksize)
+    reversed_contents = list()
+    while True:
+        try:
+            # Try finding the next newline
+            idx = reversed_content.index(linesep, 1)
+            # Yield everything up to the newline (as the content is reversed)
+            yield_, reversed_content = reversed_content[:idx], reversed_content[idx:]
+            reversed_contents.append(yield_)
+            yield "".join(reversed_contents)[::-1]
+            reversed_contents = list()
+        except ValueError:
+            # No newline was found, so read a new chunk
+            reversed_contents.append(reversed_content)
+            reversed_content = _read_file_chunk(file, chunksize)
+            if not reversed_content:
+                break
+
+    yield "".join(reversed_contents)[::-1]
 
 # To allow imports directly from utils #
 # Currently to be placed lower because get_timestamp is needed by logger #
