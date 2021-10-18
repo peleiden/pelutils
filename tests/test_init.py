@@ -1,8 +1,11 @@
+from __future__ import annotations
+from string import ascii_letters
+import io
 import os
 
 import numpy as np
 
-from pelutils import EnvVars, split_path, binary_search
+from pelutils import EnvVars, reverse_line_iterator, split_path, binary_search
 from pelutils.tests import MainTest
 
 
@@ -37,3 +40,54 @@ class TestInit(MainTest):
             assert data[binary_search(elem, data)] == elem
         assert binary_search(-1, data) is None
         assert binary_search(100, data) is None
+
+    @classmethod
+    def _setup_lineiter_files(cls) -> list[str]:
+        paths = list()
+        paths.append(os.path.join(cls.test_dir, "simple.txt"))
+        with open(paths[-1], "w") as f:
+            f.write("abc\nbbc\n")
+        paths.append(os.path.join(cls.test_dir, "no_end_newline.txt"))
+        with open(paths[-1], "w") as f:
+            f.write("abc\nbbc")
+        paths.append(os.path.join(cls.test_dir, "start_newline.txt"))
+        with open(paths[-1], "w") as f:
+            f.write("\na\nb\n")
+        paths.append(os.path.join(cls.test_dir, "long_lines.txt"))
+        with open(paths[-1], "w") as f:
+            for _ in range(100):
+                f.write(ascii_letters*1000 + "\n")
+        paths.append(os.path.join(cls.test_dir, "long_lines_with_newline_fancyness.txt"))
+        with open(paths[-1], "w") as f:
+            for i in range(100):
+                f.write("\n")
+                f.write(ascii_letters*1000 + ("\n" if i < 99 else ""))
+        return paths
+
+    def test_reverse_line_iterator(self):
+        # Test reverse iteration
+        for file in self._setup_lineiter_files():
+            with open(file) as f:
+                c = f.readlines()
+                f.seek(0)
+                assert c[::-1] == list(reverse_line_iterator(f))
+                assert f.tell() == 0
+
+        # Truncation test
+        # This tests that it is safe to truncate the file while doing reverse iteration
+        path = os.path.join(self.test_dir, "truncate.txt")
+        lines = 1000
+        with open(path, "w") as f:
+            for n in range(lines):
+                f.write(ascii_letters*n + "\n")
+        assert os.path.getsize(path) == len(ascii_letters) * ((lines)**2 - lines) / 2 + lines
+
+        prev_size = os.path.getsize(path)
+        with open(path, "r+") as f:
+            for content in reverse_line_iterator(f):
+                lines -= 1
+                assert content == ascii_letters * lines + "\n"
+                f.truncate()
+                size = os.path.getsize(path)
+                assert size <= prev_size
+                prev_size = size
