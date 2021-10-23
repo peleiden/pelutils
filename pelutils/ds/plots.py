@@ -79,12 +79,12 @@ def double_running_avg(
     samples              = 300,
 ) -> tuple[np.ndarray, np.ndarray]:
     """ Running avg. function that produces smoother curves than normal running avg.
-    Also handles uneven data spacing better
-    This function optionally takes y as `running_avg`
-    If both x and y are given, x must be sorted in ascending order
-    inner_neighbors: How many neighbors to use for the initial running average
-    outer_neighbors: How many neighbors to use for for the second running average
-    samples: How many points to sample the running avg. at """
+    Also handles uneven data spacing better.
+    This function optionally takes y as `running_avg`.
+    If both x and y are given, x must be sorted in ascending order.
+    inner_neighbors: How many neighbors to use for the initial running average.
+    outer_neighbors: How many neighbors to use for for the second running average.
+    samples: How many points to sample the running avg. at. """
     if y is None:
         y = x
         x = np.arange(x.size)
@@ -141,7 +141,7 @@ def get_bins(
 ):
     """ Create bins for plotting a line histogram. Simplest usage is plt.plot(*get_bins(data)) """
     bins = binning_fn(data, bins+1)
-    y, edges = np.histogram(data, bins=bins, density=True)
+    y, edges = np.histogram(data, bins=bins, density=density)
     x = (edges[1:] + edges[:-1]) / 2
     if ignore_zeros:
         x, y = x[y>0], y[y>0]

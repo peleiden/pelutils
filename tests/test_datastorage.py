@@ -36,6 +36,7 @@ class TestDatahandler(MainTest):
         # Use dict data that is not json serializable
         t = T(**self.data)
         t.save(self.test_dir)
+        print(os.listdir(self.test_dir))
         for f in ("a.npy", "b.pt", "data.json", "d.p"):
             assert os.path.isfile(os.path.join(self.test_dir, f))
         t = T.load(self.test_dir)

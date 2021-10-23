@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections import defaultdict
 import inspect
-import json
+import rapidjson
 import pickle
 import os
 
@@ -76,7 +76,7 @@ class DataStorage:
             else:
                 try:
                     # Test whether the data is json serializable by dumping it to string.
-                    json.dumps({key: data})
+                    rapidjson.dumps({key: data})
                     to_json[key] = data
                 except TypeError:
                     to_pickle[key] = data
@@ -86,7 +86,7 @@ class DataStorage:
         if to_json:
             paths.append(os.path.join(loc, self.json_name))
             with open(paths[-1], "w", encoding="utf-8") as f:
-                json.dump(to_json, f)
+                rapidjson.dump(to_json, f)
         for key, data in to_pickle.items():
             paths.append(os.path.join(loc, f"{key}.{self.pickle_ext}"))
             with open(paths[-1], "wb") as f:
@@ -132,7 +132,7 @@ class DataStorage:
 
         if any_json:
             with open(os.path.join(loc, cls.json_name), encoding="utf-8") as f:
-                fields.update(json.load(f))
+                fields.update(rapidjson.load(f))
 
         # Set missing parameters to None
         if cls.ignore_missing:

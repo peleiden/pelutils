@@ -25,5 +25,5 @@ class TestJsonl(MainTest):
 
         # Test stringification methods
         str_repr = jsonl.dumps(data)
-        assert str_repr == '{"a": 1}\n{"b": 2}\n{"c": 3}'
+        assert str_repr == '{"a":1}\n{"b":2}\n{"c":3}'
         assert list(jsonl.loads(str_repr)) == data
