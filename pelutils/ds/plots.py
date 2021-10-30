@@ -28,12 +28,12 @@ colours:      list[str] = tab_colours[:-2] + base_colours[:-1]  # 15 unique matp
 figsize_std  = (15, 10)
 figsize_wide = (22, 10)
 
-def running_avg(
+def moving_avg(
     x: np.ndarray,
     y: np.ndarray | None = None, *,
     neighbors            = 3,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """ Calculates the running average assuming even spacing
+    """ Calculates the moving average assuming even spacing
     If one array of size n is given, it is assumed to run from 0 to n-1 on the x axis
     If two are given, the first are the x axis coordinates
     Returns x and y coordinate arrays of same size """
@@ -44,19 +44,19 @@ def running_avg(
     kernel = np.arange(1, 2*neighbors+2)
     kernel[-neighbors:] = np.arange(neighbors, 0, -1)
     kernel = kernel / kernel.sum()
-    running = np.convolve(y, kernel, mode="valid")
-    return x, running
+    rolling = np.convolve(y, kernel, mode="valid")
+    return x, rolling
 
-def exp_running_avg(
+def exp_moving_avg(
     x: np.ndarray,
     y: np.ndarray | None = None, *,
     alpha                = 0.2,
     reverse              = False,
 ) -> np.ndarray:
-    """ Calculates the exponential running average
+    """ Calculates the exponential moving average
     alpha is a smoothing factor between 0 and 1 - the lower the value, the smoother the curve
     Returns two arrays of same size as x
-    This function optionally takes y as `running_avg` """
+    This function optionally takes y as `moving_avg` """
     if y is None:
         y = x
         x = np.arange(x.size)
@@ -71,26 +71,26 @@ def exp_running_avg(
             exp[i] = y[i]
     return x, exp if not reverse else exp[::-1]
 
-def double_running_avg(
+def double_moving_avg(
     x: np.ndarray,
     y: np.ndarray | None = None, *,
     inner_neighbors      =   1,
     outer_neighbors      =  12,
     samples              = 300,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """ Running avg. function that produces smoother curves than normal running avg.
-    Also handles uneven data spacing better.
-    This function optionally takes y as `running_avg`.
+    """ Moving avg. function that produces smoother curves than normal moving avg.
+    Also handles uneven data spacing better, and produces smoothed values for the entire span.
+    This function optionally takes y as `moving_avg`.
     If both x and y are given, x must be sorted in ascending order.
-    inner_neighbors: How many neighbors to use for the initial running average.
-    outer_neighbors: How many neighbors to use for for the second running average.
-    samples: How many points to sample the running avg. at. """
+    inner_neighbors: How many neighbors to use for the initial moving average.
+    outer_neighbors: How many neighbors to use for for the second moving average.
+    samples: How many points to sample the moving avg. at. """
     if y is None:
         y = x
         x = np.arange(x.size)
     x = np.pad(x, pad_width=inner_neighbors)
     y = np.array([*[y[0]]*inner_neighbors, *y, *[y[-1]]*inner_neighbors])
-    x, y = running_avg(x, y, neighbors=inner_neighbors)
+    x, y = moving_avg(x, y, neighbors=inner_neighbors)
     # Sampled point along x axis
     extra_sample = outer_neighbors / samples
     # Sample points along x axis
@@ -107,13 +107,13 @@ def double_running_avg(
     # Perform interpolation
     x_index = 0
     for k, interp_x in enumerate(xx[outer_neighbors:outer_neighbors+samples], start=outer_neighbors):
-        if interp_x >= x[x_index+1]:
+        while interp_x >= x[x_index+1]:
             x_index += 1
         a = (y[x_index+1] - y[x_index]) / (x[x_index+1] - x[x_index])
         b = y[x_index] - a * x[x_index]
         yy[k] += (a * interp_x + b)
 
-    return running_avg(xx, yy, neighbors=outer_neighbors)
+    return moving_avg(xx, yy, neighbors=outer_neighbors)
 
 # Utility functions for histograms
 def linear_binning(x: Iterable, bins: int) -> np.ndarray:

@@ -6,7 +6,7 @@ import numpy as np
 from pelutils.ds.plots import (
     linear_binning, log_binning, normal_binning, get_bins,
     figsize_wide, rc_params, rc_params_small, update_rc_params,
-    running_avg, exp_running_avg, double_running_avg, tab_colours
+    moving_avg, exp_moving_avg, double_moving_avg, tab_colours
 )
 from pelutils.ds.distributions import norm, lognorm
 
@@ -53,8 +53,8 @@ def plots_binning():
     plt.tight_layout()
     plt.show()
 
-@click.command("plots-running")
-def plots_running():
+@click.command("plots-moving")
+def plots_moving():
     update_rc_params(rc_params_small)
     plt.figure(figsize=(30, 20))
 
@@ -63,32 +63,32 @@ def plots_running():
     y = np.sin(x)
     y += np.random.randn(y.size) / 3
 
-    # Plot data with running average function and few neighbors
+    # Plot data with moving average function and few neighbors
     plt.subplot(221)
     plt.scatter(x, y)
-    plt.plot(*running_avg(x, y, neighbors=1), c=tab_colours[1])
-    plt.title("Running avg., n=1")
+    plt.plot(*moving_avg(x, y, neighbors=1), c=tab_colours[1])
+    plt.title("Moving avg., n=1")
     plt.grid()
 
     # Same but with higher smoothing
     plt.subplot(222)
     plt.scatter(x, y)
-    plt.plot(*running_avg(x, y, neighbors=4), c=tab_colours[1])
-    plt.title("Running avg., n=4")
+    plt.plot(*moving_avg(x, y, neighbors=4), c=tab_colours[1])
+    plt.title("Moving avg., n=4")
     plt.grid()
 
     # Same but with higher smoothing
     plt.subplot(223)
     plt.scatter(x, y)
-    plt.plot(*exp_running_avg(x, y), c=tab_colours[1])
-    plt.title(r"Exp. running avg., $\alpha=0.2$")
+    plt.plot(*exp_moving_avg(x, y), c=tab_colours[1])
+    plt.title(r"Exp. moving avg., $\alpha=0.2$")
     plt.grid()
 
     # Same but with higher smoothing
     plt.subplot(224)
     plt.scatter(x, y)
-    plt.plot(*exp_running_avg(x, y, reverse=True), c=tab_colours[1])
-    plt.title(r"Reverse exp. running avg., $\alpha=0.2$")
+    plt.plot(*exp_moving_avg(x, y, reverse=True), c=tab_colours[1])
+    plt.title(r"Reverse exp. moving avg., $\alpha=0.2$")
     plt.grid()
 
     plt.show()
@@ -107,32 +107,32 @@ def plots_smoothing():
     subsample = np.random.randint(0, 2, n).astype(bool)
     x, y = x[subsample], y[subsample]
 
-    # Plot data with running average function and few neighbors
+    # Plot data with moving average function and few neighbors
     plt.subplot(221)
     plt.scatter(x, y)
-    plt.plot(*running_avg(x, y, neighbors=2), c=tab_colours[1])
-    plt.title("Running avg., n=2")
+    plt.plot(*moving_avg(x, y, neighbors=2), c=tab_colours[1])
+    plt.title("Moving avg., n=2")
     plt.grid()
 
-    # Plot data with running average function and few neighbors
+    # Plot data with moving average function and few neighbors
     plt.subplot(222)
     plt.scatter(x, y)
-    plt.plot(*running_avg(x, y, neighbors=4), c=tab_colours[1])
-    plt.title("Running avg., n=4")
+    plt.plot(*moving_avg(x, y, neighbors=4), c=tab_colours[1])
+    plt.title("Moving avg., n=4")
     plt.grid()
 
-    # Running avg. with smoothing
+    # Moving avg. with smoothing
     plt.subplot(223)
     plt.scatter(x, y)
-    plt.plot(*double_running_avg(x, y, outer_neighbors=10), c=tab_colours[1])
-    plt.title("Running avg. with smoothing, outer=10")
+    plt.plot(*double_moving_avg(x, y, outer_neighbors=10), c=tab_colours[1])
+    plt.title("moving avg. with smoothing, outer=10")
     plt.grid()
 
-    # Running avg. with more smoothing
+    # Moving avg. with more smoothing
     plt.subplot(224)
     plt.scatter(x, y)
-    plt.plot(*double_running_avg(x, y, outer_neighbors=20), c=tab_colours[1])
-    plt.title("Running avg. with smoothing, outer=20")
+    plt.plot(*double_moving_avg(x, y, outer_neighbors=20), c=tab_colours[1])
+    plt.title("Moving avg. with smoothing, outer=20")
     plt.grid()
 
     plt.show()

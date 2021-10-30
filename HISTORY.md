@@ -25,7 +25,7 @@
 - `unique` can now take non-contiguous arrays and also has an `axis` argument
 - Added a command line entry to examples, `pelexamples`
 - Added a `binary_search` for searching in ordered iterables in `log(n)` time
-- Added running average function and variations thereof for plotting noisy data with uneven spacing
+- Added moving average function and variations thereof for plotting noisy data with uneven spacing
 - Made `TickTock.tick` void and `TickTock.tock` raise `TickTockException` if `.tick` not called first
 - Changed to `rapidjson` instead for built-in `json` module for all json operations for strictness and that sweet performance
 - Added `reverse_line_iterator` for iterating through a file backwards

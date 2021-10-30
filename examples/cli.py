@@ -1,6 +1,6 @@
 import click
 
-from examples.ds.plots import plots_binning, plots_running, plots_smoothing
+from examples.ds.plots import plots_binning, plots_moving, plots_smoothing
 
 
 @click.group()
@@ -8,7 +8,7 @@ def cli():
     pass
 
 cli.add_command(plots_binning)
-cli.add_command(plots_running)
+cli.add_command(plots_moving)
 cli.add_command(plots_smoothing)
 
 
