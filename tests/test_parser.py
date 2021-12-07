@@ -12,25 +12,30 @@ from pelutils.parser import Argument, Option, Flag, Parser, JobDescription,\
 
 
 _testdir = "parser_test"
-_sample_argv = f"main.py {os.path.join(MainTest.test_dir, _testdir)} -g 4 --gib-num 3.2 -o 7 -i".split()
+_argv_template = ["main.py", os.path.join(MainTest.test_dir, _testdir)]
+_sample_argv = f"{_argv_template[0]} {_argv_template[1]} -g 4 --gib-num 3.2 -o 7 -i -a b c".split()
 _sample_argv_conf = lambda config_path: (
-    f"main.py {os.path.join(MainTest.test_dir, _testdir)} -c %s --gib-num 3.2" % config_path
+    f"{_argv_template[0]} {_argv_template[1]} -c %s --gib-num 3.2" % config_path
 ).split()
 _sample_arguments = [
     Argument("gibstr"),
     Argument("gib-num", type=float),
+    Argument("arg-two", nargs=2),
     Option("opt-int", default=4),
     Option("opt-d", abbrv="o", default=6, type=lambda x: 2 * int(x)),
-    Flag("iam-bool", abbrv="i")
+    Option("opt-many", nargs=0, default=list(), type=float),
+    Flag("iam-bool", abbrv="i"),
 ]
 
 _sample_no_default = """
 [IAMNOTDEFAULT]
 gibstr=not default
+arg-two=1 2
 """
 _sample_default_only = """
 [DEFAULT]
 gibstr=pistaccio
+arg-two=1 2
 iam-bool
 """
 _sample_single_section = _sample_default_only + """
@@ -43,6 +48,9 @@ _sample_multiple_section = _sample_single_section + """
 gibstr=but they were all of them deceived, for another job was made
 opt-d=8
 opt-int=5
+iam-bool=True
+arg-two=1 3
+opt-many=1 4.5 -3
 """
 
 
@@ -79,6 +87,10 @@ class TestParser(MainTest):
                 Argument("hello%sthere" % char)
         with pytest.raises(TypeError):
             Argument("default", default=4)
+        with pytest.raises(TypeError):
+            Argument("multiple-args", nargs="?")
+        with pytest.raises(ValueError):
+            Option("no-args", nargs=-1, default=[])
         Argument("meme-folder")
         Option("memes", abbrv="m", default="doge")
         Flag("show-memes", abbrv="s")
@@ -142,10 +154,12 @@ class TestParser(MainTest):
         assert job.location == os.path.join(self.test_dir, _testdir)
         assert job.gibstr == "4"
         assert job.gib_num == float("3.2")
+        assert job.arg_two == ["b", "c"]
         assert job.opt_int == 4
         assert job.opt_d == 14
+        assert job.opt_many == list()
         assert job.iam_bool
-        assert job.explicit_args == { "location", "gibstr", "gib_num", "opt_d", "iam_bool" }
+        assert job.explicit_args == { "location", "gibstr", "gib_num", "arg_two", "opt_d", "iam_bool" }
 
     @restore_argv
     def test_conf_single_job(self):
@@ -184,8 +198,10 @@ class TestParser(MainTest):
         assert job.location == os.path.join(self.test_dir, _testdir, job.name)
         assert job.gibstr == "4"
         assert job.gib_num == float("3.2")
+        assert job.arg_two == ["b", "c"]
         assert job.opt_int == 4
         assert job.opt_d == 14
+        assert job.opt_many == list()
         assert job.iam_bool
 
     @restore_argv
@@ -209,6 +225,7 @@ class TestParser(MainTest):
         assert jobs[1].gib_num == float("3.2")
         assert jobs[1].opt_int == 5
         assert jobs[1].opt_d == 16
+        assert jobs[1].opt_many == [float("1"), float("4.5"), float("-3")]
         assert jobs[1].iam_bool
 
         # Make sure an error is thrown if name is set from the command line
@@ -227,6 +244,7 @@ class TestParser(MainTest):
         assert job.location == os.path.join(self.test_dir, _testdir)
         assert job.gibstr == "not default"
         assert job.gib_num == float("3.2")
+        assert job.arg_two == ["1", "2"]
 
     @restore_argv
     def test_non_optional_args(self):
@@ -245,4 +263,42 @@ class TestParser(MainTest):
         parser = Parser()
         parser.parse_args(clear_folders=True)
         assert not os.listdir(d)
+
+    @restore_argv
+    def test_nargs(self):
+        # Test an expected case
+        sys.argv = _argv_template + ["--bar", "1", "2"]
+        parser = Parser(
+            Argument("bar", nargs=2, type=int),
+            Option("foo", nargs=3, default=["a", "b", "c"]),
+            Option("fizz", nargs=1, default=(1,))
+        )
+        assert parser._arguments["fizz"].type is int
+
+        args = parser.parse_args()
+        assert len(args.bar) == 2
+        assert args.bar == [1, 2]
+        assert len(args.foo) == 3
+        assert args.foo == ["a", "b", "c"]
+
+        # Test if argument not given
+        sys.argv = _argv_template
+        parser = Parser(
+            Argument("bar", nargs=0, type=int),
+        )
+        with pytest.raises(ParserError):
+            parser.parse_args()
+
+        # Test if wrong number of arguments
+        sys.argv = _argv_template + ["--bar", "1", "2"]
+        parser = Parser(
+            Argument("bar", nargs=3)
+        )
+        with pytest.raises(ValueError):
+            parser.parse_args()
+        parser = Parser(
+            Option("bar", nargs=3, default=[1, 2, 3])
+        )
+        with pytest.raises(ValueError):
+            parser.parse_args()
 
