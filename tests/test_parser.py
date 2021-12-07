@@ -52,16 +52,21 @@ iam-bool=True
 arg-two=1 3
 opt-many=1 4.5 -3
 """
+_sample_single_nargs = """
+[DEFAULT]
+foo=3 4
+"""
 
 
 class TestParser(MainTest):
 
     def setup_class(self):
         super().setup_class()
-        self._no_default_file    = os.path.join(self.test_dir, "no-default.ini")
-        self._default_file       = os.path.join(self.test_dir, "default-only.ini")
-        self._single_job_file    = os.path.join(self.test_dir, "single-job.ini")
-        self._multiple_jobs_file = os.path.join(self.test_dir, "multiple-jobs.ini")
+        self._no_default_file          = os.path.join(self.test_dir, "no-default.ini")
+        self._default_file             = os.path.join(self.test_dir, "default-only.ini")
+        self._single_job_file          = os.path.join(self.test_dir, "single-job.ini")
+        self._multiple_jobs_file       = os.path.join(self.test_dir, "multiple-jobs.ini")
+        self._sample_single_nargs_file = os.path.join(self.test_dir, "single-nargs.ini")
         with open(self._no_default_file, "w") as f:
             f.write(_sample_no_default)
         with open(self._default_file, "w") as f:
@@ -70,6 +75,8 @@ class TestParser(MainTest):
             f.write(_sample_single_section)
         with open(self._multiple_jobs_file, "w") as f:
             f.write(_sample_multiple_section)
+        with open(self._sample_single_nargs_file, "w") as f:
+            f.write(_sample_single_nargs)
 
     def test_argument_validation(self):
         with pytest.raises(ValueError):
@@ -300,5 +307,34 @@ class TestParser(MainTest):
             Option("bar", nargs=3, default=[1, 2, 3])
         )
         with pytest.raises(ValueError):
+            parser.parse_args()
+
+        # Make sure stuff also works if config file is wrong
+        sys.argv = _argv_template + ["-c", self._sample_single_nargs_file]
+        parser = Parser(
+            Argument("foo", nargs=3)
+        )
+        with pytest.raises(ValueError):
+            parser.parse_args()
+
+        # Test type parsing
+        parser = Parser(Argument("foo", nargs=2, type=int))
+        args = parser.parse_args()
+        assert args.foo == [3, 4]
+
+    @restore_argv
+    def test_no_unknown_args(self):
+        # Test with command line argument
+        sys.argv = _argv_template + ["--bar", "1", "--foo", "1"]
+        parser = Parser(Argument("bar"))
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            parser.parse_args()
+        assert pytest_wrapped_e.type == SystemExit
+        assert pytest_wrapped_e.value.code == 2
+
+        # Test with config argument
+        sys.argv = _argv_template + ["-c", self._sample_single_nargs_file]
+        parser = Parser(Option("bar", type=int, default=[1, 2]))
+        with pytest.raises(KeyError):
             parser.parse_args()
 
