@@ -13,8 +13,6 @@ import sys
 
 from pelutils import get_timestamp, except_keys
 
-# TODO Assert that no unknown arguments are given
-
 
 _T = TypeVar("_T")
 _type = type  # Save `type` under different name to prevent name collisions
