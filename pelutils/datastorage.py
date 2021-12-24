@@ -1,19 +1,22 @@
 from __future__ import annotations
 from collections import defaultdict
 import inspect
-import rapidjson
-import pickle
 import os
+import pickle
+import shutil
 
 import numpy as np
+import rapidjson
 try:
     import torch
     _has_torch = True
 except:
     _has_torch = False
 
+
 # The special serializations that DataStorage supports.
 # datatype: tuple consisting of save function (API is save(file, data)), load function (API is load(file_obj)) and extension
+# Can be extended by user if necessary
 SERIALIZATIONS = {
     np.ndarray: (np.save, np.load, "npy"),
 }
@@ -56,14 +59,24 @@ class DataStorage:
     """
 
     json_name      = "data.json"
-    pickle_ext     = "p"
+    pickle_ext     = "pkl"
     ignore_missing = False
 
-    def save(self, loc: str) -> list[str]:
+    def __init__(self, *args, **kwargs):
+        """ This method is overwritten class is decorated with @dataclass.
+        Therefore, if this method is called, it is an error. """
+        raise TypeError("DataStorage class %s must be decorated with @dataclass" % self.__class__.__name__)
+
+    def save(self, loc: str, remove_existing=False) -> list[str]:
         """
         Saves all the fields of the instatiated data classes as either json, pickle or designated serialization function
         :param str loc: Path to directory in which to save data
+        :param bool remove_existing: If True, loc is cleared before saving data
         """
+
+        if remove_existing:
+            shutil.rmtree(loc)
+        os.makedirs(loc, exist_ok=True)
 
         # Split data by whether it should be saved using a known function or using pickle or json
         func_serialize = defaultdict(dict)
