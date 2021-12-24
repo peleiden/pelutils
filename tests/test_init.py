@@ -5,7 +5,7 @@ import os
 
 import numpy as np
 
-from pelutils import EnvVars, reverse_line_iterator, split_path, binary_search
+from pelutils import EnvVars, reverse_line_iterator, split_path, binary_search, raises
 from pelutils.tests import MainTest
 
 
@@ -31,6 +31,11 @@ class TestInit(MainTest):
         assert split_path(absolute + "/") == ["", "home", "senate"]
         relative = "use/pelutils/pls.py"
         assert split_path(relative) == ["use", "pelutils", "pls.py"]
+
+    def test_raises(self):
+        assert raises(IndexError, lambda x: x[0], [])
+        assert not raises(IndexError, lambda x: x[0], [1])
+        assert not raises(TypeError, lambda x: x[0], [])
 
     def test_binary_search(self):
         data = np.random.randint(0, 100, 100)

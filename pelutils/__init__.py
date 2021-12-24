@@ -1,11 +1,11 @@
 from __future__ import annotations
-import os
-import ctypes
-import random
 from collections.abc import Sequence
 from datetime import datetime
 from io import DEFAULT_BUFFER_SIZE
 from typing import Generator, TextIO, TypeVar
+import os
+import ctypes
+import random
 
 import git
 import numpy as np
@@ -17,7 +17,6 @@ except:
 
 
 T = TypeVar("T")
-
 
 def set_seeds(seed: int=0):
     np.random.seed(seed)
@@ -52,13 +51,11 @@ def get_repo(path: str | None=None) -> tuple[str | None, str | None]:
     return None, None
 
 def get_timestamp(for_file = False, include_micros = False) -> str:
-    """
-    Returns a time stamp
-    If for_file is true, it can be used to save files and: YYYY-MM-DD_HH-mm-SS
-    Else the timestamp will be YYYY-MM-DD HH:mm:SS:milliseconds
-    Set include_micros to include microseconds in time stamp (only if for_file is false)
-    Returns a time stamp for current time either in datetime format or, if for_file, in YYYY-MM-DD_HH-MM-SS
-    """
+    """ Returns a time stamp.
+    If for_file is true, it can be used to save files and: YYYY-MM-DD_HH-mm-SS.
+    Else the timestamp will be YYYY-MM-DD HH:mm:SS:milliseconds.
+    Set include_micros to include microseconds in time stamp (only if for_file is false).
+    Returns a time stamp for current time either in datetime format or, if for_file, in YYYY-MM-DD_HH-MM-SS. """
     d_string = str(datetime.now())
     if not include_micros:
         d_string = d_string[:-3]
@@ -66,7 +63,7 @@ def get_timestamp(for_file = False, include_micros = False) -> str:
         d_string = "-".join(d_string.split(".")[0].split(":")).replace(" ", "_")
     return d_string
 
-def thousand_seps(numstr: str | float | int) -> str:
+def thousand_seps(numstr: str | float | int, decimal_seperator=".") -> str:
     """ Formats a number using thousand seperators """
     decs = str(numstr)
     rest = ""
@@ -77,24 +74,25 @@ def thousand_seps(numstr: str | float | int) -> str:
         decs = decs[:i] + "," + decs[i:]
     return decs + rest
 
-def throws(exc_type: type, fun: Callable, *args, **kwargs) -> bool:
-    """ Check if fun(*args, **kwargs) throws an error of a given type """
+def raises(exc_type: type, fun: Callable, *args, **kwargs) -> bool:
+    """ Check if fun(*args, **kwargs) throws an error of a given type. """
     try:
         fun(*args, **kwargs)
         return False
     except exc_type:
         return True
+    except:
+        return False
 
 class EnvVars:
-    """
-    Execute a piece of code with certain environment variables
-    Example: Disabling multithreading in tesseract
+    """ Execute a piece of code with certain environment variables.
+    ALl environment variables are restored after with block.
+    Example: Disabling multithreading in tesseract:
     ```
     with EnvVars(OMP_THREAD_LIMIT=1):
         # Tesseract code here
     ```
-    Any existing environment variables are restored, and newly added are removed after exiting with block
-    """
+    Any existing environment variables are restored, and newly added are removed after exiting with block. """
 
     _origs: dict
 
@@ -107,7 +105,7 @@ class EnvVars:
             self._origs[var] = os.environ.get(var)
             os.environ[var] = str(value)
 
-    def __exit__(self, *args):
+    def __exit__(self, *__):
         for var, value in self._origs.items():
             if value is None:
                 del os.environ[var]
