@@ -11,8 +11,8 @@ with open("ds-requirements.txt") as ds_requirements_file:
 with open("README.md") as readme_file:
     README = readme_file.read()
 
-with open("HISTORY.md") as history_file:
-    HISTORY = history_file.read()
+with open("CHANGELOG.md") as history_file:
+    CHANGELOG = history_file.read()
 
 class install(install_):
     def run(self):
@@ -26,7 +26,7 @@ setup_args = dict(
     version          = "0.6.9",
     description      = "Utility functions that are often useful",
     long_description_content_type = "text/markdown",
-    long_description = README + "\n\n" + HISTORY,
+    long_description = README + "\n\n" + CHANGELOG,
     license          = "BSD-3-Clause",
     packages         = find_packages(),
     package_data     = { "pelutils.ds": ["ds/ds.so"] },
