@@ -1,10 +1,6 @@
 # History
 
-## 0.6.9 - Nice
-
-- Made `load_jsonl` load the file lazily
-
-## 0.7.0 - Breaking changes
+## Unreleased - Breaking changes
 
 - Removed `log.tqdm`
 - Added binning functions to `pelutils.ds.plot`
@@ -13,6 +9,8 @@
 
   Currently only has plotting examples
 - Removed `subfolder` attribute on `DataStorage` as this was cause for much confusion and many issues
+- Changed pickle extension from `p` to `pkl`
+- Add option to clear existing data folder saving with `DataStorage`
 - Made naming of different submodules consistent
 - Added `linecounter` entry point that allows plotting development of code in repositories over time
 - Made `get_repo` return the absolute repository path
@@ -31,12 +29,17 @@
 - Added `reverse_line_iterator` for iterating through a file backwards
 - Renamed `throws` to `raises`
 - Reanedm `thousand_seps` to `thousands_seperators`
+- Renamed HISTORY.md to CHANGELOG.md
 
 ### Bug fixes
 
 - Fixed a bug where a backslash would sometimes be printed from the logger before square brackets
 - Fixed `raises` throwing errors if error was not caught
 - Made `thousands_seperators` work with negative numbers
+
+## 0.6.9 - Nice
+
+- Made `load_jsonl` load the file lazily
 
 ## 0.6.7
 

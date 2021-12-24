@@ -27,6 +27,8 @@ class TExtraIgnore(T):
     f: float
     ignore_missing = True
 
+class TMissingDecorator(DataStorage):
+    a: int
 
 class TestDatahandler(MainTest):
 
@@ -37,7 +39,7 @@ class TestDatahandler(MainTest):
         t = T(**self.data)
         t.save(self.test_dir)
         print(os.listdir(self.test_dir))
-        for f in ("a.npy", "b.pt", "data.json", "d.p"):
+        for f in ("a.npy", "b.pt", "data.json", "d.pkl"):
             assert os.path.isfile(os.path.join(self.test_dir, f))
         t = T.load(self.test_dir)
         for n, d in self.data.items():
@@ -50,3 +52,7 @@ class TestDatahandler(MainTest):
             TExtra.load(self.test_dir)
         t = TExtraIgnore.load(self.test_dir)
         assert t.e is None and t.f is None
+
+    def test_missing_decorator(self):
+        with pytest.raises(TypeError):
+            TMissingDecorator(a=5)
