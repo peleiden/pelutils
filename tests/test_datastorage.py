@@ -25,6 +25,7 @@ class TExtra(T):
 class TExtraIgnore(T):
     e: np.ndarray
     f: float
+    indent = 4
     ignore_missing = True
 
 class TMissingDecorator(DataStorage):

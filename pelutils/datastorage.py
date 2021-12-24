@@ -1,5 +1,6 @@
 from __future__ import annotations
 from collections import defaultdict
+from typing import Optional
 import inspect
 import os
 import pickle
@@ -58,9 +59,10 @@ class DataStorage:
     ```
     """
 
-    json_name      = "data.json"
-    pickle_ext     = "pkl"
-    ignore_missing = False
+    json_name:      str            = "data.json"
+    indent:         Optional[None] = None
+    pickle_ext:     str            = "pkl"
+    ignore_missing: bool           = False
 
     def __init__(self, *args, **kwargs):
         """ This method is overwritten class is decorated with @dataclass.
@@ -99,7 +101,7 @@ class DataStorage:
         if to_json:
             paths.append(os.path.join(loc, self.json_name))
             with open(paths[-1], "w", encoding="utf-8") as f:
-                rapidjson.dump(to_json, f)
+                rapidjson.dump(to_json, f, indent=self.indent)
         for key, data in to_pickle.items():
             paths.append(os.path.join(loc, f"{key}.{self.pickle_ext}"))
             with open(paths[-1], "wb") as f:
