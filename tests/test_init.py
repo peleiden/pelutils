@@ -5,7 +5,8 @@ import os
 
 import numpy as np
 
-from pelutils import EnvVars, reverse_line_iterator, split_path, binary_search, raises
+from pelutils import EnvVars, reverse_line_iterator,\
+    split_path, binary_search, raises, thousands_seperators
 from pelutils.tests import MainTest
 
 
@@ -31,6 +32,24 @@ class TestInit(MainTest):
         assert split_path(absolute + "/") == ["", "home", "senate"]
         relative = "use/pelutils/pls.py"
         assert split_path(relative) == ["use", "pelutils", "pls.py"]
+
+    def test_thousands_seperator(self):
+        cases = (
+            (1, "1", "1"),
+            (1.1, "1.1", "1,1"),
+            (1e3, "1,000.0", "1.000,0"),
+            (1.234567e4, "12,345.67", "12.345,67"),
+            (1234567890, "1,234,567,890", "1.234.567.890"),
+            (0.03413, "0.03413", "0,03413"),
+        )
+        for num, with_dot, with_comma in cases:
+            for neg in False, True:
+                if neg == -1:
+                    num = -num
+                    with_dot = "-" + with_dot
+                    with_comma = "-" + with_comma
+                assert with_dot == thousands_seperators(num, ".")
+                assert with_comma == thousands_seperators(num, ",")
 
     def test_raises(self):
         assert raises(IndexError, lambda x: x[0], [])

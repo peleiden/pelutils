@@ -63,16 +63,27 @@ def get_timestamp(for_file = False, include_micros = False) -> str:
         d_string = "-".join(d_string.split(".")[0].split(":")).replace(" ", "_")
     return d_string
 
-def thousand_seps(numstr: str | float | int, decimal_seperator=".") -> str:
+def thousands_seperators(num: float | int, decimal_seperator=".") -> str:
     """ Formats a number using thousand seperators """
-    decs = str(numstr)
+    if decimal_seperator not in { ".", "," }:
+        raise ValueError("'%s' is not a valid decimal seperator. Use '.' or ','" % decimal_seperator)
+
+    num = str(num)
+    is_negative = num.startswith("-")
+    if is_negative:
+        num = num[1:]
+    tsep = "," if decimal_seperator == "." else "."
+
     rest = ""
-    if "." in decs:
-        rest = decs[decs.index("."):]
-        decs = decs[:decs.index(".")]
-    for i in range(len(decs)-3, 0, -3):
-        decs = decs[:i] + "," + decs[i:]
-    return decs + rest
+    if "." in num:
+        rest = decimal_seperator + num[num.index(".")+1:]
+        num = num[:num.index(".")]
+    for i in range(len(num)-3, 0, -3):
+        num = num[:i] + tsep + num[i:]
+    if is_negative:
+        num = "-" + num
+
+    return num + rest
 
 def raises(exc_type: type, fun: Callable, *args, **kwargs) -> bool:
     """ Check if fun(*args, **kwargs) throws an error of a given type. """

@@ -30,11 +30,13 @@
 - Changed to `rapidjson` instead for built-in `json` module for all json operations for strictness and that sweet performance
 - Added `reverse_line_iterator` for iterating through a file backwards
 - Renamed `throws` to `raises`
+- Reanedm `thousand_seps` to `thousands_seperators`
 
 ### Bug fixes
 
 - Fixed a bug where a backslash would sometimes be printed from the logger before square brackets
 - Fixed `raises` throwing errors if error was not caught
+- Made `thousands_seperators` work with negative numbers
 
 ## 0.6.7
 

@@ -3,7 +3,7 @@ from copy import deepcopy
 from time import perf_counter
 from typing import Generator, Iterable
 
-from pelutils import thousand_seps
+from pelutils import thousands_seperators
 from pelutils.format import Table
 
 
@@ -209,7 +209,7 @@ class TickTock:
     def stringify_time(dt: float, unit: tuple[str, float]=TimeUnits.millisecond) -> str:
         """ Stringify a time given in seconds with a given unit """
         str_ = f"{dt/unit[1]:.3f} {unit[0]}"
-        return thousand_seps(str_)
+        return thousands_seperators(str_)
 
     def stringify_sections(self, unit: tuple[str, float]=TimeUnits.second, with_std=False) -> str:
         """ Returns a pretty print of profiles """
@@ -228,7 +228,7 @@ class TickTock:
                 self.stringify_time(profile.sum(), unit),
                 "%.3f" % (100 * profile.sum() / (profile.parent.sum() if profile.parent else total_time))
                     + (" <" if profile.depth else "") + "--" * (profile.depth-1),
-                thousand_seps(len(profile)),
+                thousands_seperators(len(profile)),
                 self.stringify_time(profile.mean(), TimeUnits.next_smaller(unit))
             ]
             if with_std:
