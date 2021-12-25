@@ -13,7 +13,7 @@ Run the following commands to update version on PyPi.
 
 ```
 rm -rf dist
-python setup.py sdist bdist_wheel  # Requires 3.8 or later
+python setup.py sdist bdist_wheel
 twine upload dist/*
 ```
 

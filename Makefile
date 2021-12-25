@@ -2,13 +2,16 @@ CC=gcc
 CFLAGS=-fPIC -Wall -O3
 LDFLAGS=-shared
 
-all: pelutils/ds/ds.so
+all: pelutils/so/ds.so
 
-pelutils/ds/ds.o: pelutils/ds/ds.c
+pelutils/so/ds.o:
+	mkdir -p pelutils/so
+	$(CC) pelutils/ds/ds.c $(CFLAGS) $(LDFLAGS) -o pelutils/so/ds.o
 
-pelutils/ds/ds.so: pelutils/ds/ds.o
-	$(CC) pelutils/ds/ds.o pelutils/ds/hashmap.c/hashmap.c -shared -fPIC -o pelutils/ds/ds.so
-	$(RM) pelutils/ds/*.o
+pelutils/so/ds.so: pelutils/so/ds.o
+	mkdir -p pelutils/so
+	$(CC) pelutils/so/ds.o pelutils/ds/hashmap.c/hashmap.c -shared -fPIC -o pelutils/so/ds.so
+	$(RM) pelutils/so/*.o
 
 clean:
-	$(RM) pelutils/ds/*.o pelutils/ds/*.so
+	$(RM) pelutils/so/*.o pelutils/so/*.so
