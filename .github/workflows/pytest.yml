@@ -2,7 +2,7 @@ name: pytest
 
 on:
   push:
-    branches: [ master, develop ]
+    branches: [ master, release ]
     paths:
         - pelutils/**.py
         - tests/**.py
@@ -10,7 +10,7 @@ on:
         - .github/workflows
 
   pull_request:
-    branches: [ master, develop ]
+    branches: [ master, release ]
     paths:
         - pelutils/**.py
         - tests/**.py
