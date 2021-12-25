@@ -8,6 +8,9 @@ with open("requirements.txt") as requirements_file:
 with open("ds-requirements.txt") as ds_requirements_file:
     ds_requirements = ds_requirements_file.read().splitlines()
 
+with open("dev-requirements.txt") as dev_requirements_file:
+    dev_requirements = dev_requirements_file.read().splitlines()
+
 with open("README.md") as readme_file:
     README = readme_file.read()
 
@@ -36,7 +39,7 @@ setup_args = dict(
     url              = "https://github.com/peleiden/pelutils",
     download_url     = "https://pypi.org/project/pelutils/",
     install_requires = [ requirements ],
-    extras_require   = { "ds": ds_requirements },
+    extras_require   = { "ds": ds_requirements, "tests": ds_requirements+dev_requirements },
     entry_points     = { "console_scripts": [
         "linecounter = pelutils.ds._linecounter:linecounter",
         "pelexamples = examples.cli:run",
