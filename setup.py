@@ -46,7 +46,7 @@ setup_args = dict(
         "pelexamples = examples.cli:run",
     ] },
     cmdclass         = { "build": build },
-    ext_modules      = [ Extension("pelutils", ["pelutils/ds/ds.c"]) ],
+    ext_modules      = [ Extension("ds_c", ["pelutils/ds/ds.c"]) ],
 )
 
 if __name__ == "__main__":

@@ -1,14 +1,15 @@
 from __future__ import annotations
+from pathlib import Path
+from typing import Callable, Generator, Iterable, Type
 import os
 import ctypes
 import functools
 import platform
-from typing import Callable, Generator, Iterable, Type
 
 import numpy as np
 
 # Path to directory where package files are located
-_base_path = os.path.abspath(os.path.dirname(__file__))
+_base_path = Path(os.path.abspath(os.path.dirname(__file__)))
 
 _import_error = ModuleNotFoundError("To use the ds submodule, you must install pelutils[ds]")
 
@@ -22,7 +23,7 @@ from pelutils import c_ptr
 
 _so_error = NotImplementedError("unique function is currently only supported on x86_64 Linux")
 if all(substr in platform.platform().lower() for substr in ("linux", "x86_64")):
-    _lib = ctypes.cdll.LoadLibrary(f"{_base_path}/ds.so")
+    _lib = ctypes.cdll.LoadLibrary(_base_path.parent / "so" / "ds.so")
 def unique(
     array: np.ndarray, *,
     return_index=False,
