@@ -34,14 +34,6 @@ class CExtension(Extension):
 
 class build(build_):
 
-    def run(self):
-        # Clear old builds to prevent older versions being used
-        rmtree("build", ignore_errors=True)
-        rmtree("dist", ignore_errors=True)
-        # Clone all submodules
-        subprocess.call("git submodule update --init --recursive".split())
-        super().run()
-
     def build_extension(self, ext):
         self._ctypes = isinstance(ext, CExtension)
         return super().build_extension(ext)
