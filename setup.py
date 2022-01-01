@@ -20,6 +20,9 @@ with open("README.md") as readme_file:
 with open("CHANGELOG.md") as history_file:
     CHANGELOG = history_file.read()
 
+class CExtension(Extension):
+    pass
+
 class build(build_):
 
     def run(self):
@@ -29,6 +32,20 @@ class build(build_):
         # Clone all submodules
         subprocess.call("git submodule update --init --recursive".split())
         super().run()
+
+    def build_extension(self, ext):
+        self._ctypes = isinstance(ext, CExtension)
+        return super().build_extension(ext)
+
+    def get_export_symbols(self, ext):
+        if self._ctypes:
+            return ext.export_symbols
+        return super().get_export_symbols(ext)
+
+    def get_ext_filename(self, ext_name):
+        if self._ctypes:
+            return ext_name + '.so'
+        return super().get_ext_filename(ext_name)
 
 setup_args = dict(
     name             = "pelutils",
@@ -52,10 +69,10 @@ setup_args = dict(
     ] },
     cmdclass         = { "build": build },
     ext_modules      = [
-        Extension(
-            "ds_c",
-            sources=["pelutils/ds/ds.c", "pelutils/ds/hashmap.c/hashmap.c"],
-            extra_compile_args=["-DMS_WIN64"],
+        CExtension(
+            name               = "ds_c",
+            sources            = ["pelutils/ds/ds.c", "pelutils/ds/hashmap.c/hashmap.c"],
+            extra_compile_args = ["-DMS_WIN64"],
         )
     ],
     python_requires  = ">=3.7",
