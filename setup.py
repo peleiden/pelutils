@@ -2,6 +2,7 @@ from distutils.command.build import build as build_
 from distutils.core import Extension
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
+from shutil import rmtree
 import subprocess
 
 with open("requirements.txt") as requirements_file:
@@ -22,6 +23,10 @@ with open("CHANGELOG.md") as history_file:
 class build(build_):
 
     def run(self):
+        # Clear old builds to prevent older versions being used
+        rmtree("build", ignore_errors=True)
+        rmtree("dist", ignore_errors=True)
+        # Clone all submodules
         subprocess.call("git submodule update --init --recursive".split())
         super().run()
 
@@ -46,7 +51,13 @@ setup_args = dict(
         "pelexamples = examples.cli:run",
     ] },
     cmdclass         = { "build": build },
-    ext_modules      = [ Extension("ds_c", ["pelutils/ds/ds.c"]) ],
+    ext_modules      = [
+        Extension(
+            "ds_c",
+            sources=["pelutils/ds/ds.c", "pelutils/ds/hashmap.c/hashmap.c"],
+            extra_compile_args=["-DMS_WIN64"],
+        )
+    ],
 )
 
 if __name__ == "__main__":
