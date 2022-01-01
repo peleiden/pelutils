@@ -1,9 +1,8 @@
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
 #include <string.h>
 #include "hashmap.c/hashmap.h"
-#include "Python.h"
 
-
-PyMODINIT_FUNC PyInit_ds_c(void) { };
 
 // Contains a pointer to an array element and a reference to the stride
 struct elem {
@@ -25,16 +24,16 @@ int compare(const void* elem1, const void* elem2, void* udata) {
     return memcmp(e1->p_elem, e2->p_elem, e1->stride);
 }
 
-size_t unique(
-    size_t n,       // Number of array elements
-    size_t stride,  // Number of bytes between elements on primary axis
-    void* array,    // Non-empty, contiguous array of any shape
-    long* index,    // Array of size n to put unique values
-    long* inverse,  // Array of size n to put inverse values
-    long* counts    // Array of size n to put number of each unique element
-) {
+static PyObject* unique(PyObject* self, PyObject* args) {
+    size_t n, stride;
+    void *array;
+    long *index, *inverse, *counts;
+    if (!PyArg_ParseTuple(args, "nnOOOO", &n, &stride, &array, &index, &inverse, &counts))
+        return NULL;
+
     if (index == NULL)
-        return 0;
+        return PyLong_FromSize_t(0);
+
     hashmap* map = hashmap_new(sizeof(struct elem*), 0, 0, 0, hash, compare, NULL, NULL);
     size_t n_unique = 0;
     for (size_t i = 0; i < n; i ++) {
@@ -64,6 +63,5 @@ size_t unique(
         }
     }
     hashmap_free(map);
-    return n_unique;
+    return PyLong_FromSize_t(n_unique);
 }
-

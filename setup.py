@@ -1,8 +1,10 @@
 from distutils.command.build import build as build_
 from distutils.core import Extension
+from glob import glob as glob  # glob
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from shutil import rmtree
+import os
 import subprocess
 
 with open("requirements.txt") as requirements_file:
@@ -20,8 +22,12 @@ with open("README.md") as readme_file:
 with open("CHANGELOG.md") as history_file:
     CHANGELOG = history_file.read()
 
+c_files = list()
+for root, __, files in os.walk("pelutils/_c"):
+    c_files += [os.path.join(root, f) for f in files if f.endswith(".c")]
+
 class CExtension(Extension):
-    pass
+    """ See this thread for details: https://stackoverflow.com/a/34830639/13196863 """
 
 class build(build_):
 
@@ -70,8 +76,8 @@ setup_args = dict(
     cmdclass         = { "build": build },
     ext_modules      = [
         CExtension(
-            name               = "ds_c",
-            sources            = ["pelutils/ds/ds.c", "pelutils/ds/hashmap.c/hashmap.c"],
+            name               = "_pelutils_c",
+            sources            = c_files,
             extra_compile_args = ["-DMS_WIN64"],
         )
     ],

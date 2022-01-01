@@ -1,15 +1,8 @@
 from __future__ import annotations
-from pathlib import Path
-from typing import Callable, Generator, Iterable, Type
-import os
-import ctypes
+from typing import Callable, Generator, Iterable
 import functools
-import platform
 
 import numpy as np
-
-# Path to directory where package files are located
-_base_path = Path(os.path.abspath(os.path.dirname(__file__)))
 
 _import_error = ModuleNotFoundError("To use the ds submodule, you must install pelutils[ds]")
 
@@ -19,7 +12,8 @@ except ModuleNotFoundError as e:
     raise _import_error from e
 
 from pelutils import c_ptr
-from ds_c import unique as _unique
+import _pelutils_c as _c
+
 
 def unique(
     array: np.ndarray, *,
@@ -48,7 +42,7 @@ def unique(
     stride = array.dtype.itemsize
     if len(array.shape) > 1:
         stride *= int(np.prod(array.shape[1:]))
-    c = _unique(len(array), stride, c_ptr(array), c_ptr(index), c_ptr(inverse), c_ptr(counts))
+    c = _c.unique(len(array), stride, c_ptr(array), c_ptr(index), c_ptr(inverse), c_ptr(counts))
 
     index = index[:c]
     if axis:
