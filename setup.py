@@ -7,6 +7,9 @@ from shutil import rmtree
 import os
 import subprocess
 
+import numpy as np
+
+
 with open("requirements.txt") as requirements_file:
     requirements = requirements_file.read().splitlines()
 
@@ -25,6 +28,8 @@ with open("CHANGELOG.md") as history_file:
 c_files = list()
 for root, __, files in os.walk("pelutils/_c"):
     c_files += [os.path.join(root, f) for f in files if f.endswith(".c")]
+
+c_files = ["pelutils/_c/ds.c", "pelutils/_c/hashmap.c/hashmap.c"]
 
 class CExtension(Extension):
     """ See this thread for details: https://stackoverflow.com/a/34830639/13196863 """
@@ -79,6 +84,7 @@ setup_args = dict(
             name               = "_pelutils_c",
             sources            = c_files,
             extra_compile_args = ["-DMS_WIN64"],
+            include_dirs       = [np.get_include()]
         )
     ],
     python_requires  = ">=3.7",

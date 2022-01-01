@@ -2,6 +2,8 @@
 #include <Python.h>
 #include <string.h>
 #include "hashmap.c/hashmap.h"
+#include "numpy/arrayobject.h"
+#include <stdio.h>
 
 
 // Contains a pointer to an array element and a reference to the stride
@@ -25,14 +27,16 @@ int compare(const void* elem1, const void* elem2, void* udata) {
 }
 
 static PyObject* unique(PyObject* self, PyObject* args) {
-    size_t n, stride;
-    void *array;
-    long *index, *inverse, *counts;
-    if (!PyArg_ParseTuple(args, "nnOOOO", &n, &stride, &array, &index, &inverse, &counts))
+    PyArrayObject *data_arr = NULL, *index_arr = NULL, *inverse_arr = NULL, *counts_arr = NULL;
+    if (!PyArg_ParseTuple(args, "OOOO", &data_arr, &index_arr, &inverse_arr, &counts_arr))
         return NULL;
 
-    if (index == NULL)
-        return PyLong_FromSize_t(0);
+    void* array   = data_arr->data;
+    long* index   = index_arr->data;
+    long* inverse = inverse_arr->data;
+    long* counts  = counts_arr->data;
+    size_t n      = data_arr->dimensions[0];
+    size_t stride = data_arr->strides[0];
 
     hashmap* map = hashmap_new(sizeof(struct elem*), 0, 0, 0, hash, compare, NULL, NULL);
     size_t n_unique = 0;
@@ -64,4 +68,23 @@ static PyObject* unique(PyObject* self, PyObject* args) {
     }
     hashmap_free(map);
     return PyLong_FromSize_t(n_unique);
+}
+
+// /* Module declaration */
+static PyMethodDef _pelutils_c_methods[] = {
+    { "unique", unique, METH_VARARGS, NULL },
+    { NULL, NULL, 0, NULL }
+};
+
+static struct PyModuleDef _pelutils_c_module = {
+    PyModuleDef_HEAD_INIT,
+    "_pelutils_c", NULL, 1, _pelutils_c_methods
+};
+
+PyMODINIT_FUNC PyInit__pelutils_c(void) {
+    // Needed for numpy arrays. See
+    // https://stackoverflow.com/questions/37943699/crash-when-calling-pyarg-parsetuple-on-a-numpy-array
+    PyObject* module = PyModule_Create(&_pelutils_c_module);
+    import_array();
+    return module;
 }
