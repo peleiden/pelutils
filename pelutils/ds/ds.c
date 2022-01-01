@@ -1,5 +1,9 @@
 #include <string.h>
 #include "hashmap.c/hashmap.h"
+#include "Python.h"
+
+
+PyMODINIT_FUNC PyInit_ds_c(void) { };
 
 // Contains a pointer to an array element and a reference to the stride
 struct elem {
@@ -21,7 +25,7 @@ int compare(const void* elem1, const void* elem2, void* udata) {
     return memcmp(e1->p_elem, e2->p_elem, e1->stride);
 }
 
-extern size_t unique(
+size_t unique(
     size_t n,       // Number of array elements
     size_t stride,  // Number of bytes between elements on primary axis
     void* array,    // Non-empty, contiguous array of any shape

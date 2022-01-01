@@ -19,11 +19,8 @@ except ModuleNotFoundError as e:
     raise _import_error from e
 
 from pelutils import c_ptr
+from ds_c import unique as _unique
 
-
-_so_error = NotImplementedError("unique function is currently only supported on x86_64 Linux")
-if all(substr in platform.platform().lower() for substr in ("linux", "x86_64")):
-    _lib = ctypes.cdll.LoadLibrary(_base_path.parent / "so" / "ds.so")
 def unique(
     array: np.ndarray, *,
     return_index=False,
@@ -31,19 +28,7 @@ def unique(
     return_counts=False,
     axis: int=0,
 ) -> np.ndarray | Iterable[np.ndarray]:
-    """
-    Similar to np.unique, but in linear time and returns unsorted
-    Currently only works properly on x86_64 Linux
-    On other platforms, it wraps np.unique, which returns a sorted array and is slower but otherwise has same output
-    """
-    if "_lib" not in globals():
-        return np.unique(
-            array,
-            return_index=return_index,
-            return_inverse=return_inverse,
-            return_counts=return_counts,
-            axis=axis,
-        )
+    """ Similar to np.unique, but in linear time and returns unsorted """
     if not array.size:
         raise ValueError("Array must be non-empty")
 
@@ -63,7 +48,7 @@ def unique(
     stride = array.dtype.itemsize
     if len(array.shape) > 1:
         stride *= int(np.prod(array.shape[1:]))
-    c = _lib.unique(len(array), stride, c_ptr(array), c_ptr(index), c_ptr(inverse), c_ptr(counts))
+    c = _unique(len(array), stride, c_ptr(array), c_ptr(index), c_ptr(inverse), c_ptr(counts))
 
     index = index[:c]
     if axis:

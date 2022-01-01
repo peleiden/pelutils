@@ -4,7 +4,7 @@ on: [ push, pull_request ]
 
 jobs:
   build_wheels:
-    name: Build wheel for ${{ matrix.os }}
+    name: Build wheels for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build wheel
+      - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.1
         env:
           CIBW_SKIP: cp36-*
