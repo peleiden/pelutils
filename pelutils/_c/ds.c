@@ -3,7 +3,6 @@
 #include <string.h>
 #include "hashmap.c/hashmap.h"
 #include "numpy/arrayobject.h"
-#include <stdio.h>
 
 
 // Contains a pointer to an array element and a reference to the stride
@@ -31,10 +30,10 @@ static PyObject* unique(PyObject* self, PyObject* args) {
     if (!PyArg_ParseTuple(args, "OOOO", &data_arr, &index_arr, &inverse_arr, &counts_arr))
         return NULL;
 
-    void* array   = data_arr->data;
-    long* index   = index_arr->data;
-    long* inverse = inverse_arr->data;
-    long* counts  = counts_arr->data;
+    void* array   = (void*)data_arr->data;
+    long* index   = (long*)index_arr->data;
+    long* inverse = (long*)inverse_arr->data;
+    long* counts  = (long*)counts_arr->data;
     size_t n      = data_arr->dimensions[0];
     size_t stride = data_arr->strides[0];
 
@@ -70,7 +69,7 @@ static PyObject* unique(PyObject* self, PyObject* args) {
     return PyLong_FromSize_t(n_unique);
 }
 
-// /* Module declaration */
+/* Module declaration */
 static PyMethodDef _pelutils_c_methods[] = {
     { "unique", unique, METH_VARARGS, NULL },
     { NULL, NULL, 0, NULL }
@@ -78,7 +77,7 @@ static PyMethodDef _pelutils_c_methods[] = {
 
 static struct PyModuleDef _pelutils_c_module = {
     PyModuleDef_HEAD_INIT,
-    "_pelutils_c", NULL, 1, _pelutils_c_methods
+    "_pelutils_c", NULL, -1, _pelutils_c_methods
 };
 
 PyMODINIT_FUNC PyInit__pelutils_c(void) {

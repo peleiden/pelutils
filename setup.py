@@ -29,8 +29,6 @@ c_files = list()
 for root, __, files in os.walk("pelutils/_c"):
     c_files += [os.path.join(root, f) for f in files if f.endswith(".c")]
 
-c_files = ["pelutils/_c/ds.c", "pelutils/_c/hashmap.c/hashmap.c"]
-
 class CExtension(Extension):
     """ See this thread for details: https://stackoverflow.com/a/34830639/13196863 """
 
