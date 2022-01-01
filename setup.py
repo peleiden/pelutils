@@ -58,6 +58,7 @@ setup_args = dict(
             extra_compile_args=["-DMS_WIN64"],
         )
     ],
+    python_requires  = ">=3.7",
 )
 
 if __name__ == "__main__":
