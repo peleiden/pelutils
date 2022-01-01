@@ -34,6 +34,8 @@
 - Made `get_timestamp` arguments keyword-only
 - Added `restore_argv` decorator that allows safe testing of simulated `sys.argv`
 - Added `except_keys` function for removing a list of keys from a dictionary
+- Renamed `thousand_seps` to `thousands_seperators`
+- Made C functions to work on most platforms
 
 ### Bug fixes
 
