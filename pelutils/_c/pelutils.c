@@ -15,7 +15,7 @@ static struct PyModuleDef _pelutils_c_module = {
 PyMODINIT_FUNC PyInit__pelutils_c(void) {
     // Needed for numpy arrays. See
     // https://stackoverflow.com/questions/37943699/crash-when-calling-pyarg-parsetuple-on-a-numpy-array
-    PyObject* mod = PyModule_Create(&_pelutils_c_module);
+    PyObject* module = PyModule_Create(&_pelutils_c_module);
     import_array();
-    return mod;
+    return module;
 }

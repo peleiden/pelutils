@@ -38,11 +38,7 @@ def unique(
     inverse = np.empty(len(array), dtype=int) if return_inverse else None
     counts  = np.empty(len(array), dtype=int) if return_counts  else None
 
-    # Calculate number of bytes between each row
-    stride = array.dtype.itemsize
-    if len(array.shape) > 1:
-        stride *= int(np.prod(array.shape[1:]))
-    c = _c.unique(len(array), stride, c_ptr(array), c_ptr(index), c_ptr(inverse), c_ptr(counts))
+    c = _c.unique(array, index, inverse, counts)
 
     index = index[:c]
     if axis:
