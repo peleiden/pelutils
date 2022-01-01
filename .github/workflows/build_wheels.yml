@@ -24,7 +24,9 @@ jobs:
         env:
           CIBW_SKIP: cp36-*
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_ARCHS: all
+          CIBW_ARCHS_LINUX: all
+          CIBW_ARCHS_MACOS: all
+          CIBW_ARCHS_WINDOWS: auto
           CIBW_BEFORE_BUILD: git submodule update --init --recursive && pip install numpy
 
       - uses: actions/upload-artifact@v2
