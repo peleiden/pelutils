@@ -31,7 +31,7 @@ extern size_t unique(
 ) {
     if (index == NULL)
         return 0;
-    hashmap* map = hashmap_new(sizeof(struct elem*), 0, 0, 0, hash, compare, NULL);
+    hashmap* map = hashmap_new(sizeof(struct elem*), 0, 0, 0, hash, compare, NULL, NULL);
     size_t n_unique = 0;
     for (size_t i = 0; i < n; i ++) {
         // Construct element
