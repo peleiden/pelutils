@@ -200,13 +200,8 @@ def reverse_line_iterator(file: TextIO, chunksize=DEFAULT_BUFFER_SIZE, linesep=o
 
 def except_keys(d: dict[_T, Any], except_keys: Iterable[_T]) -> dict[_T, Any]:
     """ Returns the given dictionary, but with given keys removed """
-    d = d.copy()
-    for key in except_keys:
-        try:
-            del d[key]
-        except KeyError:
-            pass
-    return d
+    except_keys = set(except_keys)
+    return { kw: v for kw, v in d.items() if kw not in except_keys }
 
 # To allow imports directly from utils #
 # Currently to be placed lower because get_timestamp is needed by logger #
