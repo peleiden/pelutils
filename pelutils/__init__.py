@@ -169,12 +169,14 @@ def _read_file_chunk(file: TextIO, chunksize: int) -> str:
     file.seek(file.tell()-mov)
     return reversed_content
 
-def reverse_line_iterator(file: TextIO, chunksize=DEFAULT_BUFFER_SIZE, linesep=os.linesep) -> Generator[str, None, None]:
-    """ Similar to file.readlines(), but lazily returns lines in reverse order
-    Will move file pointer (file.tell()) throughout execution, so be careful
-    When done, file pointer will be 0
-    This function is especially useful for large files,
-    as it will never take up more memory that size of largest line + chunksize """
+def reverse_line_iterator(file: TextIO, chunksize=DEFAULT_BUFFER_SIZE, linesep="\n") -> Generator[str, None, None]:
+    """ Similar to file.readlines(), but lazily returns lines in reverse order.
+    Will move file pointer (file.tell()) throughout execution, so be careful.
+    When done, file pointer will be 0. This function is especially useful for large files,
+    as it will never take up more memory that size of largest line + chunksize. """
+
+    if len(linesep) != 1:
+        raise ValueError("reverse_line_iterator only supports line seperators of length 1")
 
     # Go to end of file and read first chunk
     file.seek(0, os.SEEK_END)
