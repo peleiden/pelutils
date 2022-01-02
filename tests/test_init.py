@@ -70,13 +70,13 @@ class TestInit(MainTest):
         paths = list()
         paths.append(os.path.join(cls.test_dir, "simple.txt"))
         with open(paths[-1], "w") as f:
-            f.write("abc\nbbc\n")
+            f.write(f"abc\nbbc\n")
         paths.append(os.path.join(cls.test_dir, "no_end_newline.txt"))
         with open(paths[-1], "w") as f:
-            f.write("abc\nbbc")
+            f.write(f"abc\nbbc")
         paths.append(os.path.join(cls.test_dir, "start_newline.txt"))
         with open(paths[-1], "w") as f:
-            f.write("\na\nb\n")
+            f.write(f"\na\nb\n")
         paths.append(os.path.join(cls.test_dir, "long_lines.txt"))
         with open(paths[-1], "w") as f:
             for _ in range(100):
