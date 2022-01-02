@@ -3,9 +3,7 @@ from distutils.core import Extension
 from glob import glob as glob  # glob
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
-from shutil import rmtree
 import os
-import subprocess
 
 import numpy as np
 

@@ -1,0 +1,75 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [ release ]
+  push:
+    branches: [ release ]
+
+jobs:
+  build_wheels:
+    name: Build wheels for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04, windows-2019, macos-10.15 ]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.3.1
+        env:
+          CIBW_SKIP: cp36-* pp*
+          CIBW_BUILD_VERBOSITY: 1
+          CIBW_ARCHS_LINUX: auto aarch64
+          CIBW_ARCHS_MACOS: all
+          CIBW_ARCHS_WINDOWS: auto64
+          CIBW_BEFORE_BUILD: git submodule update --init --recursive && pip install numpy
+          CIBW_BEFORE_TEST: >
+            pip install numpy &&
+            pip install -e .[tests]
+          CIBW_TEST_COMMAND: pytest {project}/tests
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+
+  make_sdist:
+    name: Make source dist
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Build source dist
+      run: |
+        pip install numpy
+        python setup.py sdist
+
+    - uses: actions/upload-artifact@v2
+      with:
+        path: dist/*.tar.gz
+
+  upload_all:
+    needs: [ build_wheels, make_sdist ]
+    runs-on: ubuntu-latest
+    # upload to PyPI on every tag starting with 'v'
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: artifact
+        path: dist
+
+    - uses: pypa/gh-action-pypi-publish@v1.4.2
+      with:
+        user: __token__
+        password: ${{ secrets.pypi_password }}

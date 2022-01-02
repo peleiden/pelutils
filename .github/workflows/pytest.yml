@@ -2,19 +2,17 @@ name: pytest
 
 on:
   push:
-    branches: [ master, develop ]
+    branches: [ master, release ]
     paths:
         - pelutils/**.py
         - tests/**.py
-        - Makefile
         - .github/workflows
 
   pull_request:
-    branches: [ master, develop ]
+    branches: [ master, release ]
     paths:
         - pelutils/**.py
         - tests/**.py
-        - Makefile
         - .github/workflows
 
 jobs:
@@ -22,12 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - name: Build C extensions
-        shell: bash
-        run: |
-          git submodule update --init --recursive
-          make
+        with:
+          submodules: true
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -37,8 +31,8 @@ jobs:
       - name: Set up PyPi dependencies and install package
         run: |
           pip install --upgrade setuptools wheel
-          pip install -r dev-requirements.txt
-          pip install -e .[ds]
+          pip install numpy
+          pip install -e .[tests]
 
       - name: Run test
         run: pytest --cov=pelutils
