@@ -36,13 +36,14 @@
 - Added `except_keys` function for removing a list of keys from a dictionary
 - Renamed `thousand_seps` to `thousands_seperators`
 - Made C functions to work on most platforms
-- Add `is_windows` function
+- Added `is_windows` function
 
 ### Bug fixes
 
 - Fixed a bug where a backslash would sometimes be printed from the logger before square brackets
 - Fixed `raises` throwing errors if error was not caught
 - Made `thousands_seperators` work with negative numbers
+- Made `corr_ci` handle all iterable types correctly
 
 ## 0.6.9 - Nice
 
