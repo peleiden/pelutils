@@ -36,6 +36,7 @@
 - Added `except_keys` function for removing a list of keys from a dictionary
 - Renamed `thousand_seps` to `thousands_seperators`
 - Made C functions to work on most platforms
+- Add `is_windows` function
 
 ### Bug fixes
 
