@@ -75,7 +75,7 @@ setup_args = dict(
             include_dirs       = [np.get_include()]
         )
     ],
-    python_requires  = ">=3.7",
+    python_requires  = ">=3.7,<3.10",
 )
 
 if __name__ == "__main__":
