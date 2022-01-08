@@ -157,6 +157,10 @@ def binary_search(element: _T, iterable: Sequence[_T], *, _start=0, _end=-1) -> 
     else:
         return index
 
+def is_windows() -> bool:
+    """ Checks if running on a Windows machine. """
+    return os.name == "nt"
+
 def _read_file_chunk(file: TextIO, chunksize: int) -> str:
     """ Reads a chunk starting from `chunksize` before file pointer and up to current file pointer
     If `chunksize` is larger than the current file pointer, the file is read from the beginning
@@ -173,8 +177,12 @@ def reverse_line_iterator(file: TextIO, chunksize=DEFAULT_BUFFER_SIZE, linesep="
     """ Similar to file.readlines(), but lazily returns lines in reverse order.
     Will move file pointer (file.tell()) throughout execution, so be careful.
     When done, file pointer will be 0. This function is especially useful for large files,
-    as it will never take up more memory that size of largest line + chunksize. """
+    as it will never take up more memory that size of largest line + chunksize.
+    Raises an OSError on Windows, as this function currently is not supported on Windows due
+    to fuckery in how line seperators are read. """
 
+    if is_windows():
+        raise OSError("reverse_line_iterator is not supported on Windows")
     if len(linesep) != 1:
         raise ValueError("reverse_line_iterator only supports line seperators of length 1")
 

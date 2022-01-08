@@ -1,12 +1,13 @@
 from __future__ import annotations
 from string import ascii_letters
-import io
 import os
+import platform
 
 import numpy as np
+import pytest
 
 from pelutils import EnvVars, reverse_line_iterator, except_keys,\
-    split_path, binary_search, raises, thousands_seperators
+    split_path, binary_search, raises, thousands_seperators, is_windows
 from pelutils.tests import MainTest
 
 
@@ -88,10 +89,22 @@ class TestInit(MainTest):
                 f.write(ascii_letters*1000 + ("\n" if i < 99 else ""))
         return paths
 
+    def test_is_windows(self):
+        # What a dum test
+        assert is_windows() == platform.platform().startswith("Windows")
+
     def test_reverse_line_iterator(self):
+        if is_windows():
+            open("test.txt", "w").close()
+            with pytest.raises(OSError), open("test.txt") as f:
+                next(reverse_line_iterator(f))
+            return
+
         # Test reverse iteration
         for file in self._setup_lineiter_files():
             with open(file) as f:
+                with pytest.raises(ValueError):
+                    next(reverse_line_iterator(f, linesep="\r\n"))
                 c = f.readlines()
                 f.seek(0)
                 assert c[::-1] == list(reverse_line_iterator(f))
