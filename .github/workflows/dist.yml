@@ -26,10 +26,10 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.1
         env:
-          CIBW_SKIP: cp36-* pp*
+          CIBW_SKIP: cp36-* pp* *musllinux*
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_ARCHS_LINUX: auto aarch64
-          CIBW_ARCHS_MACOS: all
+          CIBW_ARCHS_LINUX: auto64 aarch64
+          CIBW_ARCHS_MACOS: auto64
           CIBW_ARCHS_WINDOWS: auto64
           CIBW_BEFORE_BUILD: git submodule update --init --recursive && pip install numpy
           CIBW_BEFORE_TEST: >
