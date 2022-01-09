@@ -233,3 +233,12 @@ for i in range(15):
     plt.plot(x[i], y[i], color=next(c))
 ```
 
+# Installing on unsupported platforms
+
+Mostly, `pelutils` can be install with `pip install pelutils`, but some platforms and Python versions are not supported.
+These limitations are due to what dependencies, notably PyTorch, support.
+Most importantly, wheels for 32-bit platforms are not provided, meaning that the normal install method will not work on a Raspberry Pi.
+If your platform is not supported, but you do not requires the `ds` submodule, and thus PyTorch as a dependency, you can try installing `pelutils` directly from GitHub with
+```
+pip install git+https://github.com/peleiden/pelutils.git#egg=pelutils
+```
