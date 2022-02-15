@@ -71,7 +71,6 @@ def no_grad(fun: Callable) -> Callable:
             return fun(*args, **kwargs)
     return wrapper
 
-
 class BatchFeedForward:
     """
     This class handles feedforwarding large batches that would otherwise cause memory overflow
