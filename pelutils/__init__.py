@@ -50,18 +50,12 @@ def get_repo(path: str | None=None) -> tuple[str | None, str | None]:
 
     return None, None
 
-def get_timestamp(*, for_file=False, include_micros=False) -> str:
-    """ Returns a time stamp.
-    If for_file is true, it can be used to save files and: YYYY-MM-DD_HH-mm-SS.
-    Else the timestamp will be YYYY-MM-DD HH:mm:SS:milliseconds.
-    Set include_micros to include microseconds in time stamp (only if for_file is false).
-    Returns a time stamp for current time either in datetime format or, if for_file, in YYYY-MM-DD_HH-MM-SS. """
-    d_string = str(datetime.now())
-    if not include_micros:
-        d_string = d_string[:-3]
-    if for_file:
-        d_string = "-".join(d_string.split(".")[0].split(":")).replace(" ", "_")
-    return d_string
+def get_timestamp(*, with_date=True) -> str:
+    """ Returns a timestamp formatted as YYYY-MM-DD HH:mm:SS.ms. """
+    tstr = datetime.now().isoformat(sep=" ", timespec="milliseconds")
+    if not with_date:
+        tstr = tstr[11:]
+    return tstr
 
 def thousands_seperators(num: float | int, decimal_seperator=".") -> str:
     """ Formats a number using thousand seperators """
@@ -215,8 +209,8 @@ def except_keys(d: dict[_T, Any], except_keys: Iterable[_T]) -> dict[_T, Any]:
 
 # To allow imports directly from utils #
 # Currently to be placed lower because get_timestamp is needed by logger #
-from .logger import *
-from .logger import _Logger
+from .logging import *
+from .logging import _Logger
 log: _Logger  # Make sure type hinting works when importing global instances
 from .parser import *
 from .ticktock import *
