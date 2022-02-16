@@ -351,7 +351,7 @@ class Parser:
         self.location = args.location
 
         if args.config is None:
-            name = args.name or get_timestamp(for_file=True)
+            name = args.name or get_timestamp()
             if self._multiple_jobs:
                 location = os.path.join(self.location, name)
             else:
