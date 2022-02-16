@@ -57,6 +57,8 @@ class _Logger:
             with open(fpath, "a" if append else "w", encoding="utf-8") as logfile:
                 logfile.write("")
 
+        self._fpath = fpath
+        self._level_mgr = _LevelManager()
         self._log_errors = _LogErrors(self)
         self._default_sep = default_seperator
         self._print_level = print_level
@@ -75,9 +77,9 @@ class _Logger:
         """ Use in a with block. Any errors thrown within the block are logged with the full stacktrace. """
         return self._log_errors
 
-    def __call__(self, *tolog, with_info=True, sep=None, with_print=None):
-        """ Shorthand for logging at info level. """
-        self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print)
+    def __call__(self, *tolog, level=LogLevels.INFO, with_info=True, sep=None, with_print=None):
+        """ Shorthand for specific logging methods where level is specified as an argument. """
+        self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 
     def _write_to_log(self, content: RichString):
         if self._fpath is not None:
@@ -89,9 +91,7 @@ class _Logger:
         return f"[{format}]{s}[/]"
 
     def _log(self, *tolog, level=LogLevels.INFO, with_info=True, sep=None, with_print=None):
-        if not self._loggers:
-            return
-        if self._level_mgr.is_active and level < self._level_mgr.level:
+        if self._level_mgr.level is not None and level < self._level_mgr.level:
             return
         sep = sep or self._default_sep
         with_print = level >= self._print_level if with_print is None else with_print
