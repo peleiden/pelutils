@@ -32,6 +32,9 @@ class _Logger:
     _maxlen = max(len(l.name) for l in LogLevels)
     _spacing = 4 * " "
 
+    _yes = "yes"
+    _no = "no"
+
     def __init__(self):
         self._log_errors = _LogErrors(self)
         self._collect = False
@@ -147,6 +150,27 @@ class _Logger:
             return self._input(prompt)
         else:
             return (self._input(p) for p in prompt)
+
+    @classmethod
+    def bool_input(cls, answer: str, *, default: bool) -> bool | None:
+        """ Validate user yes/no input. Returns None if input is not parsable. Example:
+        ```
+        answer = log.input("Do you like this question? [y/N] ")
+        likes_answer = log.bool_input(answer, default=False)
+        # User answered y/Y/yes/Yes/YES/yE etc.
+        likes_answer == True
+        # User answered nothing or n/N/no/No/nO/NO
+        likes_answer == False
+        # User answered something unparsable as yes/no
+        likes_answer == None
+        ``` """
+        answer = answer.strip()
+        if not answer:
+            return default
+        if cls._yes.startswith(answer.lower()):
+            return True
+        if cls._no.startswith(answer.lower()):
+            return False
 
     def log_repo(self):
         """ Niceness method for logging the git repo that the code is run in. """
