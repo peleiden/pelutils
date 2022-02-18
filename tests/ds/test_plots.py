@@ -3,8 +3,14 @@ from math import ceil
 import numpy as np
 
 from pelutils.tests import UnitTestCollection
-from pelutils.ds.plots import linear_binning, log_binning, normal_binning
+from pelutils.ds.plots import linear_binning, log_binning, normal_binning, colours
 
+
+def test_colours():
+    expected_colours = 15
+    assert len(colours) == expected_colours
+    # Teste uniqueness
+    assert len(set(colours)) == expected_colours
 
 class TestBinning:
 
