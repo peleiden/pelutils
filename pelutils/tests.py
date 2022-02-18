@@ -1,6 +1,7 @@
+from shutil import rmtree
+import multiprocessing as mp
 import os
 import sys
-from shutil import rmtree
 
 
 def restore_argv(fun):
@@ -27,8 +28,26 @@ def restore_argv(fun):
             sys.argv = old_argv
     return wrapper
 
+class SimplePool:
 
-class MainTest:
+    """ pytest-cov does not exit properly when using mp.Pool. Using
+    this class as a basic drop-in replacement solves it. For details,
+    see https://github.com/pytest-dev/pytest-cov/issues/250. """
+
+    def __init__(self, processes=mp.cpu_count()):
+        self._processes = processes
+        self._pool = None
+
+    def __enter__(self):
+        self._pool = mp.Pool(self._processes)
+        return self._pool
+
+    def __exit__(self, *_):
+        self._pool.close()
+        self._pool.join()
+        self._pool = None
+
+class UnitTestCollection:
     """
     A convenience class for inheriting from when writing test classes using pytest.
     This class ensures that test path is automatically created and deleted between tests.
