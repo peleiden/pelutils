@@ -2,14 +2,12 @@ name: pytest
 
 on:
   push:
-    branches: [ master, release ]
     paths:
         - pelutils/**.py
         - tests/**.py
         - .github/workflows
 
   pull_request:
-    branches: [ master, release ]
     paths:
         - pelutils/**.py
         - tests/**.py
