@@ -40,6 +40,7 @@
 - Removed `TickTock.profile_iter`
 - Added `SimplePool` for testing with `multiprocessing.Pool`
 - Renamed `MainTest` to `UnitTestCollection`
+- Removed `BatchFeedForward`
 
 ### Bug fixes
 
