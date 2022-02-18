@@ -1,11 +1,11 @@
-from itertools import permutations, product
+from itertools import chain, permutations, product
 from string import ascii_lowercase
 import multiprocessing as mp
 import os
 
 import pytest
 
-from pelutils.logging import LogLevels, log
+from pelutils.logging import LogLevels, Logger, log, LoggingException
 from pelutils.tests import MainTest
 
 
@@ -138,3 +138,62 @@ class TestLogger(MainTest):
                 assert "log 2" in prevline
             else:
                 raise RuntimeError("'log i' not found in '%s'" % repr(newline))
+
+    def test_collect_with_other_logger(self):
+        reps = 1000
+        logfile = os.path.join(self.test_dir, "test_logging2.log")
+        log = Logger().configure(logfile, print_level=None)
+        # Test that logs do not get messed up
+        with mp.Pool(mp.cpu_count()) as p:
+            p.map(_collect_test_fn, reps*[(log, False)])
+        with open(logfile) as lf:
+            lines = lf.readlines()
+        # _collect_test_fn logs out three lines
+        assert len(lines) == 3 * reps
+        for i, line in enumerate(lines):
+            assert "log %i" % (i%3+1) in line
+
+    def test_multiple_loggers(self, capfd: pytest.CaptureFixture):
+        os.remove(self.logfile)
+        logfile2 = os.path.join(self.test_dir, "test_logging2.log")
+        log2 = Logger().configure(logfile2, print_level=None)
+        logs = [
+            ("logger",),
+            ("logger", "bogger"),
+            ("logger", "bogger", "hogger")
+        ]
+        for tolog in logs:
+            log(*tolog)
+            stdout, _ = capfd.readouterr()
+            assert all(x in stdout for x in tolog)
+            log2(*tolog)
+            stdout, _ = capfd.readouterr()
+            assert not stdout
+        with open(self.logfile) as lf, open(logfile2) as lf2:
+            logger_iter = chain(*logs)
+            for line1, line2 in zip(lf, lf2):
+                log_item = next(logger_iter)
+                assert log_item in line1 and log_item in line2
+
+    def test_reconfiguration(self):
+        log = Logger()
+        logfile = os.path.join(self.test_dir, "test_logging2.log")
+        with pytest.raises(LoggingException):
+            log("This fails")
+
+        log.configure(logfile)
+        log("This does", "not fail")
+        with open(logfile) as lf:
+            lines = lf.readlines()
+        assert "This does" in lines[0]
+        assert "not fail" in lines[1]
+
+        log.configure(logfile, default_seperator=" ", append=True)
+        log("This does", "not fail")
+        with open(logfile) as lf:
+            lines = lf.readlines()
+        assert "This does not fail" in lines[2]
+
+        with pytest.raises(LoggingException):
+            with log.collect:
+                log.configure(logfile)
