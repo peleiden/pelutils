@@ -23,7 +23,7 @@ LEVEL_FORMAT = {
 class LoggingException(RuntimeError):
     pass
 
-class _Logger:
+class Logger:
     """ A simple logger which creates a log file and pushes strings both to stdout and the log file.
     Main features include automatically logging errors and their stacktrace (see _Logger.log_errors),
     collecting logs for multiprocessing (see _Logger.collect), and colourful prints. """
@@ -37,9 +37,12 @@ class _Logger:
 
     def __init__(self):
         self._log_errors = _LogErrors(self)
+        self._is_configured = False
         self._collect = False
         self._collected_log: list[RichString] = list()
         self._collected_print: list[RichString] = list()
+        self._level_mgr = _LevelManager()
+        self._log_errors = _LogErrors(self)
 
     def configure(
         self,
@@ -48,6 +51,11 @@ class _Logger:
         append               = False,           # Set to True to append to old log file instead of overwriting it
         print_level          = LogLevels.INFO,  # Highest level that will be printed. All will be logged. None for no print
     ):
+        """ This configures a logfile and must be called for a logger to work.
+        Loggers can be reconfigured at any time, so long as they are not collecting. """
+
+        if self._collect:
+            raise LoggingException("Logger cannot be reconfigured while collecting")
 
         # Create logfile
         if fpath is not None:
@@ -58,10 +66,12 @@ class _Logger:
                 logfile.write("")
 
         self._fpath = fpath
-        self._level_mgr = _LevelManager()
-        self._log_errors = _LogErrors(self)
         self._default_sep = default_seperator
-        self._print_level = print_level
+        self._print_level = print_level if print_level is not None else max(LogLevels) + 1
+        self._is_configured = True
+
+        # Make it easier to create new loggers by making it possible to chain configure on __init__
+        return self
 
     def level(self, level: LogLevels):
         """ Log only at given level and above. Use with a with block. """
@@ -91,6 +101,8 @@ class _Logger:
         return f"[{format}]{s}[/]"
 
     def _log(self, *tolog, level=LogLevels.INFO, with_info=True, sep=None, with_print=None):
+        if not self._is_configured:
+            raise LoggingException("Logger has not been configured. Create a new logger with log = Logger().configure(...)")
         if self._level_mgr.level is not None and level < self._level_mgr.level:
             return
         sep = sep or self._default_sep
@@ -225,4 +237,4 @@ class _Logger:
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.DEBUG)
 
 
-log = _Logger()
+log = Logger()

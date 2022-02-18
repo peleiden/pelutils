@@ -210,8 +210,7 @@ def except_keys(d: dict[_T, Any], except_keys: Iterable[_T]) -> dict[_T, Any]:
 # To allow imports directly from utils #
 # Currently to be placed lower because get_timestamp is needed by logger #
 from .logging import *
-from .logging import _Logger
-log: _Logger  # Make sure type hinting works when importing global instances
+log: Logger  # Make sure type hinting works when importing global instances
 from .parser import *
 from .ticktock import *
 TT: TickTock
