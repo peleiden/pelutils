@@ -2,8 +2,7 @@
 colours, collection of logs, etc. """
 from __future__ import annotations
 from enum import IntEnum
-from functools import update_wrapper
-from typing import Callable, Optional
+from typing import Optional
 
 
 class LogLevels(IntEnum):
@@ -46,9 +45,7 @@ class _LogErrors:
     def __enter__(self):
         pass
 
-    def __exit__(self, et, ev, tb_):
-        if et and self._log._collect:
-            self._log.log_collected()
+    def __exit__(self, et, ev, _):
         if et:
             self._log.log_with_stacktrace(ev, level=LogLevels.CRITICAL)
 
@@ -61,13 +58,12 @@ class _CollectLogs:
         p.map(log.collect(fun), ...)
     ``` """
 
-    def __init__(self, logger, fun: Callable):
-        self.logger = logger
-        self.fun = fun
+    def __init__(self, logger):
+        self._log = logger
 
-    def __call__(self, *args, **kwargs):
-        self.logger.set_collect_mode(True)
-        return_value = self.fun(*args, **kwargs)
-        self.logger.log_collected()
-        self.logger.set_collect_mode(False)
-        return return_value
+    def __enter__(self):
+        self._log._set_collect_mode(True)
+
+    def __exit__(self, *_):
+        self._log._log_collected()
+        self._log._set_collect_mode(False)
