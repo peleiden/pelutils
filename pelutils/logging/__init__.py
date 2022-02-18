@@ -189,7 +189,7 @@ class Logger:
         repo, commit = get_repo()
         if repo is not None:
             self.debug(
-                "Executing in repository %s" % repo,
+                "Executing in repository: %s" % repo,
                 "Commit: %s\n" % commit,
             )
         else:

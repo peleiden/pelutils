@@ -2,6 +2,7 @@ from itertools import chain, permutations, product
 from string import ascii_lowercase
 import multiprocessing as mp
 import os
+import re
 
 import pytest
 
@@ -100,6 +101,20 @@ class TestLogger(UnitTestCollection):
                 log(test_str, level=level)
                 out, err = capfd.readouterr()
                 assert not out and not err
+
+    def test_level_methods(self, capfd: pytest.CaptureFixture):
+        methods = log.debug, log.info, log.warning, log.error, log.critical, log.section
+        for method, level in zip(methods, sorted(LogLevels)):
+            method("Bulbasaur is underrated")
+            stdout, _ = capfd.readouterr()
+            assert level.name in stdout
+
+    def test_log_commit(self, capfd: pytest.CaptureFixture):
+        """ Tests are assumed to be run from within the
+        pelutils git repository. If not, this test will fail. """
+        log.log_repo()
+        stdout, _ = capfd.readouterr()
+        assert re.search(r"\b[0-9a-f]{40}\b", stdout)
 
     def test_collect(self):
         reps = 1000
