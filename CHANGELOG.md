@@ -37,6 +37,8 @@
 - Renamed `thousand_seps` to `thousands_seperators`
 - Made C functions to work on most platforms
 - Added `is_windows` function
+- Added `SimplePool` for testing with `multiprocessing.Pool`
+- Renamed `MainTest` to `UnitTestCollection`
 
 ### Bug fixes
 

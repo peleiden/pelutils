@@ -2,7 +2,7 @@ from math import ceil
 
 import numpy as np
 
-from pelutils.tests import MainTest
+from pelutils.tests import UnitTestCollection
 from pelutils.ds.plots import linear_binning, log_binning, normal_binning
 
 

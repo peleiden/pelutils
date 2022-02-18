@@ -8,10 +8,10 @@ import pytest
 
 from pelutils import EnvVars, reverse_line_iterator, except_keys,\
     split_path, binary_search, raises, thousands_seperators, is_windows
-from pelutils.tests import MainTest
+from pelutils.tests import UnitTestCollection
 
 
-class TestInit(MainTest):
+class TestInit(UnitTestCollection):
 
     def test_envvars(self):
         os.environ["var1"] = "v1"

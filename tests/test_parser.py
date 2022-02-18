@@ -6,13 +6,13 @@ import sys
 import pytest
 
 from pelutils import except_keys
-from pelutils.tests import restore_argv, MainTest
+from pelutils.tests import restore_argv, UnitTestCollection
 from pelutils.parser import Argument, Option, Flag, Parser, JobDescription,\
     _fixdash, ParserError, CLIError, ConfigError
 
 
 _testdir = "parser_test"
-_argv_template = ["main.py", os.path.join(MainTest.test_dir, _testdir)]
+_argv_template = ["main.py", os.path.join(UnitTestCollection.test_dir, _testdir)]
 _sample_argv = f"{_argv_template[0]} {_argv_template[1]} -g 4 --gib-num 3.2 -o 7 -i -a b c".split()
 _sample_argv_conf = lambda config_path: (
     f"{_argv_template[0]} {_argv_template[1]} -c %s --gib-num 3.2" % config_path
@@ -58,7 +58,7 @@ foo=3 4
 """
 
 
-class TestParser(MainTest):
+class TestParser(UnitTestCollection):
 
     def setup_class(self):
         super().setup_class()
@@ -130,7 +130,7 @@ class TestParser(MainTest):
             Parser(Argument("null", abbrv="n"))
 
         # Test that under no permutations is the ordering changed in the argparser
-        sys.argv = f"main.py {os.path.join(MainTest.test_dir, _testdir)}".split()
+        sys.argv = f"main.py {os.path.join(UnitTestCollection.test_dir, _testdir)}".split()
         sample_args = [
             Option("quick-mafs", default=0),
             Flag("Quick-flag", abbrv="Q"),
@@ -255,7 +255,7 @@ class TestParser(MainTest):
 
     @restore_argv
     def test_non_optional_args(self):
-        sys.argv = f"main.py {os.path.join(MainTest.test_dir, _testdir)} -c {self._multiple_jobs_file}".split()
+        sys.argv = f"main.py {os.path.join(UnitTestCollection.test_dir, _testdir)} -c {self._multiple_jobs_file}".split()
         parser = Parser(*_sample_arguments, multiple_jobs=True)
         with pytest.raises(ParserError):
             parser.parse_args()
@@ -266,7 +266,7 @@ class TestParser(MainTest):
         os.makedirs(d)
         with open(os.path.join(d, "tmp.txt"), "w") as f:
             f.write("")
-        sys.argv = f"main.py {os.path.join(MainTest.test_dir, _testdir)}".split()
+        sys.argv = f"main.py {os.path.join(UnitTestCollection.test_dir, _testdir)}".split()
         parser = Parser()
         parser.parse_args(clear_folders=True)
         assert not os.listdir(d)

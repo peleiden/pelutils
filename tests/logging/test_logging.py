@@ -6,7 +6,7 @@ import os
 import pytest
 
 from pelutils.logging import LogLevels, Logger, log, LoggingException
-from pelutils.tests import MainTest
+from pelutils.tests import UnitTestCollection, SimplePool
 
 
 def _collect_test_fn(args):
@@ -18,7 +18,7 @@ def _collect_test_fn(args):
             raise RuntimeError
         logger("log 3 from %s" % mp.current_process()._identity)
 
-class TestLogger(MainTest):
+class TestLogger(UnitTestCollection):
 
     def setup_class(self):
         super().setup_class()
@@ -106,7 +106,7 @@ class TestLogger(MainTest):
         # Clear log file
         os.remove(self.logfile)
         # Test that logs do not get messed up
-        with mp.Pool(mp.cpu_count()) as p:
+        with SimplePool(mp.cpu_count()) as p:
             p.map(_collect_test_fn, reps*[(log, False)])
         with open(self.logfile) as lf:
             lines = lf.readlines()
@@ -120,7 +120,7 @@ class TestLogger(MainTest):
         # Clear log file
         os.remove(self.logfile)
         # Test that logs do not get messed up
-        with mp.Pool(mp.cpu_count()) as p:
+        with SimplePool(mp.cpu_count()) as p:
             args = reps*[(log, False)]
             args[reps//2] = (log, True)
             with pytest.raises(RuntimeError):
@@ -144,7 +144,7 @@ class TestLogger(MainTest):
         logfile = os.path.join(self.test_dir, "test_logging2.log")
         log = Logger().configure(logfile, print_level=None)
         # Test that logs do not get messed up
-        with mp.Pool(mp.cpu_count()) as p:
+        with SimplePool(mp.cpu_count()) as p:
             p.map(_collect_test_fn, reps*[(log, False)])
         with open(logfile) as lf:
             lines = lf.readlines()

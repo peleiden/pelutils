@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 
-from pelutils import MainTest, DataStorage
+from pelutils import UnitTestCollection, DataStorage
 
 
 @dataclass
@@ -31,7 +31,7 @@ class TExtraIgnore(T):
 class TMissingDecorator(DataStorage):
     a: int
 
-class TestDatahandler(MainTest):
+class TestDatahandler(UnitTestCollection):
 
     data = {"a": np.array([1]), "b": torch.Tensor([1]), "c": "lala", "d": {(1,2): 1}}
 

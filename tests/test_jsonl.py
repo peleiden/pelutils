@@ -1,9 +1,9 @@
 import os
 import pelutils.jsonl as jsonl
-from pelutils.tests import MainTest
+from pelutils.tests import UnitTestCollection
 
 
-class TestJsonl(MainTest):
+class TestJsonl(UnitTestCollection):
 
     def test_jsonl(self):
         data = [{ l: v } for l, v in zip(("a", "b", "c"), (1, 2, 3))]
