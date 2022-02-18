@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Generator, Iterable, Optional
+from typing import Generator, Iterable
 import os
 import traceback as tb
 
@@ -183,27 +183,26 @@ class _Logger:
         else:
             self.debug("Unable to find repository that code was executed in")
 
-    def collect(self, fun: Callable) -> Callable:
-        """ Wrap a function with this to collect logs. This means that all logs in the function are
-        only printed when the function is over, which is useful for multiprocessing. If using log.log_errors,
-        any partially done functions will have their content logged before the error is raised. """
-        return _CollectLogs(self, fun)
-
     def _reset_collected(self):
         self._collected_log = list()
         self._collected_print = list()
 
-    def set_collect_mode(self, collect: bool):
+    def _set_collect_mode(self, collect: bool):
         self._collect = collect
         if not collect:
             self._reset_collected()
 
-    def log_collected(self):
+    def _log_collected(self):
         if self._collected_log:
             logs = "\n".join(str(log) for log in self._collected_log)
             self._write_to_log(logs)
         if self._collected_print:
             RichString.multiprint(self._collected_print)
+
+    @property
+    def collect(self):
+        """ Use with a with block to perform all logs within the block at once. """
+        return _CollectLogs(self)
 
     def section(self, *tolog, with_info=True, sep=None, with_print=None, newline=True):
         if newline:

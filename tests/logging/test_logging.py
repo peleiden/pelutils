@@ -1,5 +1,6 @@
 from itertools import permutations, product
 from string import ascii_lowercase
+import multiprocessing as mp
 import os
 
 import pytest
@@ -7,6 +8,15 @@ import pytest
 from pelutils.logging import LogLevels, log
 from pelutils.tests import MainTest
 
+
+def _collect_test_fn(args):
+    logger, do_fail = args
+    with logger.collect:
+        logger("log 1 from %s" % mp.current_process()._identity)
+        logger("log 2 from %s" % mp.current_process()._identity)
+        if do_fail:
+            raise RuntimeError
+        logger("log 3 from %s" % mp.current_process()._identity)
 
 class TestLogger(MainTest):
 
@@ -18,7 +28,7 @@ class TestLogger(MainTest):
             print_level=LogLevels.DEBUG,
         )
 
-    def test_input(self, monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture):
+    def test_input(self, monkeypatch: pytest.MonkeyPatch):
         words = "Lorem ipsum dolor sit amet, consectetur adipiscing elit".split()
         # Generate some test queries and responses
         all_combs = list(permutations(words, 3))
@@ -50,7 +60,7 @@ class TestLogger(MainTest):
         Nothing/yes-ish/no-ish/gibberish under different possible default values. """
         for default in False, True:
             # Test no input given
-            assert log.bool_input("", default=default) == default
+            assert log.bool_input("", default=default) is default
             # Test for no-ish input
             for n, o in product("nN", "oO "):
                 no = (n + o).strip()
@@ -82,7 +92,49 @@ class TestLogger(MainTest):
                 assert test_str in out and not err
             else:
                 assert not out and not err
+
+    def test_no_log(self, capfd: pytest.CaptureFixture):
+        test_str = "lev med det"
         with log.no_log:
-            log.section(test_str)
-            out, err = capfd.readouterr()
-            assert not out and not err
+            for level in LogLevels:
+                log(test_str, level=level)
+                out, err = capfd.readouterr()
+                assert not out and not err
+
+    def test_collect(self):
+        reps = 1000
+        # Clear log file
+        os.remove(self.logfile)
+        # Test that logs do not get messed up
+        with mp.Pool(mp.cpu_count()) as p:
+            p.map(_collect_test_fn, reps*[(log, False)])
+        with open(self.logfile) as lf:
+            lines = lf.readlines()
+        # _collect_test_fn logs out three lines
+        assert len(lines) == 3 * reps
+        for i, line in enumerate(lines):
+            assert "log %i" % (i%3+1) in line
+
+    def test_collect_with_errors(self):
+        reps = 1000
+        # Clear log file
+        os.remove(self.logfile)
+        # Test that logs do not get messed up
+        with mp.Pool(mp.cpu_count()) as p:
+            args = reps*[(log, False)]
+            args[reps//2] = (log, True)
+            with pytest.raises(RuntimeError):
+                p.map(_collect_test_fn, args)
+        with open(self.logfile) as lf:
+            lines = lf.readlines()
+        # _collect_test_fn logs out three lines but one function has a log less
+        assert 0 < len(lines) < 3 * reps
+        for prevline, newline in zip(lines[:-1], lines[1:]):
+            if "log 1" in newline:
+                assert "log 2" in prevline or "log 3" in prevline
+            elif "log 2" in newline:
+                assert "log 1" in prevline
+            elif "log 3" in newline:
+                assert "log 2" in prevline
+            else:
+                raise RuntimeError("'log i' not found in '%s'" % repr(newline))
