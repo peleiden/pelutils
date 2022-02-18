@@ -20,9 +20,9 @@ def update_rc_params(rc_params: dict[str, Any]):
     plt.rcParams.update(rc_params)
 
 # Colours
-base_colours: list[str] = list(mcolour.BASE_COLORS)  # 8 colours
-tab_colours:  list[str] = list(mcolour.TABLEAU_COLORS)  # 10 colours
-colours:      list[str] = tab_colours[:-2] + base_colours[:-1]  # 15 unique matplotlib colours
+base_colours: tuple[str] = tuple(mcolour.BASE_COLORS)  # 8 colours
+tab_colours:  tuple[str] = tuple(mcolour.TABLEAU_COLORS)  # 10 colours
+colours:      tuple[str] = tab_colours[:-2] + base_colours[:-1]  # 15 unique matplotlib colours
 
 # Common figure sizes
 figsize_std  = (15, 10)
