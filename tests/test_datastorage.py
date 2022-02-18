@@ -7,7 +7,7 @@ import pytest
 import rapidjson
 import torch
 
-from pelutils import MainTest, DataStorage
+from pelutils import UnitTestCollection, DataStorage
 
 
 @dataclass
@@ -30,7 +30,7 @@ class TExtra(T, indent=4):
 class TMissingDecorator(DataStorage):
     a: int
 
-class TestDatahandler(MainTest):
+class TestDatahandler(UnitTestCollection):
 
     data = {"a": np.array([1]), "b": torch.Tensor([1]), "c": "lala", "d": {(1,2): 1}}
 
