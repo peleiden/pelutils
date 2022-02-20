@@ -34,4 +34,4 @@ class TestBinning:
         binning = normal_binning(self.uniform_data, self.bins)
         for i in range(ceil(self.bins / 2)):
             assert np.isclose(binning[i+1]-binning[i], binning[self.bins-i-1]-binning[self.bins-i-2])
-        assert (np.diff(np.diff(np.diff(binning))) > 0).all()
+        assert (np.diff(binning, n=3) > 0).all()
