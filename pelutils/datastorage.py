@@ -23,42 +23,41 @@ if _has_torch:
     SERIALIZATIONS[torch.Tensor] = lambda f, d: torch.save(d, f), torch.load, "pt"
 
 class DataStorage:
-    """
-    The DataStorage class is an augmentation of the dataclass that incluces a standard way to save and load data.
+    """ The DataStorage class is an augmentation of the dataclass that incluces save and load functionality.
 
     Currently works specifically with:
-        * Numpy arrays (numpy.ndarray)
-        * Torch tensors (torch.Tensor)
-        * Any json serializable type - that is, it should be savable by json.dump
-    * All other data structures are pickled
+    - Numpy arrays (numpy.ndarray)
+    - Torch tensors (torch.Tensor)
+    - Any json serializable type - that is, it should be savable by json.dump
+    All other data structures are pickled.
 
-    `json_name` chooses the name of the single json data file including all jsonifiable data
-    This can be useful for backwards compatibility when loading data saved by older DataStorage instances
+    DataStorage classes must inherit from DataStorage and be annotated with `@dataclass`.
+    It is further possible to give arguments to the class definition:
+    - `json_name`: Name of the saved json file
+    - `indent`:    How many spaces to use for indenting in the json file
 
-    Usage example
-    ```
-    @dataclass  # dataclass decoration is important for this to work
-    class ResultData(DataStorage):
+    Usage example:
+    ```py
+    @dataclass
+    class ResultData(DataStorage, json_name="game.json", indent=4):
         shots: int
         goalscorers: list
         dists: np.ndarray
 
-        json_name = 'game.json'
-
     rdata = ResultData(shots=1, goalscorers=["Max Fenger"], dists=np.ones(22)*10)
-    rdata.save()
-    # Now shots and goalscorers are saved in <pwd>/gamedata/game.json and dists in <pwd>/gamedata/dists.npy
+    rdata.save("max")
+    # Now shots and goalscorers are saved in <pwd>/max/game.json and dists in <pwd>/max/dists.npy
 
-    # In seperate script
-    rdata = ResultData.load()
+    # Then to load
+    rdata = ResultData.load("max")
     print(rdata.goalscorers)  # ["Max Fenger"]
-    ```
-    """
+    ``` """
 
-    def __init_subclass__(cls, json_name="data.json", indent: Optional[int]=None, pickle_ext="pkl"):
-        cls._json_name = json_name
-        cls._indent = indent
-        cls._pickle_ext = pickle_ext
+    _pickle_ext = "pkl"
+
+    def __init_subclass__(cls, *, json_name="data.json", indent: Optional[int]=None):
+        cls._json_name  = json_name
+        cls._indent     = indent
 
     def __init__(self, *args, **kwargs):
         """ This method is overwritten class is decorated with @dataclass.
