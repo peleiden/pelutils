@@ -85,11 +85,6 @@ print(TT)  # Prints a table view of profiled code sections
 with TT.profile("The best task"):
     <some task>
 
-# Profile a loop
-# Do not do this if the loop may be ended by a break statement!
-for elem in TT.profile_iter(range(100), "The second best task"):
-    <some task>
-
 # When using multiprocessing, it can be useful to simulate multiple hits of the same profile
 with mp.Pool() as p, TT.profile("Processing 100 items on multiple threads", hits=100):
     p.map(100 items)
@@ -98,6 +93,21 @@ a = 0
 with TT.profile("Adding 1 to a", hits=100):
     for _ in range(100):
         a += 1
+
+# Examples so far use a global TickTock instance, which is convenient,
+# but it can also be desirable to use for multiple different timers, e.g.
+tt1 = TickTock()
+tt2 = TickTock()
+t1_interval = 1  # Do task 1 every second
+t2_interval = 2  # Do task 2 every other second
+tt1.tick()
+tt2.tick()
+while True:
+    if tt1.tock() > t1_interval:
+        <task 1>
+    if tt2.tock() > t2_interval:
+        <task 2>
+    time.sleep(0.01)
 ```
 
 ## Data Storage
@@ -105,8 +115,8 @@ with TT.profile("Adding 1 to a", hits=100):
 The DataStorage class is an augmentation of the dataclass that incluces save and load functionality.
 
 Currently works specifically with:
-- Numpy arrays (numpy.ndarray)
-- Torch tensors (torch.Tensor)
+- Numpy arrays (`numpy.ndarray`)
+- Torch tensors (`torch.Tensor`)
 - Any json serializable type - that is, it should be savable by json.dump
 All other data structures are pickled.
 

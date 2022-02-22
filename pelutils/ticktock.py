@@ -104,22 +104,50 @@ class TickTockException(RuntimeError):
 
 
 class TickTock:
-    """
-    A taker that works like Matlab's Tic and Toc.
-    Simples use case:
-    ```
-    tt = TickTorck()
-    tt.tick()
+    """ Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
+
+    ```py
+    TT.tick()
     <some task>
-    time = tt.tock()
-    ```
-    Profiling code sections is also supported
-    ```
-    tt.profile(<profile name>)
-    <some task>
-    tt.end_profile()
-    ```
-    """
+    seconds_used = TT.tock()
+
+    for i in range(100):
+        TT.profile("Repeated code")
+        <some task>
+        TT.profile("Subtask")
+        <some subtask>
+        TT.end_profile()
+        TT.end_profile()
+    print(TT)  # Prints a table view of profiled code sections
+
+    # Alternative syntax using with statement
+    with TT.profile("The best task"):
+        <some task>
+
+    # When using multiprocessing, it can be useful to simulate multiple hits of the same profile
+    with mp.Pool() as p, TT.profile("Processing 100 items on multiple threads", hits=100):
+        p.map(100 items)
+    # Similar for very quick loops
+    a = 0
+    with TT.profile("Adding 1 to a", hits=100):
+        for _ in range(100):
+            a += 1
+
+    # Examples so far use a global TickTock instance, which is convenient,
+    # but it can also be desirable to use for multiple different timers, e.g.
+    tt1 = TickTock()
+    tt2 = TickTock()
+    t1_interval = 1  # Do task 1 every second
+    t2_interval = 2  # Do task 2 every other second
+    tt1.tick()
+    tt2.tick()
+    while True:
+        if tt1.tock() > t1_interval:
+            <task 1>
+        if tt2.tock() > t2_interval:
+            <task 2>
+        time.sleep(0.01)
+    ``` """
 
     def __init__(self):
         self._start:         float | None = None
@@ -139,11 +167,9 @@ class TickTock:
         return end - self._start
 
     def profile(self, name: str, *, hits=1) -> _ProfileContext:
-        """
-        Begin profile with given name
-        Optionally it is possible to register this as several hits that sum to the total time
-        This is usual when executing a multiprocessing mapping operation
-        """
+        """ Begin profile with given name. Optionally it is possible to
+        register this as several hits that sum to the total time.
+        This is usual when executing a multiprocessing mapping operation. """
         if name not in self.profiles:
             self.profiles[name] = Profile(
                 name,
@@ -157,8 +183,8 @@ class TickTock:
         return pc
 
     def end_profile(self, name: str=None) -> float:
-        """ End profile. If name given, it is checked that it matches latest started profile
-        Return time passed since .profile was called """
+        """ End profile. If name given, it is checked that it matches latest
+        started profile. Return time passed since .profile was called. """
         end = perf_counter()
         dt = end - self._profile_stack[-1].start
         if name is not None and name != self._profile_stack[-1].name:
@@ -167,16 +193,6 @@ class TickTock:
         self._profile_stack[-1].hits.extend([dt/nhits] * nhits)
         self._profile_stack.pop()
         return dt
-
-    def profile_iter(self, it: Iterable, name: str) -> Generator:
-        """
-        tqdm-like method for profiling a for loop
-        Do not use this for for loops that are ended with break statements!
-        """
-        for elem in it:
-            self.profile(name)
-            yield elem
-            self.end_profile(name)
 
     def fuse(self, tt: TickTock):
         """ Fuses a TickTock instance into self """
@@ -214,7 +230,8 @@ class TickTock:
     def stringify_sections(self, unit: tuple[str, float]=TimeUnits.second, with_std=False) -> str:
         """ Returns a pretty print of profiles """
         if self._profile_stack:
-            raise ValueError("TickTock instance cannot be stringified while profiling is still ongoing. Please end all profiles first")
+            raise ValueError("TickTock instance cannot be stringified while profiling is still ongoing. "\
+                "Please end all profiles first")
 
         table = Table()
         h = ["Profile", "Total time", "Percentage", "Hits", "Average"]
