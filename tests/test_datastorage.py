@@ -17,16 +17,9 @@ class T(DataStorage):
     d: dict[tuple[int], int]
 
 @dataclass
-class TExtra(T):
+class TExtra(T, indent=4):
     e: np.ndarray
     f: float
-
-@dataclass
-class TExtraIgnore(T):
-    e: np.ndarray
-    f: float
-    indent = 4
-    ignore_missing = True
 
 class TMissingDecorator(DataStorage):
     a: int
@@ -39,21 +32,19 @@ class TestDatahandler(MainTest):
         # Use dict data that is not json serializable
         t = T(**self.data)
         t.save(self.test_dir)
-        print(os.listdir(self.test_dir))
         for f in ("a.npy", "b.pt", "data.json", "d.pkl"):
             assert os.path.isfile(os.path.join(self.test_dir, f))
         t = T.load(self.test_dir)
         for n, d in self.data.items():
             assert getattr(t, n) == d
 
-    def test_ignore_missing(self):
-        t = T(**self.data)
-        t.save(self.test_dir)
-        with pytest.raises(TypeError):
-            TExtra.load(self.test_dir)
-        t = TExtraIgnore.load(self.test_dir)
-        assert t.e is None and t.f is None
-
     def test_missing_decorator(self):
         with pytest.raises(TypeError):
             TMissingDecorator(a=5)
+
+    def test_indent(self):
+        t = TExtra(**self.data, e=np.arange(5), f=5)
+        t.save(self.test_dir)
+        with open(os.path.join(self.test_dir, "data.json")) as f:
+            lines = f.readlines()
+        assert lines[1].startswith(4*" ")

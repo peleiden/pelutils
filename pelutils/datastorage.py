@@ -22,7 +22,7 @@ SERIALIZATIONS = {
     np.ndarray: (np.save, np.load, "npy"),
 }
 if _has_torch:
-    SERIALIZATIONS[torch.Tensor] = (lambda f, d: torch.save(d, f), torch.load, "pt")
+    SERIALIZATIONS[torch.Tensor] = lambda f, d: torch.save(d, f), torch.load, "pt"
 
 class DataStorage:
     """
@@ -35,7 +35,6 @@ class DataStorage:
     * All other data structures are pickled
 
     `json_name` chooses the name of the single json data file including all jsonifiable data
-    `ignore_missing` sets fields not present in stored data to None instead of throwing an error
     This can be useful for backwards compatibility when loading data saved by older DataStorage instances
 
     Usage example
@@ -47,7 +46,6 @@ class DataStorage:
         dists: np.ndarray
 
         json_name = 'game.json'
-        ignore_missing = False
 
     rdata = ResultData(shots=1, goalscorers=["Max Fenger"], dists=np.ones(22)*10)
     rdata.save()
@@ -59,25 +57,21 @@ class DataStorage:
     ```
     """
 
-    json_name:      str            = "data.json"
-    indent:         Optional[None] = None
-    pickle_ext:     str            = "pkl"
-    ignore_missing: bool           = False
+    def __init_subclass__(cls, json_name="data.json", indent: Optional[int]=None, pickle_ext="pkl"):
+        cls._json_name = json_name
+        cls._indent = indent
+        cls._pickle_ext = pickle_ext
 
     def __init__(self, *args, **kwargs):
         """ This method is overwritten class is decorated with @dataclass.
         Therefore, if this method is called, it is an error. """
         raise TypeError("DataStorage class %s must be decorated with @dataclass" % self.__class__.__name__)
 
-    def save(self, loc: str, remove_existing=False) -> list[str]:
-        """
-        Saves all the fields of the instatiated data classes as either json, pickle or designated serialization function
-        :param str loc: Path to directory in which to save data
-        :param bool remove_existing: If True, loc is cleared before saving data
-        """
+    def save(self, loc: str) -> list[str]:
+        """ Saves all the fields of the instatiated data classes as either json,
+        pickle or designated serialization function.
+        :param str loc: Path to directory in which to save data. """
 
-        if remove_existing:
-            shutil.rmtree(loc)
         os.makedirs(loc, exist_ok=True)
 
         # Split data by whether it should be saved using a known function or using pickle or json
@@ -99,11 +93,11 @@ class DataStorage:
         # Save data
         paths = list()
         if to_json:
-            paths.append(os.path.join(loc, self.json_name))
+            paths.append(os.path.join(loc, self._json_name))
             with open(paths[-1], "w", encoding="utf-8") as f:
-                rapidjson.dump(to_json, f, indent=self.indent)
+                rapidjson.dump(to_json, f, indent=self._indent)
         for key, data in to_pickle.items():
-            paths.append(os.path.join(loc, f"{key}.{self.pickle_ext}"))
+            paths.append(os.path.join(loc, f"{key}.{self._pickle_ext}"))
             with open(paths[-1], "wb") as f:
                 pickle.dump(data, f)
         for seri, datas in func_serialize.items():
@@ -138,7 +132,7 @@ class DataStorage:
         # Check if the field was saved with pickle
         any_json = False
         for key in generals:
-            pfile = os.path.join(loc, f"{key}.{cls.pickle_ext}")
+            pfile = os.path.join(loc, f"{key}.{cls._pickle_ext}")
             if os.path.isfile(pfile):
                 with open(pfile, "rb") as f:
                     fields[key] = pickle.load(f)
@@ -146,13 +140,7 @@ class DataStorage:
                 any_json = True
 
         if any_json:
-            with open(os.path.join(loc, cls.json_name), encoding="utf-8") as f:
+            with open(os.path.join(loc, cls._json_name), encoding="utf-8") as f:
                 fields.update(rapidjson.load(f))
-
-        # Set missing parameters to None
-        if cls.ignore_missing:
-            for parameter in inspect.signature(cls.__init__).parameters:
-                if parameter != "self":
-                    fields[parameter] = fields.get(parameter)
 
         return cls(**fields)
