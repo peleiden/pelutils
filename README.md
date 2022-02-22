@@ -91,34 +91,45 @@ for elem in TT.profile_iter(range(100), "The second best task"):
     <some task>
 
 # When using multiprocessing, it can be useful to simulate multiple hits of the same profile
-with mp.Pool() as p, tt.profile("Processing 100 items on multiple threads", hits=100):
+with mp.Pool() as p, TT.profile("Processing 100 items on multiple threads", hits=100):
     p.map(100 items)
+# Similar for very quick loops
+a = 0
+with TT.profile("Adding 1 to a", hits=100):
+    for _ in range(100):
+        a += 1
 ```
 
 ## Data Storage
 
-A data class that saves/loads its fields from disk.
-Anything that can be saved to a `json` file will be.
-Other data types will be saved to relevant file formats.
+The DataStorage class is an augmentation of the dataclass that incluces save and load functionality.
 
+Currently works specifically with:
+- Numpy arrays (numpy.ndarray)
+- Torch tensors (torch.Tensor)
+- Any json serializable type - that is, it should be savable by json.dump
+All other data structures are pickled.
+
+DataStorage classes must inherit from DataStorage and be annotated with `@dataclass`.
+It is further possible to give arguments to the class definition:
+- `json_name`: Name of the saved json file
+- `indent`: How many spaces to use for indenting in the json file
+
+Usage example:
 ```py
 @dataclass
-class Person(DataStorage):
-    name: str
-    age: int
-    numbers: np.ndarray
+class ResultData(DataStorage, json_name="game.json", indent=4):
+    shots: int
+    goalscorers: list
+    dists: np.ndarray
 
-    json_name = "yoda.json"
+rdata = ResultData(shots=1, goalscorers=["Max Fenger"], dists=np.ones(22)*10)
+rdata.save("max")
+# Now shots and goalscorers are saved in <pwd>/max/game.json and dists in <pwd>/max/dists.npy
 
-yoda = Person(name="Yoda", age=900, numbers=np.array([69, 420]))
-yoda.save("high/on/ketamine")  # Save to 'old' folder
-# Saved data at high/on/ketamine/yoda.json
-# {
-#     "name": "Yoda",
-#     "age": 900
-# }
-# There will also be a file named numbers.npy
-yoda = Person.load("old")
+# Then to load
+rdata = ResultData.load("max")
+print(rdata.goalscorers)  # ["Max Fenger"]
 ```
 
 ## Parsing

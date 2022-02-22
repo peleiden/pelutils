@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pytest
+import rapidjson
 import torch
 
 from pelutils import MainTest, DataStorage
@@ -15,6 +16,11 @@ class T(DataStorage):
     b: torch.Tensor
     c: str
     d: dict[tuple[int], int]
+    g = "not part of data"
+
+@dataclass
+class TCompatible(T):
+    e: str = "loadable from T"
 
 @dataclass
 class TExtra(T, indent=4):
@@ -37,6 +43,14 @@ class TestDatahandler(MainTest):
         t = T.load(self.test_dir)
         for n, d in self.data.items():
             assert getattr(t, n) == d
+        with open(os.path.join(self.test_dir, "data.json")) as f:
+            assert "g" not in rapidjson.load(f)
+
+    def test_compatible(self):
+        t = T(**self.data)
+        t.save(self.test_dir)
+        t2 = TCompatible.load(self.test_dir)
+        assert t2.e == "loadable from T"
 
     def test_missing_decorator(self):
         with pytest.raises(TypeError):
