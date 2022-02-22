@@ -37,6 +37,7 @@
 - Renamed `thousand_seps` to `thousands_seperators`
 - Made C functions to work on most platforms
 - Added `is_windows` function
+- Removed `TickTock.profile_iter`
 
 ### Bug fixes
 
