@@ -1,10 +1,8 @@
 from __future__ import annotations
 from collections import defaultdict
 from typing import Optional
-import inspect
 import os
 import pickle
-import shutil
 
 import numpy as np
 import rapidjson
@@ -95,7 +93,12 @@ class DataStorage:
         if to_json:
             paths.append(os.path.join(loc, self._json_name))
             with open(paths[-1], "w", encoding="utf-8") as f:
-                rapidjson.dump(to_json, f, indent=self._indent)
+                # Save json. This does not guarantee writing to disk, so flushing
+                # and synchronization is also done to increase chance of writing
+                dump = rapidjson.dumps(to_json, indent=self._indent)
+                f.write(dump)
+                f.flush()
+                os.fsync(f.fileno())
         for key, data in to_pickle.items():
             paths.append(os.path.join(loc, f"{key}.{self._pickle_ext}"))
             with open(paths[-1], "wb") as f:
