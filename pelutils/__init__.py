@@ -16,6 +16,9 @@ except:
     _has_torch = False
 
 
+__version__ = "1.0.0"
+
+
 _T = TypeVar("_T")
 
 def set_seeds(seed: int=0):

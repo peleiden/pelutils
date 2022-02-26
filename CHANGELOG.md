@@ -1,6 +1,6 @@
 # History
 
-## Unreleased - Breaking changes
+## 1.0.0 - Breaking changes, first stable release
 
 - Removed `log.tqdm`
 - Added binning functions to `pelutils.ds.plot`

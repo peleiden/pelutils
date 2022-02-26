@@ -48,7 +48,7 @@ class build(build_):
 
 setup_args = dict(
     name             = "pelutils",
-    version          = "0.6.9",
+    version          = "0.99.0",
     description      = "Utility functions that are often useful",
     long_description_content_type = "text/markdown",
     long_description = README + "\n\n" + CHANGELOG,

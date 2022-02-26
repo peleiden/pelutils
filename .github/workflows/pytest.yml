@@ -5,12 +5,14 @@ on:
     paths:
         - pelutils/**.py
         - tests/**.py
+        - setup.py
         - .github/workflows
 
   pull_request:
     paths:
         - pelutils/**.py
         - tests/**.py
+        - setup.py
         - .github/workflows
 
 jobs:
