@@ -2,76 +2,31 @@
 
 Various utilities useful for Python projects. Features include
 
-- Feature-rich logger using `Rich` for colourful printing
-- Parsing for combining config files and command-line arguments - especially useful for parametric methods
-- Time taking and profiling
-- Easy to use data storage class for easy data saving and loading
+- A simple and powerful logger with colourful printing
+- Parsing for combining config files and command-line arguments - especially useful for parametric algorithms
+- Timers and code profiling
+- An extension to dataclasses for saving and loading data
 - Table formatting
 - Miscellaneous standalone functions providing various functionalities - see `pelutils/__init__.py`
 - Data-science submodule with extra utilities for statistics, plotting, and machine learning using `PyTorch`
-- `unique` function similar to `np.unique` but in linear time (currently Linux x86_64 only)
+- Linear time `unique` function in the style of `numpy.unique`
 
-`pelutils` supports Python 3.7+.
+`pelutils` supports Python 3.7-3.9.
 
 [![pytest](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml/badge.svg?branch=master)](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml)
 [![Coverage Status](https://coveralls.io/repos/github/peleiden/pelutils/badge.svg?branch=master)](https://coveralls.io/github/peleiden/pelutils?branch=master)
 
-## Logging
-
-Easy to use logger which fits common needs.
-
-```py
-log("This is printed but not saved to a log file as the logger has not been configured")
-
-# Configure logger for the script
-log.configure("path/to/save/log.log", "Optional title of log")
-
-# Start logging
-for i in range(70):  # Nice
-    log("Execution %i" % i)
-
-# Sections
-log.section("New section in the logfile")
-
-# Adjust logging levels
-log.warning("Will be logged")
-with log.level(LogLevels.ERROR):  # Only log at ERROR level or above
-    log.warning("Will not be logged")
-with log.no_log():
-    log.section("I will not be logged")
-
-# Error handling
-# The zero-division error and stacktrace is logged
-with log.log_errors:
-    0 / 0
-# Entire chained stacktrace is logged
-with log.log_errors:
-    try:
-        0 / 0
-    except ZeroDivisionError as e:
-        raise ValueError("Denominator must be non-zero") from e
-
-# User input - acts like built-in input but logs both prompt and user input
-inp = log.input("WHAT... is your favourite colour? ")
-
-# Log all logs from a function at the same time
-# This is especially useful when using multiple threads so logging does not get mixed up
-def fun():
-    log("Hello there")
-    log("General Kenobi!")
-with mp.Pool() as p:
-    p.map(collect_logs(fun), args)
-```
-
-## Time Taking and Profiling
+## Timing and Code Profiling
 
 Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
 
 ```py
+# Time a task
 TT.tick()
 <some task>
 seconds_used = TT.tock()
 
+# Profile a for loop
 for i in range(100):
     TT.profile("Repeated code")
     <some task>
@@ -105,8 +60,10 @@ tt2.tick()
 while True:
     if tt1.tock() > t1_interval:
         <task 1>
+        tt1.tick()
     if tt2.tock() > t2_interval:
         <task 2>
+        tt2.tick()
     time.sleep(0.01)
 ```
 
@@ -146,31 +103,43 @@ print(rdata.goalscorers)  # ["Max Fenger"]
 
 A combination of parsing CLI and config file arguments which allows for a powerful, easy-to-use workflow.
 Useful for parametric methods such as machine learning.
+The first argument must always be a path. This can for instance be used to put log files, results, plots etc.
 
-A file `main.py` could contain:
+
+Consider the execution of a file `main.py` with the command line call
+```
+python main.py path/to/put/results -c path/to/config/file.ini --data-path path/to/data
+```
+The config file could contain
+```
+[DEFAULT]
+fp16
+learning-rate=1e-4
+
+[LOWLR]
+learning-rate=1e-5
+
+[NOFP16]
+fp16=False
+```
+where `main.py` contains
 ```py
-options = {
-    "learning-rate": { "default": 1.5e-3, "help": "Controls size of parameter update", "type": float },
-    "gamma": { "default": 1, "help": "Use of generator network in updating", "type": float },
-    "initialize-zeros": { "help": "Whether to initialize all parameters to 0", "action": "store_true" },
-}
-parser = Parser(options)
-location = parser.location  # Experiments are stored here
-experiments = parser.parse()
+options = [
+    # Mandatory argument with set abbreviation -p
+    Argument("--data-path", help="Path to where data is located", abbrv"-p"),
+    # Optional argument with auto-generated abbreviation -l
+    Option("--learning-rate", default=1e-5, help="Learning rate to use for gradient descent steps"),
+    # Boolean flag with auto-generated abbreviation -f
+    Flag("--fp16", help="Use mixed precision for training")
+]
+parser = Parser(*options, multiple_jobs=True)  # Two jobs are specified in the config file, so multiple_jobs=True
+location = parser.location  # Experiments are stored here. In this case path/to/put/results
+job_descriptions = parser.parse()
 parser.document_settings()  # Save a config file to reproduce the experiment
 # Run each experiment
-for args in experiments:
-    run_experiment(location, args)
-
-# Alternatively, if there is only ever a single job
-parser = Parser(options, multiple_jobs=False)
-location = parser.location
-args = parser.parse()
-parser.document_settings()
-run_experiment(location, args)
-
-# Check if an argument has been given explictly, either from cli or config file, or if default value is used
-parser.is_explicit("learning-rate")
+for job_description in experiments:
+    # Get location of this job as job_description.location
+    run_experiment(job_description)
 ```
 
 This could then by run by
@@ -181,17 +150,51 @@ or using a combination where CLI args takes precedence:
 `python main.py data/my-big-experiment --config cfg.ini --learning-rate 1e-5`
 where `cfg.ini` could contain
 
-```
-[DEFAULT]
-gamma = 0.95
+# pelutils.logging
 
-[RUN1]
-learning-rate = 1e-4
-initialize-zeros
+Easy to use logger which fits common needs. Can be imported from `pelutils` directly, e.g. `from pelutils import log`.
 
-[RUN2]
-learning-rate = 1e-5
-gamma = 0.9
+```py
+# Configure logger for the script
+log.configure("path/to/save/log.log")
+
+# Start logging
+for i in range(70):  # Nice
+    log("Execution %i" % i)
+
+# Sections
+log.section("New section in the logfile")
+
+# Adjust logging levels
+log.warning("Will be logged")
+with log.level(LogLevels.ERROR):  # Only log at ERROR level or above
+    log.warning("Will not be logged")
+with log.no_log:
+    log.section("I will not be logged")
+
+# Error handling
+# The zero-division error and stacktrace is logged
+with log.log_errors:
+    0 / 0
+# Entire chained stacktrace is logged
+with log.log_errors:
+    try:
+        0 / 0
+    except ZeroDivisionError as e:
+        raise ValueError("Denominator must be non-zero") from e
+
+# User input - acts like built-in input but logs both prompt and user input
+inp = log.input("Continue [Y/n]? ")
+# Parse yes/no user input
+cont = log.parse_bool_input(inp, default=True)
+
+# Log all logs from a function at the same time
+# This is especially useful when using multiple threads so logging does not get mixed up
+def fun():
+    log("Hello there")
+    log("General Kenobi!")
+with mp.Pool() as p:
+    p.map(log.collect_logs(fun), args)
 ```
 
 # pelutils.ds
@@ -215,13 +218,6 @@ All PyTorch functions work independently of whether CUDA is available or not.
 @no_grad
 def infer():
     <code that includes feedforwarding>
-
-# Feed forward in batches to prevent using too much memory
-# Every time a memory allocation error is encountered, the number of batches is doubled
-# Same as using y = net(x), but without risk of running out of memory
-# Gradients are not tracked
-bff = BatchFeedForward(net)
-y = bff(x)
 ```
 
 ## Statistics
@@ -259,7 +255,7 @@ for i in range(15):
 Mostly, `pelutils` can be install with `pip install pelutils`, but some platforms and Python versions are not supported.
 These limitations are due to what dependencies, notably PyTorch, support.
 Most importantly, wheels for 32-bit platforms are not provided, meaning that the normal install method will not work on a Raspberry Pi.
-If your platform is not supported, but you do not requires the `ds` submodule, and thus PyTorch as a dependency, you can try installing `pelutils` directly from GitHub with
+If your platform is not supported, but you do not require the `ds` submodule, and thus PyTorch as a dependency, you can try installing `pelutils` directly from GitHub with
 ```
-pip install git+https://github.com/peleiden/pelutils.git#egg=pelutils
+pip install git+https://github.com/peleiden/pelutils.git@release#egg=pelutils
 ```
