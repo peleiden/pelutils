@@ -59,25 +59,36 @@ class TestLogger(UnitTestCollection):
     def test_bool_input(self):
         """ Tests bool input parsing under the eight different cases:
         Nothing/yes-ish/no-ish/gibberish under different possible default values. """
-        for default in False, True:
+        for default in False, True, None:
             # Test no input given
-            assert log.bool_input("", default=default) is default
+            assert log.parse_bool_input("", default=default) is default
             # Test for no-ish input
             for n, o in product("nN", "oO "):
                 no = (n + o).strip()
-                assert not log.bool_input(no, default=default)
+                assert not log.parse_bool_input(no, default=default)
             # Test for yes-ish input
             for y, e, s in product("yY", "eE ", "sS "):
                 yes = (y + e + s).strip()
                 if e == " " and s != " ":
                     # Unparsable
-                    assert log.bool_input(yes, default=default) is None
+                    assert log.parse_bool_input(yes, default=default) is None
                 else:
                     # Parsable yes-ish
-                    assert log.bool_input(yes, default=default)
+                    assert log.parse_bool_input(yes, default=default)
+
             # Test that gibberish is always unparsable
             for letter1, letter2 in product(ascii_lowercase[:5], ascii_lowercase[:5]):
-                assert log.bool_input(letter1+letter2, default=default) is None
+                assert log.parse_bool_input(letter1+letter2, default=default) is None
+
+    def test_parse_user_bool_input(self, monkeypatch: pytest.MonkeyPatch):
+        """ Tests input and bool parsing in combination. """
+        for final_answer in "ny":
+            inputs = iter(("unparsable", "gibberish", final_answer))
+            user_input = None
+            while user_input is None:
+                monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+                user_input = log.parse_bool_input(log.input("Is the weather nice today? "))
+            assert user_input == (True if final_answer == "y" else False)
 
     def test_log_levels(self, capfd: pytest.CaptureFixture):
         test_str = "What LUKE? DaLUKE!"
