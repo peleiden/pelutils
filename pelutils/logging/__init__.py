@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Generator, Iterable
+from typing import Generator, Iterable, Optional
 import os
 import traceback as tb
 
@@ -164,7 +164,7 @@ class Logger:
             return (self._input(p) for p in prompt)
 
     @classmethod
-    def bool_input(cls, answer: str, *, default: bool) -> bool | None:
+    def parse_bool_input(cls, answer: str, *, default: Optional[bool]=None) -> bool | None:
         """ Validate user yes/no input. Returns None if input is not parsable. Example:
         ```
         answer = log.input("Do you like this question? [y/N] ")
