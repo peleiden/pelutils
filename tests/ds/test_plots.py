@@ -2,9 +2,15 @@ from math import ceil
 
 import numpy as np
 
-from pelutils.tests import MainTest
-from pelutils.ds.plots import linear_binning, log_binning, normal_binning
+from pelutils.tests import UnitTestCollection
+from pelutils.ds.plots import linear_binning, log_binning, normal_binning, colours
 
+
+def test_colours():
+    expected_colours = 15
+    assert len(colours) == expected_colours
+    # Teste uniqueness
+    assert len(set(colours)) == expected_colours
 
 class TestBinning:
 
@@ -28,4 +34,4 @@ class TestBinning:
         binning = normal_binning(self.uniform_data, self.bins)
         for i in range(ceil(self.bins / 2)):
             assert np.isclose(binning[i+1]-binning[i], binning[self.bins-i-1]-binning[self.bins-i-2])
-        assert (np.diff(np.diff(np.diff(binning))) > 0).all()
+        assert (np.diff(binning, n=3) > 0).all()
