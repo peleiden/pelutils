@@ -122,10 +122,13 @@ class TestLogger(UnitTestCollection):
 
     def test_log_commit(self, capfd: pytest.CaptureFixture):
         """ Tests are assumed to be run from within the
-        pelutils git repository. If not, this test will fail. """
+        pelutils git repository root or above. If not, this test will fail. """
         log.log_repo()
         stdout, _ = capfd.readouterr()
-        assert re.search(r"\b[0-9a-f]{40}\b", stdout)
+        if ".git" in os.listdir("."):
+            assert re.search(r"\b[0-9a-f]{40}\b", stdout)
+        else:
+            assert re.search(r"\b[0-9a-f]{40}\b", stdout) is None
 
     def test_collect(self):
         reps = 1000
