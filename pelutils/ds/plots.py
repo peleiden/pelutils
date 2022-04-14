@@ -155,7 +155,7 @@ class Figure:
     and attributes exist on fig and ax.
     In the example, the seaborn style is used (similar to `plt.style.use("seaborn"))`.
     ```py
-    with Figure(show=True, figsize=(20, 10), stylesheet="seaborn") as f:
+    with Figure(show=True, figsize=(20, 10), style="seaborn") as f:
         f.ax.set_title("Normal sized title")
         f.figure.add_axes(...)
     # No path has been specified, so the figure is not saved, but a window is shown.
@@ -168,7 +168,7 @@ class Figure:
         ncol:         int  = 1,
         tight_layout: bool = True,
         show:         bool = False,
-        stylesheet:   Optional[str] = None,
+        style:        Optional[str] = None,
         # Arguments below here go into mpl.rcParams
         figsize:           tuple[int, int] = (15, 10),
         dpi:               float = 200,
@@ -177,14 +177,14 @@ class Figure:
         legend_fontsize:   float = 26,
         legend_framealpha: float = 0.8,
         legend_edgecolor:  tuple[float, float, float, float] = (0, 0, 0, 1),
-        other_rc_params:   dict[str, Any],
+        other_rc_params:   dict[str, Any] = dict(),
     ):
         self._savepath = savepath
         self._nrow = nrow
         self._ncol = ncol
         self._tight_layout = tight_layout
         self._show = show
-        self._stylesheet = stylesheet
+        self._style = style
 
         self._original_rc_params = deepcopy(dict(mpl.rcParams))
         self._rc_params = {
@@ -200,8 +200,8 @@ class Figure:
         }
 
     def __enter__(self):
-        if self._stylesheet:
-            plt.style.use(self._stylesheet)
+        if self._style:
+            plt.style.use(self._style)
         mpl.rcParams.update(self._rc_params)
 
         self.fig, self.ax = plt.subplots(self._nrow, self._ncol)
