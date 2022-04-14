@@ -1,32 +1,25 @@
 from __future__ import annotations
-from typing import Any, Callable, Iterable
+from copy import deepcopy
+from typing import Any, Callable, Iterable, Optional
 
 from . import _import_error
 try:
+    import matplotlib as mpl
     import matplotlib.pyplot as plt
     import matplotlib.colors as mcolour
     from scipy import stats
 except ModuleNotFoundError as e:
     raise _import_error from e
 import numpy as np
+import numpy.typing as nptyping
 
-# All rc params are available here
-# https://matplotlib.org/3.2.1/tutorials/introductory/customizing.html#customizing-with-matplotlibrc-files
-rc_params       = { "font.size": 26, "legend.fontsize": 24, "legend.framealpha": 1, "legend.edgecolor": (0, 0, 0, 1) }
-rc_params_small = { **rc_params, "font.size": 22, "legend.fontsize": 20 }  # Same but with smaller font
 
-def update_rc_params(rc_params: dict[str, Any]):
-    """ Update matplotlib parameters - utility function for preventing always having to look it up """
-    plt.rcParams.update(rc_params)
-
-# Colours
-base_colours: tuple[str] = tuple(mcolour.BASE_COLORS)  # 8 colours
-tab_colours:  tuple[str] = tuple(mcolour.TABLEAU_COLORS)  # 10 colours
-colours:      tuple[str] = tab_colours[:-2] + base_colours[:-1]  # 15 unique matplotlib colours
-
-# Common figure sizes
-figsize_std  = (15, 10)
-figsize_wide = (22, 10)
+# 8 colours
+base_colours: tuple[str] = tuple(mcolour.BASE_COLORS)
+# 10 colours
+tab_colours:  tuple[str] = tuple(mcolour.TABLEAU_COLORS)
+# 15 unique matplotlib colours
+colours:      tuple[str] = tab_colours[:-2] + base_colours[:-1]
 
 def moving_avg(
     x: np.ndarray,
@@ -146,3 +139,84 @@ def get_bins(
     if ignore_zeros:
         x, y = x[y>0], y[y>0]
     return x, y
+
+class Figure:
+    """ Used for more ergonomic plotting. Simple usecase:
+    ```py
+    with Figure("figure.png", figsize=(20, 10), fontsize=50):
+        plt.plot(x, y)
+        plt.title("Very large title")
+        plt.grid()
+    # The finished figure is saved to "figure.png"
+    # All settings are reset here
+    ```
+    It is also possible to access the figure and axis produced by plt.subplots.
+    These have type hinting, so it is for once possible to known what methods
+    and attributes exist on fig and ax.
+    In the example, the seaborn style is used (similar to `plt.style.use("seaborn"))`.
+    ```py
+    with Figure(show=True, figsize=(20, 10), stylesheet="seaborn") as f:
+        f.ax.set_title("Normal sized title")
+        f.figure.add_axes(...)
+    # No path has been specified, so the figure is not saved, but a window is shown.
+    ``` """
+
+    def __init__(
+        self,
+        savepath:     Optional[str] = None, *,
+        nrow:         int  = 1,
+        ncol:         int  = 1,
+        tight_layout: bool = True,
+        show:         bool = False,
+        stylesheet:   Optional[str] = None,
+        # Arguments below here go into mpl.rcParams
+        figsize:           tuple[int, int] = (15, 10),
+        dpi:               float = 200,
+        fontsize:          float = 30,
+        axes_ticksize:     float = 26,
+        legend_fontsize:   float = 26,
+        legend_framealpha: float = 0.8,
+        legend_edgecolor:  tuple[float, float, float, float] = (0, 0, 0, 1),
+        other_rc_params:   dict[str, Any],
+    ):
+        self._savepath = savepath
+        self._nrow = nrow
+        self._ncol = ncol
+        self._tight_layout = tight_layout
+        self._show = show
+        self._stylesheet = stylesheet
+
+        self._original_rc_params = deepcopy(dict(mpl.rcParams))
+        self._rc_params = {
+            "font.size": fontsize,
+            "figure.figsize": figsize,
+            "figure.dpi": dpi,
+            "legend.fontsize": legend_fontsize,
+            "xtick.labelsize": axes_ticksize,
+            "ytick.labelsize": axes_ticksize,
+            "legend.framealpha": legend_framealpha,
+            "legend.edgecolor": legend_edgecolor,
+            **other_rc_params,
+        }
+
+    def __enter__(self):
+        if self._stylesheet:
+            plt.style.use(self._stylesheet)
+        mpl.rcParams.update(self._rc_params)
+
+        self.fig, self.ax = plt.subplots(self._nrow, self._ncol)
+        self.fig: mpl.figure.Figure
+        self.ax: mpl.axes.Axes
+        return self
+
+    def __exit__(self, *_):
+        if self._tight_layout:
+            plt.tight_layout()
+        if self._savepath:
+            plt.savefig(self._savepath)
+        if self._show:
+            plt.show()
+
+        plt.close()
+        mpl.rcParams.update(self._original_rc_params)
+        del self.fig, self.ax
