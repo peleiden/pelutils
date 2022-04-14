@@ -1,11 +1,17 @@
+import os
 from itertools import product
 from math import ceil
 
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 
 from pelutils.tests import UnitTestCollection
 from pelutils.ds.plots import linear_binning, log_binning, normal_binning,\
-    colours, base_colours, tab_colours, moving_avg, exp_moving_avg, double_moving_avg
+    colours, base_colours, tab_colours,\
+    moving_avg, exp_moving_avg, double_moving_avg,\
+    Figure
 
 
 def test_colours():
@@ -123,3 +129,50 @@ class TestBinning:
         for i in range(ceil(self.bins / 2)):
             assert np.isclose(binning[i+1]-binning[i], binning[self.bins-i-1]-binning[self.bins-i-2])
         assert (np.diff(binning, n=3) > 0).all()
+
+class TestFigure(UnitTestCollection):
+
+    savepath = os.path.join(UnitTestCollection.test_dir, "test.png")
+
+    def test_save(self):
+        with Figure(self.savepath):
+            pass
+        assert os.path.exists(self.savepath)
+        os.remove(self.savepath)
+
+    def test_restore_rc_params(self):
+        default_fontsize = mpl.rcParams["font.size"]
+        default_ytick_right = mpl.rcParams["ytick.right"]
+        new_fontsize = default_fontsize + 1
+        new_ytick_right = not default_ytick_right
+
+        with Figure(
+            fontsize=new_fontsize,
+            other_rc_params={ "ytick.right": new_ytick_right },
+        ):
+            assert mpl.rcParams["font.size"] == new_fontsize
+            assert mpl.rcParams["ytick.right"] == new_ytick_right
+        assert mpl.rcParams["font.size"] == default_fontsize
+        assert mpl.rcParams["ytick.right"] == default_ytick_right
+
+    def test_fig_ax(self):
+        with Figure() as f:
+            assert isinstance(f.fig, mpl.figure.Figure)
+            assert isinstance(f.ax, mpl.axes.Axes)
+        with Figure(nrow=3) as f:
+            assert isinstance(f.fig, mpl.figure.Figure)
+            assert isinstance(f.ax, np.ndarray)
+            assert f.ax.shape == (3,)
+            assert all(isinstance(ax, mpl.axes.Axes) for ax in f.ax)
+        with Figure(nrow=3, ncol=4) as f:
+            assert isinstance(f.fig, mpl.figure.Figure)
+            assert isinstance(f.ax, np.ndarray)
+            assert f.ax.shape == (3, 4)
+            assert all(isinstance(ax, mpl.axes.Axes) for axes in f.ax for ax in axes)
+
+    def test_stylesheet(self):
+        with pytest.raises(OSError):
+            with Figure(style="this-style-does-not exist", tight_layout=True):
+                pass
+        with Figure(style="seaborn", tight_layout=True):
+            pass
