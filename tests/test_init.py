@@ -6,7 +6,7 @@ import platform
 import numpy as np
 import pytest
 
-from pelutils import EnvVars, reverse_line_iterator, except_keys,\
+from pelutils import EnvVars, UnsupportedOS, reverse_line_iterator, except_keys,\
     split_path, binary_search, raises, thousands_seperators, is_windows
 from pelutils.tests import UnitTestCollection
 
@@ -90,13 +90,13 @@ class TestInit(UnitTestCollection):
         return paths
 
     def test_is_windows(self):
-        # What a dum test
+        # What a dumb test
         assert is_windows() == platform.platform().startswith("Windows")
 
     def test_reverse_line_iterator(self):
         if is_windows():
             open("test.txt", "w").close()
-            with pytest.raises(OSError), open("test.txt") as f:
+            with pytest.raises(UnsupportedOS), open("test.txt") as f:
                 next(reverse_line_iterator(f))
             return
 

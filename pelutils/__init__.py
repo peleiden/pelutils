@@ -21,6 +21,9 @@ __version__ = "1.0.0"
 
 _T = TypeVar("_T")
 
+class UnsupportedOS(Exception):
+    pass
+
 def set_seeds(seed: int=0):
     np.random.seed(seed)
     random.seed(seed)
@@ -179,7 +182,7 @@ def reverse_line_iterator(file: TextIO, chunksize=DEFAULT_BUFFER_SIZE, linesep="
     to fuckery in how line seperators are read. """
 
     if is_windows():
-        raise OSError("reverse_line_iterator is not supported on Windows")
+        raise UnsupportedOS("reverse_line_iterator is not supported on Windows")
     if len(linesep) != 1:
         raise ValueError("reverse_line_iterator only supports line seperators of length 1")
 

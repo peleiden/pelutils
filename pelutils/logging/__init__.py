@@ -3,7 +3,7 @@ from typing import Generator, Iterable, Optional
 import os
 import traceback as tb
 
-from pelutils import get_repo, get_timestamp
+from pelutils import UnsupportedOS, get_repo, get_timestamp, is_windows
 from pelutils.format import RichString
 
 from .support import LogLevels, _LevelManager, _LogErrors, _CollectLogs
@@ -214,6 +214,11 @@ class Logger:
     @property
     def collect(self):
         """ Use with a with block to perform all logs within the block at once. """
+        if is_windows():
+            # Having multiple threads or processes write to the same file is not
+            # safe on Windows unlike on Linux or Mac, in the way that log.collect
+            # is usually used. See https://stackoverflow.com/a/25924980.
+            raise UnsupportedOS("Log collecting is not supported on windows")
         return _CollectLogs(self)
 
     def section(self, *tolog, with_info=True, sep=None, with_print=None, newline=True):

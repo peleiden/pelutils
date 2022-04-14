@@ -48,20 +48,18 @@ class SimplePool:
         self._pool = None
 
 class UnitTestCollection:
-    """
-    A convenience class for inheriting from when writing test classes using pytest.
-    This class ensures that test path is automatically created and deleted between tests.
+    """ A convenience class for inheriting from when writing test classes using pytest.
+    This class ensures that test directory is automatically created and deleted between tests.
 
     See this example for usage:
-    ```
-    class SomethingTest(MainTest):
+    ```py
+    class TestMyProgram(UnitTestCollection):
         def test_somefun(self):
-            results = ...
-            with open("myresultfile.txt", "w") as f:
-                f.write(results)
+            result = ...
+            with open(f"{self.test_dir}/myresultfile.txt", "w") as f:
+                f.write(result)
             assert "myresultfile.txt" in os.listdir(self.test_dir)
-    ```
-    """
+    ``` """
 
     # Place temporary test files here
     # Directory will be creating when running test files and removed afterwards
