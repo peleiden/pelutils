@@ -91,7 +91,7 @@ class _ProfileContext:
         self.profile_name = profile_name
 
     def __enter__(self):
-        ...
+        pass
 
     def __exit__(self, et, ev, tb):
         if et == KeyboardInterrupt:
