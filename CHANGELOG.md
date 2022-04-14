@@ -41,6 +41,7 @@
 - Added `SimplePool` for testing with `multiprocessing.Pool`
 - Renamed `MainTest` to `UnitTestCollection`
 - Removed `BatchFeedForward`
+- Added `Figure` plotting context class for easier plotting settings control
 
 ### Bug fixes
 
