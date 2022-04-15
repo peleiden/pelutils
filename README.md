@@ -2,13 +2,14 @@
 
 Various utilities useful for Python projects. Features include
 
-- A simple and powerful logger with colourful printing
-- Parsing for combining config files and command-line arguments - especially useful for parametric algorithms
-- Timers and code profiling
-- An extension to dataclasses for saving and loading data
+- A simple and powerful logger with colourful printing and stacktrace logging
+- Parsing for combining config files and command-line arguments - especially useful for algorithms with several parameters
+- A timer inspired by Matlab's `tic` and `toc`
+- Simple code profiler
+- An extension to the built-in `dataclass` for saving and loading data
 - Table formatting
-- Miscellaneous standalone functions providing various functionalities - see `pelutils/__init__.py`
-- Data-science submodule with extra utilities for statistics, plotting, and machine learning using `PyTorch`
+- Miscellaneous standalone functions - see `pelutils/__init__.py`
+- Data-science submodule with extra utilities for statistics, plotting with `matplotlib`, and machine learning using `PyTorch`
 - Linear time `unique` function in the style of `numpy.unique`
 
 `pelutils` supports Python 3.7-3.9.
@@ -70,19 +71,25 @@ while True:
 ## Data Storage
 
 The DataStorage class is an augmentation of the dataclass that incluces save and load functionality.
+This simplifies saving data, as only save command has to be issued for all data, and it keeps type hinting when loading data compared to e.g. a dictionary.
 
 Currently works specifically with:
+
 - Numpy arrays (`numpy.ndarray`)
 - Torch tensors (`torch.Tensor`)
-- Any json serializable type - that is, it should be savable by json.dump
-All other data structures are pickled.
+- Any `json` serializable data (as determined by the `rapidjson` library)
+
+All other data is pickled.
 
 DataStorage classes must inherit from DataStorage and be annotated with `@dataclass`.
+
 It is further possible to give arguments to the class definition:
+
 - `json_name`: Name of the saved json file
 - `indent`: How many spaces to use for indenting in the json file
 
 Usage example:
+
 ```py
 @dataclass
 class ResultData(DataStorage, json_name="game.json", indent=4):
@@ -101,10 +108,9 @@ print(rdata.goalscorers)  # ["Max Fenger"]
 
 ## Parsing
 
-A combination of parsing CLI and config file arguments which allows for a powerful, easy-to-use workflow.
+A parsing tool for combining command-line and config file arguments.
 Useful for parametric methods such as machine learning.
 The first argument must always be a path. This can for instance be used to put log files, results, plots etc.
-
 
 Consider the execution of a file `main.py` with the command line call
 ```
@@ -150,9 +156,9 @@ or using a combination where CLI args takes precedence:
 `python main.py data/my-big-experiment --config cfg.ini --learning-rate 1e-5`
 where `cfg.ini` could contain
 
-# pelutils.logging
+# Logging
 
-Easy to use logger which fits common needs. Can be imported from `pelutils` directly, e.g. `from pelutils import log`.
+The logging submodule contains a simple yet feature-rich logger which fits common needs. Can be imported from `pelutils` directly, e.g. `from pelutils import log`.
 
 ```py
 # Configure logger for the script
@@ -195,26 +201,30 @@ def fun():
     log("General Kenobi!")
 with mp.Pool() as p:
     p.map(log.collect_logs(fun), args)
+
+# It is also possible to create multiple loggers by importing the Logger class, e.g.
+log2 = Logger()
+log2.configure("path/to/save/log2.log")
 ```
 
-# pelutils.ds
+# Data Science
 
 This submodule contains various utility functions for data science and machine learning. To make sure the necessary requirements are installed, install using
 ```
 pip install pelutils[ds]
 ```
-Note that in some terminals, you will instead have to write
+Note that in some terminals (e.g. `zsh`), you will have escape the brackets:
 ```
 pip install pelutils\[ds\]
 ```
 
-## PyTorch
+## Deep Learning
 
 All PyTorch functions work independently of whether CUDA is available or not.
 
 ```py
 # Inference only: No gradients should be tracked in the following function
-# Same as putting entire function body inside with torch.no_grad()
+# Same as putting entire function body inside `with torch.no_grad()`
 @no_grad
 def infer():
     <code that includes feedforwarding>
@@ -233,29 +243,87 @@ a, b = np.random.randn(100), np.random.randn(100)
 r, lower_r, upper_r, p = corr_ci(a, b, alpha=0.01)
 ```
 
-## Matplotlib
+## Plotting
 
-Contains predefined rc params, colours, and figure sizes.
-
+`pelutils` provides plotting utilities based on `matplotlib`.
+Most notable is the `Figure` context class, which attempts to remedy some of the common grievances with `matplotlib`, e.g. having to remember the correct `kwargs` and `rcParams` for setting font sizes, grid line colours etc, and notably adding type hinting to `fig` and `ax` produced by `plt.subplots`.
 ```py
-# Set wide figure size
-plt.figure(figsize=figsize_wide)
+from pelutils.ds.plots import Figure
 
-# Use larger font for larger figures - works well with predefined figure sizes
-update_rc_params(rc_params)
+# The following makes a plot and saves it to `plot.png`.
+# The seaborn is style is used for demonstration, but if the `style` argument
+# is not given, the default matplotlib style is used.
+# The figure and font size are also given for demonstration, but their default
+# values are increased compared to matplotlib's default, as these are generally
+# too small for finished plots.
+with Figure("plot.png", figsize=(20, 10), style="seaborn", fontsize=20):
+    plt.scatter(x, y, label="Data")
+    plt.grid()
+    plt.title("Very nice plot")
+# The figure is automatically saved to `plot.png` and closed, such that
+# plt.plot can be used again from here.
+# Figure changes `matplotlib.rcParams`, but these changes are also undone
+# after the end of the `with statement`.
 
-# 15 different, unique colours
-c = iter(colours)
-for i in range(15):
-    plt.plot(x[i], y[i], color=next(c))
+# For more complex plots, it is also possible to access the `fig` and `ax`
+# variables usually assigned as `fig, ax = plt.subplots()`.
+# These are type hinted, so no more remembering if it is `ax.title()` or
+# `ax.set_title()`.
+with Figure("plot.png") as f:
+    f.fig  # fig available as attribute on the Figure instance
+    f.ax.set_title("Very nice plot")  # The same goes for `ax`
 ```
 
-# Installing on unsupported platforms
+The plotting utilies also include binning functions for creating nice histograms.
+The `get_bins` function produces bins based on a binning function, of which three are provided:
 
-Mostly, `pelutils` can be install with `pip install pelutils`, but some platforms and Python versions are not supported.
-These limitations are due to what dependencies, notably PyTorch, support.
-Most importantly, wheels for 32-bit platforms are not provided, meaning that the normal install method will not work on a Raspberry Pi.
-If your platform is not supported, but you do not require the `ds` submodule, and thus PyTorch as a dependency, you can try installing `pelutils` directly from GitHub with
+- `linear_binning`: Bins are spaced evenly from the lowest to the largest value of the data.
+- `log_binning`: Bins are log-spaced from the lowest to the largest value of the data, which is assumed to be positive.
+- `normal_binning`: Bins are distributed according to the distribution of the data, such there are more bins closer to the center of the data. This is useful if the data somewhat resembles a normal distribution, as the resolution will be the greatest where there is the most data.
+
+It is also possible to provide custom binning functions.
+
+`get_bins` provide both `x` and `y` coordinates, making it simple to use with argument unpacking:
+```py
+import matplotlib.pyplot as plt
+import numpy as np
+from pelutils.ds.plots import get_bins, normal_binning
+
+# Generate normally distributed data
+x = np.random.randn(100)
+# Plot distribution
+plt.plot(*get_bins(x, binning_fn=normal_binning))
+```
+
+Finally, different smoothing functions are provided.
+The two most common are `moving_avg` and `exponential_avg` which smooth the data using a moving average and exponential smoothing, respectively.
+
+The `double_moving_avg` is special in that the number of smoothed data points do not depend on the number of given data points but is instead based on a given number of samples, which allows the resulting smoothed curve to not by jagged as happens with the other smoothing functions.
+It also has two smoothness parameters, which allows a large degree of smoothness control.
+
+Apart from smoothness parameters, all smoothness functions have the same call signature:
+```py
+from pelutils.ds.plots import double_moving_avg
+
+# Generate noisy data
+n = 100
+x = np.linspace(-1, 1, n)
+y = np.random.randn(n)
+
+# Plot data along with smoothed curve
+plt.plot(*double_moving_avg(x, y))
+# If x is not given, it is assumed to go from 0 to n-1 in steps of 1
+plt.plot(*double_moving_avg(y))
+```
+
+Examples of all the plotting utilities are shown in the `examples` directory.
+
+# Supported platforms
+
+Precompiled wheels are provided for most common platforms.
+Notably, they are not provided for 32-bit systems.
+If no wheel is provided, `pip` should attempt a source install.
+If all else fails, it is possible to install from source by pointing `pip` to Github directly:
 ```
 pip install git+https://github.com/peleiden/pelutils.git@release#egg=pelutils
 ```

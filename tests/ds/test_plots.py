@@ -138,7 +138,6 @@ class TestFigure(UnitTestCollection):
         with Figure(self.savepath):
             pass
         assert os.path.exists(self.savepath)
-        os.remove(self.savepath)
 
     def test_restore_rc_params(self):
         default_fontsize = mpl.rcParams["font.size"]
@@ -147,6 +146,7 @@ class TestFigure(UnitTestCollection):
         new_ytick_right = not default_ytick_right
 
         with Figure(
+            self.savepath,
             fontsize=new_fontsize,
             other_rc_params={ "ytick.right": new_ytick_right },
         ):
@@ -156,15 +156,15 @@ class TestFigure(UnitTestCollection):
         assert mpl.rcParams["ytick.right"] == default_ytick_right
 
     def test_fig_ax(self):
-        with Figure() as f:
+        with Figure(self.savepath) as f:
             assert isinstance(f.fig, mpl.figure.Figure)
             assert isinstance(f.ax, mpl.axes.Axes)
-        with Figure(nrow=3) as f:
+        with Figure(self.savepath, nrow=3) as f:
             assert isinstance(f.fig, mpl.figure.Figure)
             assert isinstance(f.ax, np.ndarray)
             assert f.ax.shape == (3,)
             assert all(isinstance(ax, mpl.axes.Axes) for ax in f.ax)
-        with Figure(nrow=3, ncol=4) as f:
+        with Figure(self.savepath, nrow=3, ncol=4) as f:
             assert isinstance(f.fig, mpl.figure.Figure)
             assert isinstance(f.ax, np.ndarray)
             assert f.ax.shape == (3, 4)
@@ -172,7 +172,7 @@ class TestFigure(UnitTestCollection):
 
     def test_stylesheet(self):
         with pytest.raises(OSError):
-            with Figure(style="this-style-does-not exist", tight_layout=True):
+            with Figure(self.savepath, style="this-style-does-not exist", tight_layout=True):
                 pass
-        with Figure(style="seaborn", tight_layout=True):
+        with Figure(self.savepath, style="seaborn", tight_layout=True):
             pass
