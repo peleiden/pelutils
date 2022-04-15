@@ -141,6 +141,7 @@ def get_bins(
     return x, y
 
 class Figure:
+
     """ Used for more ergonomic plotting. Simple usecase:
     ```py
     with Figure("figure.png", figsize=(20, 10), fontsize=50):
@@ -155,19 +156,19 @@ class Figure:
     and attributes exist on fig and ax.
     In the example, the seaborn style is used (similar to `plt.style.use("seaborn"))`.
     ```py
-    with Figure(show=True, figsize=(20, 10), style="seaborn") as f:
+    with Figure("figure.png", figsize=(20, 10), style="seaborn") as f:
         f.ax.set_title("Normal sized title")
         f.figure.add_axes(...)
-    # No path has been specified, so the figure is not saved, but a window is shown.
     ``` """
 
     def __init__(
         self,
-        savepath:     Optional[str] = None, *,
+        savepath:     str, *,
+        # nrow and ncol are given to plt.subplots
+        # If either is larger than 1, the .ax attribute will be a numpy array
         nrow:         int  = 1,
         ncol:         int  = 1,
         tight_layout: bool = True,
-        show:         bool = False,
         style:        Optional[str] = None,
         # Arguments below here go into mpl.rcParams
         figsize:           tuple[int, int] = (15, 10),
