@@ -1,4 +1,5 @@
 .vscode
+*.png
 
 # Files and folders prepended by local_
 **/local_*/

@@ -173,8 +173,9 @@ class Figure:
         figsize:           tuple[int, int] = (15, 10),
         dpi:               float = 200,
         fontsize:          float = 30,
-        axes_ticksize:     float = 26,
-        legend_fontsize:   float = 26,
+        title_fontsize:    float = 0.5,     # Fraction of fontsize
+        axes_ticksize:     float = 0.85,  # Fraction of fontsize
+        legend_fontsize:   float = 0.85,  # Fraction of fontsize
         legend_framealpha: float = 0.8,
         legend_edgecolor:  tuple[float, float, float, float] = (0, 0, 0, 1),
         other_rc_params:   dict[str, Any] = dict(),
@@ -183,7 +184,6 @@ class Figure:
         self._nrow = nrow
         self._ncol = ncol
         self._tight_layout = tight_layout
-        self._show = show
         self._style = style
 
         self._original_rc_params = deepcopy(dict(mpl.rcParams))
@@ -191,9 +191,10 @@ class Figure:
             "font.size": fontsize,
             "figure.figsize": figsize,
             "figure.dpi": dpi,
-            "legend.fontsize": legend_fontsize,
-            "xtick.labelsize": axes_ticksize,
-            "ytick.labelsize": axes_ticksize,
+            "figure.titlesize": title_fontsize * fontsize,
+            "legend.fontsize": legend_fontsize * fontsize,
+            "xtick.labelsize": axes_ticksize * fontsize,
+            "ytick.labelsize": axes_ticksize * fontsize,
             "legend.framealpha": legend_framealpha,
             "legend.edgecolor": legend_edgecolor,
             **other_rc_params,
@@ -214,8 +215,6 @@ class Figure:
             plt.tight_layout()
         if self._savepath:
             plt.savefig(self._savepath)
-        if self._show:
-            plt.show()
 
         plt.close()
         mpl.rcParams.update(self._original_rc_params)
