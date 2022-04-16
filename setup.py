@@ -63,7 +63,7 @@ setup_args = dict(
     install_requires = [ requirements ],
     extras_require   = { "ds": ds_requirements, "tests": ds_requirements+dev_requirements },
     entry_points     = { "console_scripts": [
-        "linecounter = pelutils.ds._linecounter:linecounter",
+        "linecounter = pelutils.entry_points._linecounter:linecounter",
         "pelexamples = examples.cli:run",
     ] },
     cmdclass         = { "build": build },

@@ -5,9 +5,7 @@
 - Removed `log.tqdm`
 - Added binning functions to `pelutils.ds.plot`
 - Added `pelutils.ds.distributions` with `scipy` distributions that use same notation as Jim Pitman's "Probability"
-- Added `examples` directory
-
-  Currently only has plotting examples
+- Added `examples` directory, which currently only has plotting examples
 - Removed `subfolder` attribute on `DataStorage` as this was cause for much confusion and many issues
 - Changed pickle extension from `p` to `pkl`
 - Added option to clear existing data folder saving with `DataStorage`
@@ -42,6 +40,7 @@
 - Renamed `MainTest` to `UnitTestCollection`
 - Removed `BatchFeedForward`
 - Added `Figure` plotting context class for easier plotting settings control
+- Added convenience function for adding dates on the x axis, `get_dateticks`
 
 ### Bug fixes
 
