@@ -1,7 +1,11 @@
 from __future__ import annotations
+
+import time
 from copy import deepcopy
 from typing import Any, Callable, Iterable, Optional
 
+import numpy as np
+import numpy.typing as nptyping
 from . import _import_error
 try:
     import matplotlib as mpl
@@ -10,8 +14,6 @@ try:
     from scipy import stats
 except ModuleNotFoundError as e:
     raise _import_error from e
-import numpy as np
-import numpy.typing as nptyping
 
 
 # 8 colours
@@ -139,6 +141,18 @@ def get_bins(
     if ignore_zeros:
         x, y = x[y>0], y[y>0]
     return x, y
+
+def get_dateticks(x: Iterable[float], num=10, date_format="%y-%m-%d") -> tuple[np.array, list[str]]:
+    """ Produces date labels for the x axis given an array of epoch times in seconds. Simple usage:
+    ```py
+    # x is an array of epoch times in seconds
+    plt.plot(x, y)
+    plt.xticks(*get_dateticks(x))
+    ``` """
+    x = np.fromiter(x)
+    xticks = np.linspace(x.min(), x.max(), num)
+    xticklabels = [time.strftime(date_format, time.gmtime(et)) for et in xticks]
+    return xticks, xticklabels
 
 class Figure:
 

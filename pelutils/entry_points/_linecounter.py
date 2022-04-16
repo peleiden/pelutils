@@ -68,10 +68,10 @@ def _last_initial_zero(values: np.ndarray) -> int:
 @click.command()
 @click.argument("repos", nargs=-1)
 @click.option("-e", "--extensions", default=_default_extensions, help="Comma seperated list of file extensions to look for")
-@click.option("-o", "--outplot-path", default="linecount.png")
+@click.option("-o", "--output", default=None)
 @click.option("-d", "--date-format", default="%d-%m-%y", help="How to format axis labels")
 @click.option("-n", "--no-repo-name", is_flag=True)
-def linecounter(repos: list[str], extensions: str, outplot_path: str, date_format: str, no_repo_name: bool):
+def linecounter(repos: list[str], extensions: str, output: str, date_format: str, no_repo_name: bool):
     extensions = [x.strip() for x in extensions.split(",")]
     extensions = [x if x.startswith(".") else "." + x for x in extensions]
     wd = os.getcwd()
@@ -119,7 +119,11 @@ def linecounter(repos: list[str], extensions: str, outplot_path: str, date_forma
     plt.legend(loc=2)
     plt.grid()
     plt.tight_layout()
-    plt.savefig(outplot_path)
+
+    if output:
+        plt.savefig(output)
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
