@@ -1,4 +1,6 @@
 import os
+import time
+from datetime import datetime, timedelta
 from itertools import product
 from math import ceil
 
@@ -11,13 +13,35 @@ from pelutils.tests import UnitTestCollection
 from pelutils.ds.plots import linear_binning, log_binning, normal_binning,\
     colours, base_colours, tab_colours,\
     moving_avg, exp_moving_avg, double_moving_avg,\
-    Figure
+    Figure, get_dateticks
 
 
 def test_colours():
     assert len(base_colours) == len(set(base_colours)) ==  8
     assert len(tab_colours)  == len(set(tab_colours))  == 10
     assert len(colours)      == len(set(colours))      == 15
+
+def test_get_dateticks():
+    start_time = datetime.now()
+    end_time = start_time + timedelta(days=10)
+
+    num_datapoints = 50
+    x = np.linspace(start_time.timestamp(), end_time.timestamp(), num_datapoints)
+    date_format = "%d-%m-%y"
+
+    for num_ticks in range(10):
+        if num_ticks < 2:
+            with pytest.raises(ValueError):
+                get_dateticks(x, num_ticks)
+        else:
+            with pytest.raises(ValueError):
+                get_dateticks(x, float(num_ticks))
+            ticks, labels = get_dateticks(x, num_ticks, date_format=date_format)
+            assert num_ticks == len(ticks) == len(labels)
+            assert np.isclose(x[0], ticks[0])
+            assert np.isclose(x[-1], ticks[-1])
+            assert labels[0] == start_time.strftime(date_format)
+            assert labels[-1] == end_time.strftime(date_format)
 
 class TestMovingAverage:
 
@@ -138,6 +162,20 @@ class TestFigure(UnitTestCollection):
         with Figure(self.savepath):
             pass
         assert os.path.exists(self.savepath)
+
+    def test_no_save_if_error(self):
+        if os.path.exists(self.savepath):
+            os.remove(self.savepath)
+
+        with Figure(self.savepath):
+            pass
+        assert os.path.exists(self.savepath)
+        os.remove(self.savepath)
+
+        with pytest.raises(ZeroDivisionError):
+            with Figure(self.savepath):
+                0 / 0
+            assert not os.path.exists(self.savepath)
 
     def test_restore_rc_params(self):
         default_fontsize = mpl.rcParams["font.size"]

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
 import numpy.typing as nptyping
@@ -14,6 +14,8 @@ try:
 except ModuleNotFoundError as e:
     raise _import_error from e
 
+
+_Array = Union[list[Union[float, int]], nptyping.NDArray[float], nptyping.NDArray[int]]
 
 # 8 colours
 base_colours: tuple[str] = tuple(mcolour.BASE_COLORS)
@@ -110,15 +112,15 @@ def double_moving_avg(
     return moving_avg(xx, yy, neighbors=outer_neighbors)
 
 # Utility functions for histograms
-def linear_binning(x: Iterable, bins: int) -> np.ndarray:
+def linear_binning(x: _Array, bins: int) -> np.ndarray:
     """ Standard linear binning """
     return np.linspace(min(x), max(x), bins)
 
-def log_binning(x: Iterable, bins: int) -> np.ndarray:
+def log_binning(x: _Array, bins: int) -> np.ndarray:
     """ Logarithmic binning """
     return np.logspace(np.log10(min(x)), np.log10(max(x)), bins)
 
-def normal_binning(x: Iterable, bins: int) -> np.ndarray:
+def normal_binning(x: _Array, bins: int) -> np.ndarray:
     """ Creates bins that fits nicely to a normally distributed variable
     Bins are smaller close to the mean of x """
     dist = stats.norm(np.mean(x), 3*np.std(x))
@@ -127,28 +129,30 @@ def normal_binning(x: Iterable, bins: int) -> np.ndarray:
     return dist.ppf(uniform_spacing)
 
 def get_bins(
-    data:         Iterable,
-    binning_fn:   Callable[[Iterable, int], Iterable] = linear_binning,
+    data:         np.ndarray | list[float],
+    binning_fn:   Callable[[_Array, int], _Array] = linear_binning,
     bins:         int  = 25,
     density:      bool = True,
     ignore_zeros: bool = False,
 ):
     """ Create bins for plotting a line histogram. Simplest usage is plt.plot(*get_bins(data)) """
-    bins = binning_fn(data, bins+1)
+    bins = np.array(binning_fn(data, bins+1))
     y, edges = np.histogram(data, bins=bins, density=density)
     x = (edges[1:] + edges[:-1]) / 2
     if ignore_zeros:
         x, y = x[y>0], y[y>0]
     return x, y
 
-def get_dateticks(x: Iterable[float], num=10, date_format="%Y-%m-%d") -> tuple[np.array, list[str]]:
+def get_dateticks(x: _Array, num=10, date_format="%Y-%m-%d") -> tuple[np.array, list[str]]:
     """ Produces date labels for the x axis given an array of epoch times in seconds. Simple usage:
     ```py
     # x is an array of epoch times in seconds
     plt.plot(x, y)
     plt.xticks(*get_dateticks(x), rotation=60)
     ``` """
-    x = np.fromiter(x)
+    if not isinstance(num, int) or num < 2:
+        raise ValueError("num must int of value 2 or greater, not %s" % num)
+    x = np.array(x)
     xticks = np.linspace(x.min(), x.max(), num)
     xticklabels = [time.strftime(date_format, time.gmtime(et)) for et in xticks]
     return xticks, xticklabels
