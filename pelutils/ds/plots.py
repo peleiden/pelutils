@@ -143,12 +143,12 @@ def get_bins(
         x, y = x[y>0], y[y>0]
     return x, y
 
-def get_dateticks(x: _Array, num=10, date_format="%Y-%m-%d") -> tuple[np.array, list[str]]:
+def get_dateticks(x: _Array, num=7, date_format="%y-%m-%d") -> tuple[np.array, list[str]]:
     """ Produces date labels for the x axis given an array of epoch times in seconds. Simple usage:
     ```py
     # x is an array of epoch times in seconds
     plt.plot(x, y)
-    plt.xticks(*get_dateticks(x), rotation=60)
+    plt.xticks(*get_dateticks(x))
     ``` """
     if not isinstance(num, int) or num < 2:
         raise ValueError("num must int of value 2 or greater, not %s" % num)
@@ -193,8 +193,8 @@ class Figure:
         # Arguments below here go into mpl.rcParams
         figsize:           tuple[int, int] = (15, 10),
         dpi:               float = 200,
-        fontsize:          float = 30,
-        title_fontsize:    float = 0.5,     # Fraction of fontsize
+        fontsize:          float = 26,
+        title_fontsize:    float = 0.5,   # Fraction of fontsize
         axes_ticksize:     float = 0.85,  # Fraction of fontsize
         legend_fontsize:   float = 0.85,  # Fraction of fontsize
         legend_framealpha: float = 0.8,
@@ -231,12 +231,13 @@ class Figure:
 
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, et, ev, tb):
         if self._tight_layout:
             plt.tight_layout()
-        plt.savefig(self._savepath)
+        if not et:
+            plt.savefig(self._savepath)
         plt.close()
 
-        self._rc_context.__exit__(*args)
+        self._rc_context.__exit__(et, ev, tb)
 
         del self.fig, self.ax, self._rc_context

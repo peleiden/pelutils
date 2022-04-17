@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 from pelutils import get_repo
-from pelutils.ds.plots import figsize_std, update_rc_params, rc_params_small
+from pelutils.ds.plots import Figure, get_dateticks
 
 
 _default_extensions = ", ".join((
@@ -67,11 +67,11 @@ def _last_initial_zero(values: np.ndarray) -> int:
 
 @click.command()
 @click.argument("repos", nargs=-1)
+@click.option("-o", "--output")
 @click.option("-e", "--extensions", default=_default_extensions, help="Comma seperated list of file extensions to look for")
-@click.option("-o", "--output", default=None)
-@click.option("-d", "--date-format", default="%d-%m-%y", help="How to format axis labels")
+@click.option("-d", "--date-format", default="%y-%m-%d", help="How to format axis labels")
 @click.option("-n", "--no-repo-name", is_flag=True)
-def linecounter(repos: list[str], extensions: str, output: str, date_format: str, no_repo_name: bool):
+def linecounter(repos: list[str], output: str, extensions: str, date_format: str, no_repo_name: bool):
     extensions = [x.strip() for x in extensions.split(",")]
     extensions = [x if x.startswith(".") else "." + x for x in extensions]
     wd = os.getcwd()
@@ -95,37 +95,24 @@ def linecounter(repos: list[str], extensions: str, output: str, date_format: str
         all_counts.append(lines)
         os.chdir(wd)
 
-    plt.figure(figsize=figsize_std)
-    for i, (repo_name, times, counts) in enumerate(zip(repo_names, all_times, all_counts)):
-        for ext, l in counts.items():
-            if not l.any():
-                continue
-            non_zero = l != 0
-            non_zero[_last_initial_zero(l)] = 1
-            all_times[i] = times[non_zero]
-            all_counts[i] = l[non_zero]
-            lab = ext+(f" ({repo_name})" if len(repo_names) > 1 and not no_repo_name else "")
-            plt.plot(all_times[i], all_counts[i], marker=".", ms=8, lw=2, label=lab)
+    with Figure(output):
+        for i, (repo_name, times, counts) in enumerate(zip(repo_names, all_times, all_counts)):
+            for ext, l in counts.items():
+                if not l.any():
+                    continue
+                non_zero = l != 0
+                non_zero[_last_initial_zero(l)] = 1
+                lab = ext+(f" ({repo_name})" if len(repo_names) > 1 and not no_repo_name else "")
+                plt.plot(times[non_zero], l[non_zero], marker=".", ms=8, lw=2, label=lab)
 
-    fused_times = _fuse_times(all_times)
-    xticks = np.linspace(0, len(fused_times)-1, 10, dtype=int)
-    xticklabels = [time.strftime(date_format, time.gmtime(x)) for i, x in enumerate(fused_times) if i in xticks]
-    plt.xticks([fused_times[i] for i in xticks], xticklabels, rotation=60)
-    title = "Line counts over time" + (f" ({repo_name})" if len(repo_names) == 1 and not no_repo_name else "")
-    plt.title(title)
-    plt.xlabel("Date of commit")
-    plt.ylabel("Number of lines (excluding empty lines)")
-    plt.legend(loc=2)
-    plt.grid()
-    plt.tight_layout()
-
-    if output:
-        plt.savefig(output)
-    else:
-        plt.show()
-
+        fused_times = _fuse_times(all_times)
+        plt.xticks(*get_dateticks(fused_times, date_format=date_format))
+        title = "Line count over time" + (f" ({repo_name})" if len(repo_names) == 1 and not no_repo_name else "")
+        plt.title(title)
+        plt.xlabel("Date of commit")
+        plt.ylabel("Number of non-empty lines")
+        plt.legend(loc=2)
+        plt.grid()
 
 if __name__ == "__main__":
-    update_rc_params(rc_params_small)
     linecounter()
-
