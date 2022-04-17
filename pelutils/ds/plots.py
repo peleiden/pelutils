@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, List, Optional, Union
 
 import numpy as np
-import numpy.typing as nptyping
 from . import _import_error
 try:
     import matplotlib as mpl
@@ -15,7 +14,7 @@ except ModuleNotFoundError as e:
     raise _import_error from e
 
 
-_Array = Union[list[Union[float, int]], np.ndarray]
+_Array = Union[List[Union[float, int]], np.ndarray]
 
 # 8 colours
 base_colours: tuple[str] = tuple(mcolour.BASE_COLORS)
@@ -179,7 +178,7 @@ class Figure:
     ``` """
 
     fig: mpl.figure.Figure
-    ax: mpl.axes.Axes | nptyping.NDArray[mpl.axes.Axes]
+    ax: mpl.axes.Axes | np.ndarray
 
     def __init__(
         self,
