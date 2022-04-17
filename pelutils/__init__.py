@@ -16,9 +16,6 @@ except:
     _has_torch = False
 
 
-__version__ = "1.0.0"
-
-
 _T = TypeVar("_T")
 
 class UnsupportedOS(Exception):
@@ -213,8 +210,9 @@ def except_keys(d: dict[_T, Any], except_keys: Iterable[_T]) -> dict[_T, Any]:
     except_keys = set(except_keys)
     return { kw: v for kw, v in d.items() if kw not in except_keys }
 
-# To allow imports directly from utils #
-# Currently to be placed lower because get_timestamp is needed by logger #
+# To allow imports directly from utils
+# Placed down here to prevent issues with circular imports
+from .__version__ import __version__
 from .logging import *
 log: Logger  # Make sure type hinting works when importing global instances
 from .parser import *

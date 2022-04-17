@@ -1,4 +1,5 @@
 import os
+import sys
 from distutils.command.build import build as build_
 from distutils.core import Extension
 from glob import glob as glob  # glob
@@ -6,6 +7,9 @@ from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
 import numpy as np
+
+sys.path.append("pelutils")
+from __version__ import __version__
 
 
 with open("requirements.txt") as requirements_file:
@@ -48,7 +52,7 @@ class build(build_):
 
 setup_args = dict(
     name             = "pelutils",
-    version          = "0.99.0",
+    version          = __version__,
     description      = "Utility functions that are often useful",
     long_description_content_type = "text/markdown",
     long_description = README + "\n\n" + CHANGELOG,
