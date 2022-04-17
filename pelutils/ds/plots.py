@@ -15,7 +15,7 @@ except ModuleNotFoundError as e:
     raise _import_error from e
 
 
-_Array = Union[list[Union[float, int]], nptyping.NDArray[float], nptyping.NDArray[int]]
+_Array = Union[list[Union[float, int]], np.ndarray]
 
 # 8 colours
 base_colours: tuple[str] = tuple(mcolour.BASE_COLORS)
