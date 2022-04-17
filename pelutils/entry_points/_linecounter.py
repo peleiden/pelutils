@@ -86,10 +86,9 @@ def linecounter(repos: list[str], extensions: str, output: str, date_format: str
             repo = git.Repo()
             branch = repo.active_branch
             times, lines = _count(repo, branch, extensions)
-        except:
+        finally:
             # Reset repo
             repo.git.checkout(branch)
-            raise
 
         repo_names.append(os.path.split(repo_path)[-1])
         all_times.append(times)

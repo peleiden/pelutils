@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import time
-from copy import deepcopy
 from typing import Any, Callable, Iterable, Optional
 
 import numpy as np
@@ -142,12 +141,12 @@ def get_bins(
         x, y = x[y>0], y[y>0]
     return x, y
 
-def get_dateticks(x: Iterable[float], num=10, date_format="%y-%m-%d") -> tuple[np.array, list[str]]:
+def get_dateticks(x: Iterable[float], num=10, date_format="%Y-%m-%d") -> tuple[np.array, list[str]]:
     """ Produces date labels for the x axis given an array of epoch times in seconds. Simple usage:
     ```py
     # x is an array of epoch times in seconds
     plt.plot(x, y)
-    plt.xticks(*get_dateticks(x))
+    plt.xticks(*get_dateticks(x), rotation=60)
     ``` """
     x = np.fromiter(x)
     xticks = np.linspace(x.min(), x.max(), num)
@@ -166,7 +165,7 @@ class Figure:
     # All settings are reset here
     ```
     It is also possible to access the figure and axis produced by plt.subplots.
-    These have type hinting, so it is for once possible to known what methods
+    These have type hinting, so it is for once possible to know what methods
     and attributes exist on fig and ax.
     In the example, the seaborn style is used (similar to `plt.style.use("seaborn"))`.
     ```py
@@ -174,6 +173,9 @@ class Figure:
         f.ax.set_title("Normal sized title")
         f.figure.add_axes(...)
     ``` """
+
+    fig: mpl.figure.Figure
+    ax: mpl.axes.Axes | nptyping.NDArray[mpl.axes.Axes]
 
     def __init__(
         self,
@@ -201,7 +203,6 @@ class Figure:
         self._tight_layout = tight_layout
         self._style = style
 
-        self._original_rc_params = deepcopy(dict(mpl.rcParams))
         self._rc_params = {
             "font.size": fontsize,
             "figure.figsize": figsize,
@@ -218,19 +219,20 @@ class Figure:
     def __enter__(self):
         if self._style:
             plt.style.use(self._style)
-        mpl.rcParams.update(self._rc_params)
+
+        self._rc_context = plt.rc_context(self._rc_params)
+        self._rc_context.__enter__()
 
         self.fig, self.ax = plt.subplots(self._nrow, self._ncol)
-        self.fig: mpl.figure.Figure
-        self.ax: mpl.axes.Axes
+
         return self
 
-    def __exit__(self, *_):
+    def __exit__(self, *args):
         if self._tight_layout:
             plt.tight_layout()
-        if self._savepath:
-            plt.savefig(self._savepath)
-
+        plt.savefig(self._savepath)
         plt.close()
-        mpl.rcParams.update(self._original_rc_params)
-        del self.fig, self.ax
+
+        self._rc_context.__exit__(*args)
+
+        del self.fig, self.ax, self._rc_context
