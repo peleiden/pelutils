@@ -177,9 +177,6 @@ class Figure:
         f.figure.add_axes(...)
     ``` """
 
-    fig: mpl.figure.Figure
-    ax: mpl.axes.Axes | np.ndarray
-
     def __init__(
         self,
         savepath:     str, *,
@@ -227,6 +224,8 @@ class Figure:
         self._rc_context.__enter__()
 
         self.fig, self.ax = plt.subplots(self._nrow, self._ncol)
+        self.fig: mpl.figure.Figure
+        self.ax: mpl.axes.Axes | np.ndarray
 
         return self
 
