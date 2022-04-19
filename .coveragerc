@@ -1,2 +1,2 @@
 [run]
-omit=pelutils/ds/_linecounter.py
+omit=pelutils/_entry_points

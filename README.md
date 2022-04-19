@@ -12,7 +12,7 @@ Various utilities useful for Python projects. Features include
 - Data-science submodule with extra utilities for statistics, plotting with `matplotlib`, and machine learning using `PyTorch`
 - Linear time `unique` function in the style of `numpy.unique`
 
-`pelutils` supports Python 3.7-3.9.
+`pelutils` supports Python 3.7-3.10.
 
 [![pytest](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml/badge.svg?branch=master)](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml)
 [![Coverage Status](https://coveralls.io/repos/github/peleiden/pelutils/badge.svg?branch=master)](https://coveralls.io/github/peleiden/pelutils?branch=master)
