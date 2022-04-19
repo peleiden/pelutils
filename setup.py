@@ -11,21 +11,29 @@ import numpy as np
 sys.path.append("pelutils")
 from __version__ import __version__
 
-
-with open("requirements.txt") as requirements_file:
-    requirements = requirements_file.read().splitlines()
-
-with open("requirements-ds.txt") as requirements_ds_file:
-    requirements_ds = requirements_ds_file.read().splitlines()
-
-with open("requirements-dev.txt") as requirements_dev_file:
-    requirements_dev = requirements_dev_file.read().splitlines()
+requirements = [
+    "numpy>=1.17.0",
+    "gitpython>=3.1.0",
+    "rich>=10.0.0",
+    "click>=7.0.0",
+    "python-rapidjson>=1.5",
+]
+requirements_ds = [
+    "torch>=1.7.0",
+    "matplotlib>=3.1.0",
+    "scipy>=1.4.1",
+    "tqdm>=4.0.0",
+]
+requirements_dev = [
+    "pytest>=6.2.4",
+    "pytest-cov>=2.12.1",
+    "coveralls>=3.2.0",
+    "coverage>=5.5",
+    "wheel",
+]
 
 with open("README.md") as readme_file:
     README = readme_file.read()
-
-with open("CHANGELOG.md") as history_file:
-    CHANGELOG = history_file.read()
 
 c_files = list()
 for root, __, files in os.walk("pelutils/_c"):
@@ -55,13 +63,12 @@ setup_args = dict(
     version          = __version__,
     description      = "Utility functions that are often useful",
     long_description_content_type = "text/markdown",
-    long_description = README + "\n\n" + CHANGELOG,
+    long_description = README,
     license          = "BSD-3-Clause",
     packages         = find_packages(),
-    package_data     = { "pelutils": [ "ds/ds.c", "ds/hashmap.c/*" ] },
     author           = "Asger Laurits Schultz, Søren Winkel Holm",
     author_email     = "asger.s@protonmail.com, swholm@protonmail.com",
-    keywords         = [ "utility", "logger", "parser", "profiling" ],
+    keywords         = [ "utility", "logger", "parser", "profiling", "plotting" ],
     url              = "https://github.com/peleiden/pelutils",
     download_url     = "https://pypi.org/project/pelutils/",
     install_requires = [ requirements ],
@@ -79,7 +86,7 @@ setup_args = dict(
             include_dirs       = [np.get_include()]
         )
     ],
-    python_requires  = ">=3.7,<3.10",
+    python_requires  = ">=3.7,<=3.10",
 )
 
 if __name__ == "__main__":
