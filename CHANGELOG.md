@@ -41,6 +41,7 @@
 - Removed `BatchFeedForward`
 - Added `Figure` plotting context class for easier plotting settings control
 - Added convenience function for adding dates on the x axis, `get_dateticks`
+- Added convenience function for getting path in test context, `UnitTestCollection.test_path`
 
 ### Bug fixes
 

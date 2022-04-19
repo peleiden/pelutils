@@ -1,7 +1,7 @@
-from shutil import rmtree
 import multiprocessing as mp
 import os
 import sys
+from shutil import rmtree
 
 
 def restore_argv(fun):
@@ -63,7 +63,7 @@ class UnitTestCollection:
 
     # Place temporary test files here
     # Directory will be creating when running test files and removed afterwards
-    test_dir = "local_test_files"
+    test_dir = ".local_test_files"
 
     @classmethod
     def setup_class(cls):
@@ -79,3 +79,7 @@ class UnitTestCollection:
         if isinstance(except_instance, FileNotFoundError):
             return
         raise except_instance
+
+    @classmethod
+    def test_path(cls, path: str) -> str:
+        return os.path.join(cls.test_dir, path)
