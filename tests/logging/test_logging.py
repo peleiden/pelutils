@@ -30,6 +30,10 @@ class TestLogger(UnitTestCollection):
             print_level=LogLevels.DEBUG,
         )
 
+    def get_last_line(self) -> str:
+        with open(self.logfile) as fh:
+            return next(line for line in fh.readlines()[::-1] if line.strip())
+
     def test_input(self, monkeypatch: pytest.MonkeyPatch):
         words = "Lorem ipsum dolor sit amet, consectetur adipiscing elit".split()
         # Generate some test queries and responses
@@ -236,3 +240,28 @@ class TestLogger(UnitTestCollection):
         with pytest.raises(UnsupportedOS if is_windows() else LoggingException):
             with log.collect:
                 log.configure(logfile)
+
+    def test_log_error(self):
+        # Log some random stuff to make sure previous tests do not interfere
+        log("Hello there")
+
+        # First, test that errors are caught only when within log.log_errors context
+        with pytest.raises(ZeroDivisionError):
+            0 / 0
+        assert ZeroDivisionError.__name__ not in self.get_last_line()
+
+        with pytest.raises(ZeroDivisionError):
+            with log.log_errors:
+                0 / 0
+        assert ZeroDivisionError.__name__ in self.get_last_line()
+
+        # Then test that it also works with SystemExit when the exit code is zero
+        with pytest.raises(SystemExit):
+            with log.log_errors:
+                raise SystemExit(0)
+        assert SystemExit.__name__ not in self.get_last_line()
+
+        with pytest.raises(SystemExit):
+            with log.log_errors:
+                raise SystemExit(1)
+        assert SystemExit.__name__ in self.get_last_line()

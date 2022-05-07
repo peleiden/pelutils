@@ -1,6 +1,7 @@
 """ This file contains supporting elements to the logger, such as levels,
 colours, collection of logs, etc. """
 from __future__ import annotations
+
 from enum import IntEnum
 from typing import Optional
 
@@ -46,7 +47,8 @@ class _LogErrors:
         pass
 
     def __exit__(self, et, ev, _):
-        if et:
+        is_zero_exit_code = et is SystemExit and ev.code == 0
+        if et and not is_zero_exit_code:
             self._log.log_with_stacktrace(ev, level=LogLevels.CRITICAL)
 
 class _CollectLogs:
