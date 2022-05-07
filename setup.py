@@ -86,7 +86,8 @@ setup_args = dict(
             include_dirs       = [np.get_include()]
         )
     ],
-    python_requires  = ">=3.7,<=3.10",
+    license_files    = [ os.path.join("pelutils", "_c", "hashmap.c", "LICENSE") ],
+    python_requires  = ">=3.7",
 )
 
 if __name__ == "__main__":
