@@ -1,5 +1,10 @@
 # History
 
+## 1.1.0
+
+- Include `hashmap.c` license in distributions
+- Include all header files in source distributions
+
 ## 1.0.0 - Breaking changes, first stable release
 
 - Removed `log.tqdm`

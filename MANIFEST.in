@@ -1,0 +1,2 @@
+recursive-include pelutils *.h
+recursive-include pelutils *.hpp
