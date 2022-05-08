@@ -6,8 +6,6 @@ from glob import glob as glob  # glob
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
-import numpy as np
-
 sys.path.append("pelutils")
 from __version__ import __version__
 
@@ -84,7 +82,6 @@ setup_args = dict(
             name               = "_pelutils_c",
             sources            = c_files,
             extra_compile_args = ["-DMS_WIN64"],
-            include_dirs       = [np.get_include()]
         )
     ],
     license_files    = [ os.path.join("pelutils", "_c", "hashmap.c", "LICENSE") ],

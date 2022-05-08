@@ -5,6 +5,7 @@
 - Include `hashmap.c` license in distributions
 - Include all header files in source distributions
 - Fix `log.log_errors` logging `SystemExit(0)` as raised by `click` upon successful execution
+- Move away from using `numpy` API for easier install
 
 ## 1.0.0 - Breaking changes, first stable release
 

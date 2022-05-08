@@ -122,14 +122,18 @@ class EnvVars:
 
 def c_ptr(arr: np.ndarray | torch.Tensor) -> ctypes.c_void_p:
     """
-    Returns a c pointer that can be used to import a contiguous numpy array or torch tensor into a c function
-    Returns null pointer if unable to resolve pointer, including if arr is None
+    Returns a C pointer that can be used to import a contiguous
+    numpy array or torch tensor into a C/C++/Rust function. This
+    function is mostly useful when not using Python's C api and
+    instead interfacing with .so files directly.
     """
-    if isinstance(arr, np.ndarray):
-        return ctypes.c_void_p(arr.ctypes.data)
-    elif _has_torch and isinstance(arr, torch.Tensor):
-        return ctypes.c_void_p(arr.data_ptr())
-    return ctypes.c_void_p(None)
+    if _has_torch and isinstance(arr, torch.Tensor):
+        arr = arr.numpy()
+    if not isinstance(arr, np.ndarray):
+        raise TypeError(f"Array should be of type np.ndarray or torch.Tensor, not {type(arr)}")
+    if not arr.flags.c_contiguous:
+        raise ValueError("Array must be C-contiguous")
+    return ctypes.c_void_p(arr.ctypes.data)
 
 def split_path(path: str) -> list[str]:
     """ Splits a path into components """

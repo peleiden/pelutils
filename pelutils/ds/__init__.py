@@ -1,18 +1,18 @@
 from __future__ import annotations
-from typing import Callable, Generator, Iterable
+from typing import Callable, Iterable
 import functools
-
-import numpy as np
 
 _import_error = ModuleNotFoundError("To use the ds submodule, you must install pelutils[ds]")
 
+import numpy as np
 try:
     import torch
 except ModuleNotFoundError as e:
     raise _import_error from e
 
-from pelutils import c_ptr
 import _pelutils_c as _c
+import pelutils._c as _c_utils
+from pelutils import c_ptr
 
 
 def unique(
@@ -38,7 +38,12 @@ def unique(
     inverse = np.empty(len(array), dtype=int) if return_inverse else None
     counts  = np.empty(len(array), dtype=int) if return_counts  else None
 
-    c = _c.unique(array, index, inverse, counts)
+    c = _c.unique(
+        *_c_utils.get_array_c_args(array),
+        index.ctypes.data,
+        inverse.ctypes.data,
+        counts.ctypes.data,
+    )
 
     index = index[:c]
     if axis:
