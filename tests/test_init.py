@@ -1,13 +1,16 @@
 from __future__ import annotations
-from string import ascii_letters
+
+import ctypes
 import os
 import platform
+from string import ascii_letters
 
 import numpy as np
 import pytest
+import torch
 
 from pelutils import EnvVars, UnsupportedOS, reverse_line_iterator, except_keys,\
-    split_path, binary_search, raises, thousands_seperators, is_windows
+    split_path, binary_search, raises, thousands_seperators, is_windows, c_ptr
 from pelutils.tests import UnitTestCollection
 
 
@@ -134,3 +137,10 @@ class TestInit(UnitTestCollection):
         d2 = except_keys(d, ["b", "c"])
         assert "a" in d and "b" in d
         assert "a" in d2 and "b" not in d2
+
+    def test_c_ptr(self):
+        with pytest.raises(TypeError):
+            c_ptr(None)
+        with pytest.raises(ValueError):
+            c_ptr(np.arange(5)[::2])
+        assert isinstance(c_ptr(torch.arange(5)), ctypes.c_void_p)

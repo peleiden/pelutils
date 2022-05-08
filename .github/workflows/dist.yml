@@ -32,10 +32,8 @@ jobs:
           CIBW_ARCHS_LINUX: auto64 aarch64
           CIBW_ARCHS_MACOS: auto64
           CIBW_ARCHS_WINDOWS: auto64
-          CIBW_BEFORE_BUILD: git submodule update --init --recursive && pip install numpy
-          CIBW_BEFORE_TEST: >
-            pip install numpy &&
-            pip install -e .[tests]
+          CIBW_BEFORE_BUILD: git submodule update --init --recursive
+          CIBW_BEFORE_TEST: pip install -e .[tests]
           CIBW_TEST_COMMAND: pytest {project}/tests
 
       - uses: actions/upload-artifact@v2
@@ -51,9 +49,7 @@ jobs:
         submodules: true
 
     - name: Build source dist
-      run: |
-        pip install numpy
-        python setup.py sdist
+      run: python setup.py sdist
 
     - uses: actions/upload-artifact@v2
       with:
