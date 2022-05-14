@@ -15,6 +15,8 @@ def test_unique():
     # Simple case: Ordered numbers from 0 to 99
     n = 100
     a = np.arange(n, dtype=np.uint32)
+    u = unique(a)
+    assert np.all(a == u)
     u, index, inverse, counts = unique(a, return_index=True, return_inverse=True, return_counts=True)
     assert np.all(a == u)
     assert np.all(a == index)
