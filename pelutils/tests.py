@@ -22,8 +22,6 @@ def restore_argv(fun):
         old_argv = sys.argv.copy()
         try:
             return fun(*args, **kwargs)
-        except:
-            raise
         finally:
             sys.argv = old_argv
     return wrapper
