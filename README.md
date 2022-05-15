@@ -328,10 +328,3 @@ If all else fails, it is possible to install from source by pointing `pip` to Gi
 pip install git+https://github.com/peleiden/pelutils.git@release#egg=pelutils
 ```
 It is also possible to install from source using `pip`'s `--no-binary` option.
-
-Source installs can also be necessary if you are using `numpy` versions that are incompatible with the one that the precompiled wheels are build with.
-If that is the case, you will probably see errors in the style of
-```
-ImportError: numpy.core.multiarray failed to import
-RuntimeError: module compiled against API version 0xe but this version of numpy is 0xd
-```
