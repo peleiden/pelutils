@@ -132,16 +132,16 @@ where `main.py` contains
 ```py
 options = [
     # Mandatory argument with set abbreviation -p
-    Argument("--data-path", help="Path to where data is located", abbrv"-p"),
+    Argument("data-path", help="Path to where data is located", abbrv"-p"),
     # Optional argument with auto-generated abbreviation -l
-    Option("--learning-rate", default=1e-5, help="Learning rate to use for gradient descent steps"),
+    Option("learning-rate", default=1e-5, help="Learning rate to use for gradient descent steps"),
     # Boolean flag with auto-generated abbreviation -f
-    Flag("--fp16", help="Use mixed precision for training")
+    Flag("fp16", help="Use mixed precision for training")
 ]
 parser = Parser(*options, multiple_jobs=True)  # Two jobs are specified in the config file, so multiple_jobs=True
 location = parser.location  # Experiments are stored here. In this case path/to/put/results
-job_descriptions = parser.parse()
-parser.document_settings()  # Save a config file to reproduce the experiment
+job_descriptions = parser.parse_args()
+parser.document()  # Save a config file to reproduce the experiment
 # Run each experiment
 for job_description in experiments:
     # Get location of this job as job_description.location
