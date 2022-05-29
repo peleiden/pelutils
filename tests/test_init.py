@@ -10,7 +10,7 @@ import pytest
 import torch
 
 from pelutils import EnvVars, UnsupportedOS, reverse_line_iterator, except_keys,\
-    split_path, binary_search, raises, thousands_seperators, is_windows, c_ptr
+    split_path, binary_search, raises, thousands_seperators, is_windows, c_ptr, set_seeds
 from pelutils.tests import UnitTestCollection
 
 

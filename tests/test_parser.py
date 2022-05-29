@@ -1,6 +1,7 @@
 from __future__ import annotations
 import itertools
 import os
+import shutil
 import sys
 
 import pytest
@@ -338,3 +339,15 @@ class TestParser(UnitTestCollection):
         with pytest.raises(KeyError):
             parser.parse_args()
 
+    @restore_argv
+    def test_document(self):
+        shutil.rmtree(os.path.join(UnitTestCollection.test_dir, _testdir))
+        sys.argv = _sample_argv_conf(self._no_default_file)
+        parser = Parser(*_sample_arguments)
+        parser.parse_args()
+        parser.document()
+
+        with open(os.path.join(parser.location, parser.document_filename)) as fh:
+            content = fh.read()
+        assert _sample_no_default.replace("=", " = ").strip() in content.strip()
+        assert " ".join(_sample_argv_conf(self._no_default_file)) in content
