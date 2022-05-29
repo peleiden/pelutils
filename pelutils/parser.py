@@ -11,7 +11,7 @@ import re
 import shlex
 import sys
 
-from pelutils import get_timestamp, except_keys
+from pelutils import get_timestamp_for_files, except_keys
 
 
 _T = TypeVar("_T")
@@ -352,7 +352,7 @@ class Parser:
         self.location = args.location
 
         if args.config is None:
-            name = args.name or get_timestamp()
+            name = args.name or get_timestamp_for_files()
             if self._multiple_jobs:
                 location = os.path.join(self.location, name)
             else:

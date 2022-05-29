@@ -10,9 +10,9 @@ import pytest
 import torch
 
 from pelutils import EnvVars, UnsupportedOS, reverse_line_iterator, except_keys,\
-    split_path, binary_search, raises, thousands_seperators, is_windows, c_ptr, set_seeds
+    split_path, binary_search, raises, thousands_seperators, is_windows, c_ptr,\
+    get_timestamp, get_timestamp_for_files
 from pelutils.tests import UnitTestCollection
-
 
 class TestInit(UnitTestCollection):
 
@@ -144,3 +144,10 @@ class TestInit(UnitTestCollection):
         with pytest.raises(ValueError):
             c_ptr(np.arange(5)[::2])
         assert isinstance(c_ptr(torch.arange(5)), ctypes.c_void_p)
+
+    def test_get_timestamp(self):
+        for date in False, True:
+            ts0 = get_timestamp(with_date=date)
+            ts1 = get_timestamp_for_files(with_date=date)
+            assert len(ts0[:-4]) == len(ts1)
+            assert ts1 == ts0[:-4].replace(" ", "_").replace(":", "-")
