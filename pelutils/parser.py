@@ -5,7 +5,7 @@ from ast import literal_eval
 from configparser import ConfigParser
 from copy import deepcopy
 from shutil import rmtree
-from typing import Any, Callable, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar, Union
 import os
 import re
 import shlex
@@ -172,6 +172,7 @@ ArgumentTypes = Union[Argument, Option, Flag]
 class Parser:
 
     location: str | None = None  # Set in `parse` method
+    document_filename = "used-config.ini"
 
     _default_config_job = "DEFAULT"
 
@@ -428,12 +429,12 @@ class Parser:
 
         return job_descriptions if self._multiple_jobs else job_descriptions[0]
 
-    def document(self, encoding: str | None=None) -> str:
+    def document(self, encoding: Optional[str]=None) -> str:
         """ Saves the config file used to run the script containing the CLI command used to start the program as a comment
         If no config file was used, the CLI command comment is still present
         The path of the file is returned """
-        filename = "given-arguments.ini"
-        path = os.path.join(self.location, filename)
+        os.makedirs(self.location, exist_ok=True)
+        path = os.path.join(self.location, self.document_filename)
         with open(path, "w", encoding=encoding) as docfile:
             self._configparser.write(docfile)
             docfile.write(
