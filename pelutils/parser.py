@@ -189,7 +189,8 @@ class Parser:
     )
 
     _reserved_arguments: tuple[ArgumentTypes] = (_location_arg, _name_arg, _config_arg)
-    _reserved_names  = { arg.name for arg in _reserved_arguments }
+    _reserved_names = { arg.name for arg in _reserved_arguments }
+    _reserved_names.add("help")  # Reserved by argparse
     _reserved_abbrvs = { arg.abbrv for arg in _reserved_arguments if arg.abbrv }
 
     @property
@@ -229,7 +230,7 @@ class Parser:
                 "so e.g. 'a-b' and 'a_b' would cause a conflict")
         # Build abbrevations for arguments
         # Those with explicit abbreviations are handled first to prevent being overwritten
-        _used_abbrvs = set()
+        _used_abbrvs = { "h" }  # Reserved by argparse
         _args_with_abbrvs_first = sorted(self._arguments, key=lambda arg: self._arguments[arg].abbrv is None)
         for argname in _args_with_abbrvs_first:
             argument = self._arguments[argname]

@@ -25,6 +25,7 @@ _sample_arguments = [
     Option("opt-int", default=4),
     Option("opt-d", abbrv="o", default=6, type=lambda x: 2 * int(x)),
     Option("opt-many", nargs=0, default=list(), type=float),
+    Option("hello", default="there"),
     Flag("iam-bool", abbrv="i"),
 ]
 
@@ -129,6 +130,8 @@ class TestParser(UnitTestCollection):
             Parser(Argument("location"))
         with pytest.raises(ParserError):
             Parser(Argument("null", abbrv="n"))
+        with pytest.raises(ParserError):
+            Parser(Argument("help"))
 
         # Test that under no permutations is the ordering changed in the argparser
         sys.argv = f"main.py {os.path.join(UnitTestCollection.test_dir, _testdir)}".split()
