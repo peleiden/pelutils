@@ -60,6 +60,13 @@ def get_timestamp(*, with_date=True) -> str:
         tstr = tstr[11:]
     return tstr
 
+def get_timestamp_for_files(*, with_date=True) -> str:
+    """ Returns a timestamp formatted as YYYY-MM-DD_HH-mm-SS """
+    tstr = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    if not with_date:
+        tstr = tstr[11:]
+    return tstr
+
 def thousands_seperators(num: float | int, decimal_seperator=".") -> str:
     """ Formats a number using thousand seperators """
     if decimal_seperator not in { ".", "," }:
