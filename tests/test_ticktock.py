@@ -1,6 +1,7 @@
 import pytest
 
 from pelutils import TickTock, TT, TimeUnits
+from pelutils.ticktock import TickTockException
 
 
 def test_ticktock():
@@ -76,3 +77,25 @@ def test_timeunits():
     assert TimeUnits.next_smaller(("nice", 69)) == TimeUnits.minute
     assert TimeUnits.next_bigger(TimeUnits.second) == TimeUnits.minute
     assert TimeUnits.next_smaller(TimeUnits.second) == TimeUnits.millisecond
+
+def test_reset():
+    tt = TickTock()
+    assert tt._start is None
+    tt.tick()
+    tt.reset()
+    assert tt._start is None
+    with pytest.raises(TickTockException):
+        tt.tock()
+
+    with tt.profile("p"):
+        assert len(tt._profile_stack) == 1
+        assert tt._nhits == [1]
+    assert len(tt.profiles) == 1
+    tt.reset()
+    assert len(tt.profiles) == 0
+    assert len(tt._profile_stack) == 0
+    assert tt._nhits == list()
+
+    with tt.profile("pp"):
+        with pytest.raises(TickTockException):
+            tt.reset()

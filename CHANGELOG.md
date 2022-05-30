@@ -1,5 +1,10 @@
 # History
 
+## 1.1.1 - Breaking changes
+
+- Added `reset` method to `TickTock`
+- Removed `TickTock.remove_outliers`
+
 ## 1.1.0
 
 - Include `hashmap.c` license in distributions

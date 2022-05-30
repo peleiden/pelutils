@@ -63,14 +63,6 @@ class Profile:
         s = self.mean()
         return (1 / (len(self)+1) * sum(map(lambda x: (x-s)**2, self._hits))) ** 0.5
 
-    def remove_outliers(self, threshold=2) -> int:
-        """ Remove all hits larger than threshold * average
-        Returns number of removed outliers """
-        mu = self.mean()
-        original_length = len(self)
-        self._hits = [x for x in self._hits if x <= threshold * mu]
-        return original_length - len(self)
-
     def __str__(self) -> str:
         return self.name
 
@@ -194,6 +186,12 @@ class TickTock:
         self._profile_stack.pop()
         return dt
 
+    def reset(self):
+        """ Stops all timing and profiling. """
+        if self._profile_stack:
+            raise TickTockException("Cannot reset TickTock while profiling is happening")
+        self.__init__()
+
     def fuse(self, tt: TickTock):
         """ Fuses a TickTock instance into self """
         if len(self._profile_stack) or len(tt._profile_stack):
@@ -215,11 +213,6 @@ class TickTock:
         for tt in tts:
             ticktock.fuse(tt)
         return ticktock
-
-    def remove_outliers(self, threshold=2):
-        """ For all profiles, remove hits longer than threshold * average hit """
-        for profile in self:
-            profile.remove_outliers(threshold)
 
     @staticmethod
     def stringify_time(dt: float, unit: tuple[str, float]=TimeUnits.millisecond) -> str:
