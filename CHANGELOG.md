@@ -1,9 +1,13 @@
 # History
 
-## 1.1.1 - Breaking changes
+## 1.2.0 - Breaking changes
 
 - Added `reset` method to `TickTock`
 - Removed `TickTock.remove_outliers`
+
+### Bug fixes
+
+- Fixed different profiles with the same name in `TickTock` causing incorrect behavior
 
 ## 1.1.0
 

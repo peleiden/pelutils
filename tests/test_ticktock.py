@@ -1,5 +1,6 @@
-import pytest
+from copy import deepcopy
 
+import pytest
 from pelutils import TickTock, TT, TimeUnits
 from pelutils.ticktock import TickTockException
 
@@ -46,23 +47,26 @@ def test_context_profiling():
 def test_fuse():
     tt1 = TickTock()
     tt2 = TickTock()
-    tt3 = TickTock()
 
     tt1.profile("p")
     tt2.profile("p")
     tt2.profile("pp")
     tt2.end_profile()
     tt2.end_profile()
-    with pytest.raises(ValueError):
+    with pytest.raises(TickTockException):
         tt1.fuse(tt2)
     tt1.end_profile()
-    tt1.fuse(tt2)
-    assert len(tt1.profiles) == 2
+    with pytest.raises(TickTockException):
+        tt1.fuse(tt2)
+    assert len(tt1.profiles) == 1
 
     with pytest.raises(ValueError):
-        TickTock.fuse_multiple([tt1, tt2, tt1])
-    tt = TickTock.fuse_multiple([tt2, tt3])
-    assert len(tt.profiles) == 2
+        TickTock.fuse_multiple(tt1, tt1)
+
+    tt1 = deepcopy(tt2)
+    tt1 = TickTock.fuse_multiple(tt1, tt2)
+    for p1, p2 in zip(tt1, tt2):
+        assert p1._hits == 2 * p2._hits
 
 def test_global_tt():
     assert isinstance(TT, TickTock)
@@ -99,3 +103,64 @@ def test_reset():
     with tt.profile("pp"):
         with pytest.raises(TickTockException):
             tt.reset()
+
+def test_profiles_with_same_name():
+
+    tt = TickTock()
+
+    with tt.profile("a"):
+        pass
+    with tt.profile("a"):
+        pass
+
+    with tt.profile("b"):
+        with tt.profile("a"):
+            pass
+        with tt.profile("a"):
+            pass
+        with tt.profile("a"):
+            pass
+
+    with tt.profile("b"):
+        with tt.profile("a"):
+            pass
+
+    with tt.profile("a"):
+        pass
+
+    profiles = list(tt)
+    assert profiles[0].name == "a"
+    assert profiles[0].depth == 0
+    assert len(profiles[0]._hits) == 3
+
+    assert profiles[1].name == "b"
+    assert profiles[1].depth == 0
+    assert len(profiles[1]._hits) == 2
+
+    assert profiles[2].name == "a"
+    assert profiles[2].depth == 1
+    assert len(profiles[2]._hits) == 4
+
+def test_print(capfd: pytest.CaptureFixture):
+    tt = TickTock()
+    with tt.profile("a"):
+        pass
+
+    with tt.profile("b"):
+        with tt.profile("a"):
+            pass
+
+    print(tt)
+    stdout, _ = capfd.readouterr()
+    conditions = [False] * 4
+    for line in stdout.splitlines():
+        if line.startswith("Profile"):
+            conditions[0] = True
+        elif line.startswith("a  "):
+            conditions[1] = True
+        elif line.startswith("b  "):
+            conditions[2] = True
+        elif line.startswith("  a"):
+            conditions[3] = True
+
+    assert all(conditions)
