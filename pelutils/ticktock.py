@@ -31,10 +31,7 @@ class TimeUnits:
         """ Get largest available time unit smaller than given """
         return max((u for u in cls.units() if u[1] < unit[1]), key=lambda x: x[1])
 
-
 class Profile:
-
-    start: float
 
     def __init__(self, name: str, depth: int, parent: Profile):
         self._hits: list[float] = []
@@ -75,6 +72,8 @@ class Profile:
         for child in self.children:
             yield from child
 
+    def __hash__(self) -> int:
+        return hash((self.name, self.depth, self.parent))
 
 class _ProfileContext:
 
@@ -90,10 +89,8 @@ class _ProfileContext:
             return
         self.tt.end_profile(self.profile_name)
 
-
 class TickTockException(RuntimeError):
     pass
-
 
 class TickTock:
     """ Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
@@ -143,7 +140,8 @@ class TickTock:
 
     def __init__(self):
         self._start:         float | None = None
-        self.profiles:       dict[str, Profile] = dict()
+        self._id_to_profile: dict[int, Profile] = dict()
+        self.profiles:       list[Profile] = list()
         self._profile_stack: list[Profile] = list()
         self._nhits:         list[int] = list()
 
@@ -162,16 +160,25 @@ class TickTock:
         """ Begin profile with given name. Optionally it is possible to
         register this as several hits that sum to the total time.
         This is usual when executing a multiprocessing mapping operation. """
-        if name not in self.profiles:
-            self.profiles[name] = Profile(
-                name,
-                len(self._profile_stack),
-                self._profile_stack[-1] if self._profile_stack else None
-            )
-        self._profile_stack.append(self.profiles[name])
+        profile = Profile(
+            name,
+            len(self._profile_stack),
+            self._profile_stack[-1] if self._profile_stack else None
+        )
+
+        if hash(profile) in self._id_to_profile:
+            profile = self._id_to_profile[hash(profile)]
+            if profile.parent is not None:
+                profile.parent.children.pop()
+        else:
+            self._id_to_profile[hash(profile)] = profile
+            if not self._profile_stack:
+                self.profiles.append(profile)
+
+        self._profile_stack.append(profile)
         self._nhits.append(hits)
         pc = _ProfileContext(self, name)
-        self.profiles[name].start = perf_counter()
+        profile.start = perf_counter()
         return pc
 
     def end_profile(self, name: str=None) -> float:
@@ -189,28 +196,29 @@ class TickTock:
     def reset(self):
         """ Stops all timing and profiling. """
         if self._profile_stack:
-            raise TickTockException("Cannot reset TickTock while profiling is happening")
+            raise TickTockException("Cannot reset TickTock while profiling is active")
         self.__init__()
 
     def fuse(self, tt: TickTock):
         """ Fuses a TickTock instance into self """
         if len(self._profile_stack) or len(tt._profile_stack):
-            raise ValueError("Unable to fuse while some profiles are still unfinished")
-        for profile in tt.profiles.values():
-            existing = self.profiles.get(profile.name)
-            if existing:
-                existing._hits += profile.hits
-            else:
-                self.profiles[profile.name] = profile
+            raise TickTockException("Unable to fuse while some profiles are still unfinished")
+        # TODO allow one of them to be a subset of the other
+        if tuple(self._id_to_profile) != tuple(tt._id_to_profile):
+            raise TickTockException("Ticktocks to be fused do not match")
+
+        for key, profile in tt._id_to_profile.items():
+            existing = self._id_to_profile[key]
+            existing._hits += profile._hits
 
     @staticmethod
-    def fuse_multiple(tts: list[TickTock]) -> TickTock:
+    def fuse_multiple(*tts: TickTock) -> TickTock:
         """ Combine multiple TickTocks """
-        ticktock = TickTock()
+        ticktock = deepcopy(tts[0])
         ids = set(id(tt) for tt in tts)
         if len(ids) < len(tts):
             raise ValueError("Some TickTocks are the same instance, which is not allowed")
-        for tt in tts:
+        for tt in tts[1:]:
             ticktock.fuse(tt)
         return ticktock
 
@@ -231,7 +239,7 @@ class TickTock:
         if with_std:
             h.append("Std.")
         table.add_header(h)
-        total_time = sum(p.sum() for p in self.profiles.values() if p.depth == 0)
+        total_time = sum(p.sum() for p in self.profiles)
         for profile in self:
             row = [
                 "  " * profile.depth + profile.name,
@@ -256,7 +264,7 @@ class TickTock:
 
     def __iter__(self) -> Generator[Profile, None, None]:
         """ Recursively returns all profiles in the tree """
-        for profile in (p for p in self.profiles.values() if p.depth == 0):
+        for profile in self.profiles:
             yield from profile
 
 
