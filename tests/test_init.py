@@ -11,7 +11,7 @@ import torch
 
 from pelutils import EnvVars, UnsupportedOS, reverse_line_iterator, except_keys,\
     split_path, binary_search, raises, thousands_seperators, OS, c_ptr,\
-    get_timestamp, get_timestamp_for_files
+    get_timestamp, get_timestamp_for_files, HardwareInfo
 from pelutils.tests import UnitTestCollection
 
 class TestInit(UnitTestCollection):
@@ -98,7 +98,7 @@ class TestInit(UnitTestCollection):
 
     def test_is_mac(self):
         # What a dumb test
-        assert OS.is_mac == platform.platform().startswith("Darwin")
+        assert OS.is_mac == (platform.platform().startswith("Darwin") or platform.platform().startswith("macOS"))
 
     def test_is_linux(self):
         # What a dumb test
@@ -159,3 +159,16 @@ class TestInit(UnitTestCollection):
             ts1 = get_timestamp_for_files(with_date=date)
             assert len(ts0[:-4]) == len(ts1)
             assert ts1 == ts0[:-4].replace(" ", "_").replace(":", "-")
+
+    def test_hardware_info(self):
+        assert isinstance(HardwareInfo.cpu, str) and len(HardwareInfo.cpu) > 0
+        if OS.is_linux:
+            assert isinstance(HardwareInfo.sockets, int) and HardwareInfo.sockets >= 1
+        else:
+            assert HardwareInfo.sockets is None
+        assert isinstance(HardwareInfo.threads, int) and HardwareInfo.threads > 0
+        assert isinstance(HardwareInfo.memory, int) and HardwareInfo.memory > 0
+        if torch.cuda.is_available():
+            assert isinstance(HardwareInfo.gpu, str) and len(HardwareInfo.gpu) > 0
+        else:
+            assert HardwareInfo.gpu is None

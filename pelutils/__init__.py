@@ -6,9 +6,12 @@ from typing import Generator, TextIO, TypeVar
 import ctypes
 import os
 import random
+import subprocess
 import sys
 
+import cpuinfo
 import git
+import psutil
 import numpy as np
 try:
     import torch
@@ -224,6 +227,23 @@ def except_keys(d: dict[_T, Any], except_keys: Iterable[_T]) -> dict[_T, Any]:
     """ Returns the given dictionary, but with given keys removed """
     except_keys = set(except_keys)
     return { kw: v for kw, v in d.items() if kw not in except_keys }
+
+class HardwareInfo:
+
+    # Name of the CPU
+    cpu     = cpuinfo.get_cpu_info()["brand_raw"]
+    # How many CPU sockets there are on the system
+    # Only works on Linux, otherwise None
+    sockets = int(subprocess.check_output(
+                  'cat /proc/cpuinfo | grep "physical id" | sort -u | wc -l', shell=True
+              )) if OS.is_linux else None
+    # Total threads available across all CPU sockets
+    threads = os.cpu_count()
+    # Total system memory in bytes
+    memory  = psutil.virtual_memory().total
+    # Available gpu
+    # Requires torch, otherwise None
+    gpu     = torch.cuda.get_device_name() if _has_torch and torch.cuda.is_available() else None
 
 # To allow imports directly from utils
 # Placed down here to prevent issues with circular imports
