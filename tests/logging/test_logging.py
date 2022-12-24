@@ -5,7 +5,7 @@ import os
 import re
 
 import pytest
-from pelutils import UnsupportedOS, is_windows
+from pelutils import UnsupportedOS, OS
 
 from pelutils.logging import LogLevels, Logger, log, LoggingException
 from pelutils.tests import UnitTestCollection, SimplePool
@@ -135,7 +135,7 @@ class TestLogger(UnitTestCollection):
         else:
             assert re.search(r"\b[0-9a-f]{40}\b", stdout) is None
 
-    @pytest.mark.skipif(is_windows(), reason="Log collection is not supported on Windows")
+    @pytest.mark.skipif(OS.is_windows, reason="Log collection is not supported on Windows")
     def test_collect(self):
         reps = 1000
         # Clear log file
@@ -150,7 +150,7 @@ class TestLogger(UnitTestCollection):
         for i, line in enumerate(lines):
             assert "log %i" % (i%3+1) in line
 
-    @pytest.mark.skipif(is_windows(), reason="Log collection is not supported on Windows")
+    @pytest.mark.skipif(OS.is_windows, reason="Log collection is not supported on Windows")
     def test_collect_with_errors(self):
         reps = 1000
         # Clear log file
@@ -175,7 +175,7 @@ class TestLogger(UnitTestCollection):
             else:
                 raise RuntimeError("'log i' not found in '%s'" % repr(newline))
 
-    @pytest.mark.skipif(is_windows(), reason="Log collection is not supported on Windows")
+    @pytest.mark.skipif(OS.is_windows, reason="Log collection is not supported on Windows")
     def test_collect_with_other_logger(self):
         reps = 1000
         logfile = os.path.join(self.test_dir, "test_logging2.log")
@@ -190,7 +190,7 @@ class TestLogger(UnitTestCollection):
         for i, line in enumerate(lines):
             assert "log %i" % (i%3+1) in line
 
-    @pytest.mark.skipif(not is_windows(), reason="Error should only be raised on Windows")
+    @pytest.mark.skipif(not OS.is_windows, reason="Error should only be raised on Windows")
     def test_collect_error_on_windows(self):
         reps = 100
         with pytest.raises(UnsupportedOS), SimplePool() as p:
@@ -237,7 +237,7 @@ class TestLogger(UnitTestCollection):
             lines = lf.readlines()
         assert "This does not fail" in lines[2]
 
-        with pytest.raises(UnsupportedOS if is_windows() else LoggingException):
+        with pytest.raises(UnsupportedOS if OS.is_windows else LoggingException):
             with log.collect:
                 log.configure(logfile)
 

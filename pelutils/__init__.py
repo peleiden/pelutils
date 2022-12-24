@@ -3,9 +3,10 @@ from collections.abc import Sequence
 from datetime import datetime
 from io import DEFAULT_BUFFER_SIZE
 from typing import Generator, TextIO, TypeVar
-import os
 import ctypes
+import os
 import random
+import sys
 
 import git
 import numpy as np
@@ -20,6 +21,13 @@ _T = TypeVar("_T")
 
 class UnsupportedOS(Exception):
     pass
+
+class OS:
+
+    # See https://docs.python.org/3/library/sys.html#sys.platform for all platforms
+    is_windows = sys.platform == "win32"
+    is_mac     = sys.platform == "darwin"
+    is_linux   = sys.platform == "linux"
 
 def set_seeds(seed: int=0):
     np.random.seed(seed)
@@ -165,10 +173,6 @@ def binary_search(element: _T, iterable: Sequence[_T], *, _start=0, _end=-1) -> 
     else:
         return index
 
-def is_windows() -> bool:
-    """ Checks if running on a Windows machine. """
-    return os.name == "nt"
-
 def _read_file_chunk(file: TextIO, chunksize: int) -> str:
     """ Reads a chunk starting from `chunksize` before file pointer and up to current file pointer
     If `chunksize` is larger than the current file pointer, the file is read from the beginning
@@ -189,7 +193,7 @@ def reverse_line_iterator(file: TextIO, chunksize=DEFAULT_BUFFER_SIZE, linesep="
     Raises an OSError on Windows, as this function currently is not supported on Windows due
     to fuckery in how line seperators are read. """
 
-    if is_windows():
+    if OS.is_windows:
         raise UnsupportedOS("reverse_line_iterator is not supported on Windows")
     if len(linesep) != 1:
         raise ValueError("reverse_line_iterator only supports line seperators of length 1")
