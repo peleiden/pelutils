@@ -22,7 +22,7 @@ def test_colours():
     assert len(colours)      == len(set(colours))      == 15
 
 def test_get_dateticks():
-    start_time = datetime.now()
+    start_time = datetime.utcnow()
     end_time = start_time + timedelta(days=10)
 
     num_datapoints = 50
@@ -40,6 +40,7 @@ def test_get_dateticks():
             assert num_ticks == len(ticks) == len(labels)
             assert np.isclose(x[0], ticks[0])
             assert np.isclose(x[-1], ticks[-1])
+            print(labels)
             assert labels[0] == start_time.strftime(date_format)
             assert labels[-1] == end_time.strftime(date_format)
 
