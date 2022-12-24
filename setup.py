@@ -16,6 +16,7 @@ requirements = [
     "click>=7.0.0",
     "python-rapidjson>=1.5",
     "py-cpuinfo>=8.0.0",
+    "psutil>=5.8.0",
 ]
 requirements_ds = [
     "torch>=1.7.0",
