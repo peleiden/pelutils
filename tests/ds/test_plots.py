@@ -162,7 +162,11 @@ class TestFigure(UnitTestCollection):
     def test_save(self):
         with Figure(self.savepath):
             pass
-        assert os.path.exists(self.savepath)
+        assert os.path.isfile(self.savepath)
+        path = os.path.join(UnitTestCollection.test_dir, "many", "long", "subdirectories.png")
+        with Figure(path):
+            pass
+        assert os.path.isfile(path)
 
     def test_no_save_if_error(self):
         if os.path.exists(self.savepath):
