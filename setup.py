@@ -15,6 +15,7 @@ requirements = [
     "rich>=10.0.0",
     "click>=7.0.0",
     "python-rapidjson>=1.5",
+    "py-cpuinfo>=8.0.0",
 ]
 requirements_ds = [
     "torch>=1.7.0",
@@ -28,7 +29,7 @@ requirements_dev = [
     "coveralls>=3.2.0",
     "coverage>=5.5",
     "wheel",
-    "setuptools>=60.0.0"
+    "setuptools>=60.0.0",
 ]
 
 with open("README.md") as readme_file:

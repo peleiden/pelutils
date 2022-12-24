@@ -209,8 +209,7 @@ class TestFigure(UnitTestCollection):
             assert all(isinstance(ax, mpl.axes.Axes) for axes in f.ax for ax in axes)
 
     def test_stylesheet(self):
-        with pytest.raises(OSError):
-            with Figure(self.savepath, style="this-style-does-not exist", tight_layout=True):
-                pass
-        with Figure(self.savepath, style="seaborn", tight_layout=True):
+        with pytest.raises(OSError), Figure(self.savepath, style="this-style-does-not exist", tight_layout=True):
+            pass
+        with Figure(self.savepath, style="classic", tight_layout=True):
             pass

@@ -4,6 +4,7 @@
 
 - Added `reset` method to `TickTock`
 - Removed `TickTock.remove_outliers`
+- Moved `is_windows` to static `OS` attribute, which also contains `is_mac` and `is_linux`
 
 ### Bug fixes
 

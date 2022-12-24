@@ -10,7 +10,7 @@ import pytest
 import torch
 
 from pelutils import EnvVars, UnsupportedOS, reverse_line_iterator, except_keys,\
-    split_path, binary_search, raises, thousands_seperators, is_windows, c_ptr,\
+    split_path, binary_search, raises, thousands_seperators, OS, c_ptr,\
     get_timestamp, get_timestamp_for_files
 from pelutils.tests import UnitTestCollection
 
@@ -94,10 +94,18 @@ class TestInit(UnitTestCollection):
 
     def test_is_windows(self):
         # What a dumb test
-        assert is_windows() == platform.platform().startswith("Windows")
+        assert OS.is_windows == platform.platform().startswith("Windows")
+
+    def test_is_mac(self):
+        # What a dumb test
+        assert OS.is_mac == platform.platform().startswith("Darwin")
+
+    def test_is_linux(self):
+        # What a dumb test
+        assert OS.is_linux == platform.platform().startswith("Linux")
 
     def test_reverse_line_iterator(self):
-        if is_windows():
+        if OS.is_windows:
             open("test.txt", "w").close()
             with pytest.raises(UnsupportedOS), open("test.txt") as f:
                 next(reverse_line_iterator(f))
