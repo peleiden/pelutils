@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import time
 from typing import Any, Callable, List, Optional, Union
 
@@ -233,6 +234,9 @@ class Figure:
         if self._tight_layout:
             plt.tight_layout()
         if not et:
+            directory = os.path.split(self._savepath)[0]
+            if directory:
+                os.makedirs(directory, exist_ok=True)
             plt.savefig(self._savepath)
         plt.close()
 
