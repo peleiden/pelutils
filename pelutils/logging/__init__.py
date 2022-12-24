@@ -46,7 +46,7 @@ class Logger:
 
     def configure(
         self,
-        fpath: str, *,                          # Path to logfile. Missing directories are created
+        fpath: Optional[str], *,                # Path to logfile. Missing directories are created
         default_seperator    = "\n",            # Default seperator when logging multiple strings in a single call
         append               = False,           # Set to True to append to old log file instead of overwriting it
         print_level          = LogLevels.INFO,  # Highest level that will be printed. All will be logged. None for no print
