@@ -60,7 +60,7 @@ jobs:
   upload_all:
     needs: [ build_wheels, make_sdist ]
     runs-on: ubuntu-latest
-    # upload to PyPI on every tag starting with 'v'
+    # Upload to PyPI when pushing new version tag
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
     - uses: actions/download-artifact@v2
