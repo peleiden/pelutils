@@ -6,6 +6,7 @@ from configparser import ConfigParser
 from copy import deepcopy
 from shutil import rmtree
 from typing import Any, Callable, Optional, TypeVar, Union
+import io
 import os
 import re
 import shlex
@@ -150,19 +151,27 @@ class Flag(AbstractArgument):
 
 class JobDescription(Namespace):
 
-    def __init__(self, name: str, location: str, explicit_args: set[str], **kwargs):
+    document_filename = "used-config.ini"
+
+    def __init__(self, name: str, location: str, explicit_args: set[str], docfile_content: str, **kwargs):
         super().__init__(**kwargs)
         self.name = name
         self.location = location
         self.explicit_args = explicit_args
+        self._docfile_content = docfile_content
 
     def todict(self) -> dict[str, Any]:
         return vars(self)
 
-    def clear_directory(self):
-        """ Clears the job directory. """
+    def prepare_directory(self, encoding: Optional[str] = None):
+        """ Clears the job directory and puts a documentation file in it. The file has
+        the CLI command user for running the program as a comment as well as the config file,
+        if such a one was used. """
         rmtree(self.location, ignore_errors=True)
         os.makedirs(self.location)
+        path = os.path.join(self.location, self.document_filename)
+        with open(path, "w", encoding=encoding) as docfile:
+            docfile.write(self._docfile_content)
 
     def __getitem__(self, key: str) -> Any:
         if key in self.__dict__:
@@ -177,7 +186,6 @@ ArgumentTypes = Union[Argument, Option, Flag]
 class Parser:
 
     location: str | None = None  # Set in `parse` method
-    document_filename = "used-config.ini"
 
     _default_config_job = "DEFAULT"
 
@@ -357,6 +365,7 @@ class Parser:
         self.location = args.location
 
         if args.config is None:
+            docfile_content = self._get_docfile_content()
             name = args.name or get_timestamp_for_files()
             if self._multiple_jobs:
                 location = os.path.join(self.location, name)
@@ -364,13 +373,16 @@ class Parser:
                 location = self.location
             arg_dict = vars(args)
             job_descriptions.append(JobDescription(
-                name          = name,
-                location      = location,
-                explicit_args = explicit_cli_args,
+                name            = name,
+                location        = location,
+                explicit_args   = explicit_cli_args,
+                docfile_content = docfile_content,
                 **except_keys(arg_dict, ("location", "name")),
             ))
         else:
             config_dict = self._parse_config_file(args.config)
+            # Update documentation file docname
+            docfile_content = self._get_docfile_content()
             # If any section other than DEFAULT is given, then the sections consist of DEFAULT and the others
             # In that case the DEFAULT is not used and is thus discarded
             if len(config_dict) > 1:
@@ -403,9 +415,10 @@ class Parser:
                         if argname in explicit_cli_args },
                 }
                 job_descriptions.append(JobDescription(
-                    name          = name,
-                    location      = location,
-                    explicit_args = { *config_args.keys(), *explicit_cli_args },
+                    name            = name,
+                    location        = location,
+                    explicit_args   = { *config_args.keys(), *explicit_cli_args },
+                    docfile_content = docfile_content,
                     **value_dict,
                 ))
 
@@ -429,17 +442,15 @@ class Parser:
 
         return job_descriptions if self._multiple_jobs else job_descriptions[0]
 
-    def document(self, encoding: Optional[str]=None) -> str:
-        """ Saves the config file used to run the script containing the CLI command used to start the program as a comment
-        If no config file was used, the CLI command comment is still present
-        The path of the file is returned """
-        os.makedirs(self.location, exist_ok=True)
-        path = os.path.join(self.location, self.document_filename)
-        with open(path, "w", encoding=encoding) as docfile:
-            self._configparser.write(docfile)
-            docfile.write(
-                "\n" +
-                "# CLI command:\n" +
-                "# " + " ".join(sys.argv) + "\n" +
-                "# Defaults at runtime: %s\n" % self._get_default_values()
-            )
+    def _get_docfile_content(self) -> str:
+        buffer = io.StringIO()
+        self._configparser.write(buffer)
+        buffer.write(
+            "\n" +
+            "# CLI command:\n" +
+            "# " + " ".join(sys.argv) + "\n" +
+            "# Default values: %s\n" % self._get_default_values()
+        )
+        content = buffer.getvalue()
+        buffer.close()
+        return content

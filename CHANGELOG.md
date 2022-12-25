@@ -9,7 +9,9 @@
 - `Figure` now automatically creates necessary subdirectories
 - Added `add_external_measurements` method to `TickTock`
 - Added `tex` method to `Table` for producing LaTeX code for a `tabular` environment
-- Replaced `clear_folders` argument in `Parser.parse_args` method with `JobDescription.clear_directory` method
+- Replaced `clear_folders` argument in `Parser.parse_args` method with `JobDescription.prepare_directory` method
+- `Parser` documentation files are now put in individual job directories when using `JobDescription.prepare_directory`
+- `Parser.document` has been removed
 
 ### Bug fixes
 
