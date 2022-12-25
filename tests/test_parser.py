@@ -272,7 +272,10 @@ class TestParser(UnitTestCollection):
             f.write("")
         sys.argv = f"main.py {os.path.join(UnitTestCollection.test_dir, _testdir)}".split()
         parser = Parser()
-        parser.parse_args(clear_folders=True)
+        parser.parse_args()
+        assert os.listdir(d)
+        job = parser.parse_args()
+        job.clear_directory()
         assert not os.listdir(d)
 
     @restore_argv

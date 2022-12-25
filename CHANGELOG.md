@@ -9,6 +9,7 @@
 - `Figure` now automatically creates necessary subdirectories
 - Added `add_external_measurements` method to `TickTock`
 - Added `tex` method to `Table` for producing LaTeX code for a `tabular` environment
+- Replaced `clear_folders` argument in `Parser.parse_args` method with `JobDescription.clear_directory` method
 
 ### Bug fixes
 
