@@ -7,6 +7,7 @@
 - Moved `is_windows` to static `OS` attribute, which also contains `is_mac` and `is_linux`
 - Added `HardwareInfo`, which contains a bunch of system hardware information
 - `Figure` now automatically creates necessary subdirectories
+- Added `add_external_measurements` method to `TickTock`
 
 ### Bug fixes
 

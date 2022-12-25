@@ -141,6 +141,21 @@ def test_profiles_with_same_name():
     assert profiles[2].depth == 1
     assert len(profiles[2]._hits) == 4
 
+def test_add_external_measurements():
+    tt = TickTock()
+    with tt.profile("a"):
+        tt.add_external_measurements("b", 5, hits=2)
+        with tt.profile("b"):
+            tt.add_external_measurements(None, 3, hits=4)
+        tt.add_external_measurements(None, 5)
+    tt.add_external_measurements("a", 5)
+
+    for profile in tt.profiles:
+        if profile.name == "a":
+            assert len(profile.hits) == 3
+        elif profile.name == "b":
+            assert len(profile.hits) == 7
+
 def test_print(capfd: pytest.CaptureFixture):
     tt = TickTock()
     with tt.profile("a"):
