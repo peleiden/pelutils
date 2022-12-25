@@ -206,7 +206,7 @@ class Logger:
 
     def _log_collected(self):
         if self._collected_log:
-            logs = "\n".join(str(log) for log in self._collected_log)
+            logs = os.linesep.join(str(log) for log in self._collected_log)
             self._write_to_log(logs)
         if self._collected_print:
             RichString.multiprint(self._collected_print)

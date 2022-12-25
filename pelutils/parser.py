@@ -446,10 +446,10 @@ class Parser:
         buffer = io.StringIO()
         self._configparser.write(buffer)
         buffer.write(
-            "\n" +
-            "# CLI command:\n" +
-            "# " + " ".join(sys.argv) + "\n" +
-            "# Default values: %s\n" % self._get_default_values()
+            os.linesep +
+            "# CLI command:" + os.linesep +
+            "# " + " ".join(sys.argv) + os.linesep +
+            "# Default values: %s" % self._get_default_values() + os.linesep
         )
         content = buffer.getvalue()
         buffer.close()
