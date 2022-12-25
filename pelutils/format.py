@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, Iterable
+import os
 import re
 
 from rich.color import ANSI_COLOR_NAMES
@@ -77,6 +78,22 @@ class Table:
     def add_hline(self):
         self._hlines.add(len(self._rows)-1)
 
+    def tex(self) -> str:
+        """ Produces code for rendering the table in LaTeX. The code should go
+        into a tabular environment. It assumes the booktabs package is used. """
+        formatted = str(self)
+        lines = formatted.splitlines()
+        lines.insert(0, r"\toprule")
+        lines.append(r"\bottomrule")
+
+        for i, line in enumerate(lines):
+            if re.match(r"^(-+\+)+-+$", line):
+                lines[i] = r"\midrule"
+            elif re.match(r"^(.+\|)+.+$", line):
+                lines[i] = line.replace("|", "&") + r" \\"
+
+        return os.linesep.join(lines)
+
     @staticmethod
     def _format_element(element: Any, width: int, left_align: bool) -> str:
         element = str(element)
@@ -103,4 +120,4 @@ class Table:
             ))
             if i in self._hlines:
                 strs.append(hline)
-        return "\n".join(strs)
+        return os.linesep.join(strs)
