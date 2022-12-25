@@ -1,4 +1,5 @@
 from string import ascii_letters
+import os
 
 from pelutils import Table
 import pytest
@@ -11,7 +12,7 @@ def test_table():
     with pytest.raises(ValueError):
         t.add_row([1, 2, 3])
     t.add_row([12, 2], [True, False])
-    assert str(t) == "\n".join([
+    assert str(t) == os.linesep.join([
         "a  | 69",
         "---+---",
         "12 |  2",
