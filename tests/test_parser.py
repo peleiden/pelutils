@@ -113,6 +113,7 @@ class TestParser(UnitTestCollection):
             name = "groot",
             location = "i_am_groot",
             explicit_args = set(),
+            docfile_content = "",
             a = 2,
             a_b = 4,
         )
@@ -279,8 +280,8 @@ class TestParser(UnitTestCollection):
         parser.parse_args()
         assert os.listdir(d)
         job = parser.parse_args()
-        job.clear_directory()
-        assert not os.listdir(d)
+        job.prepare_directory()
+        assert len(os.listdir(d)) == 1 and os.listdir(d)[0] == JobDescription.document_filename
 
     @restore_argv
     def test_nargs(self):
@@ -354,10 +355,10 @@ class TestParser(UnitTestCollection):
         shutil.rmtree(os.path.join(UnitTestCollection.test_dir, _testdir))
         sys.argv = _sample_argv_conf(self._no_default_file)
         parser = Parser(*_sample_arguments)
-        parser.parse_args()
-        parser.document()
+        job = parser.parse_args()
+        job.prepare_directory()
 
-        with open(os.path.join(parser.location, parser.document_filename)) as fh:
+        with open(os.path.join(job.location, job.document_filename)) as fh:
             content = fh.read()
         assert _sample_no_default.replace("=", " = ").strip() in content.strip()
         assert " ".join(_sample_argv_conf(self._no_default_file)) in content
