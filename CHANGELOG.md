@@ -12,6 +12,7 @@
 - Replaced `clear_folders` argument in `Parser.parse_args` method with `JobDescription.prepare_directory` method
 - `Parser` documentation files are now put in individual job directories when using `JobDescription.prepare_directory`
 - `Parser.document` has been removed
+- Changed from BSD-3-Clause license to MIT license
 
 ### Bug fixes
 
