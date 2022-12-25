@@ -1,6 +1,6 @@
 # History
 
-## 1.2.0 - Breaking changes
+## 2.0.0 - Breaking changes
 
 - Added `reset` method to `TickTock`
 - Removed `TickTock.remove_outliers`
