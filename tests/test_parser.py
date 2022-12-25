@@ -26,7 +26,9 @@ _sample_arguments = [
     Option("opt-d", abbrv="o", default=6, type=lambda x: 2 * int(x)),
     Option("opt-many", nargs=0, default=list(), type=float),
     Option("hello", default="there"),
+    Option("Cased-Option", default="Kebab-Pascal"),
     Flag("iam-bool", abbrv="i"),
+    Flag("Cased-Flag"),
 ]
 
 _sample_no_default = """
@@ -38,7 +40,9 @@ _sample_default_only = """
 [DEFAULT]
 gibstr=pistaccio
 arg-two=1 2
+Cased-Option=Pascal-Kebab
 iam-bool
+Cased-Flag
 """
 _sample_single_section = _sample_default_only + """
 [BUTWHATABOUTSECONDJOB]
