@@ -159,6 +159,11 @@ class JobDescription(Namespace):
     def todict(self) -> dict[str, Any]:
         return vars(self)
 
+    def clear_directory(self):
+        """ Clears the job directory. """
+        rmtree(self.location, ignore_errors=True)
+        os.makedirs(self.location)
+
     def __getitem__(self, key: str) -> Any:
         if key in self.__dict__:
             return self.__dict__[key]
@@ -341,12 +346,10 @@ class Parser:
 
         return config_dict
 
-    def parse_args(self, *, clear_folders=False) -> JobDescription | list[JobDescription]:
-        """ Parses command line arguments and optionally a configuration file if given
-        If multiple_jobs was set to True in __init__, a list of job descriptions is returned
-        Otherwise, a single job description is returned
-        If clear_folders is True, all job locations are cleared,
-        such that an empty directory for each job is guaranteed """
+    def parse_args(self) -> JobDescription | list[JobDescription]:
+        """ Parses command line arguments and optionally a configuration file if given.
+        If multiple_jobs was set to True in __init__, a list of job descriptions is returned.
+        Otherwise, a single job description is returned. """
         job_descriptions: list[JobDescription] = list()
         args = self._argparser.parse_args()
         explicit_cli_args = self._parse_explicit_cli_args()
@@ -422,11 +425,6 @@ class Parser:
                         raise ValueError("Argument '%s' in job '%s' should have %i args, but had %i" % (
                             argname, job.name, argument.nargs, len(job[argname])
                         ))
-
-        if clear_folders:
-            for description in job_descriptions:
-                rmtree(description.location, ignore_errors=True)
-                os.makedirs(description.location)
 
         return job_descriptions if self._multiple_jobs else job_descriptions[0]
 
