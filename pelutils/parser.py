@@ -221,6 +221,7 @@ class Parser:
 
         self._argparser = ArgumentParser(description=description)
         self._configparser = ConfigParser(allow_no_value=True)
+        self._configparser.optionxform = str
 
         # Ensure that no conflicts exist with reserved arguments
         if any(arg.name in self._reserved_names for arg in arguments):

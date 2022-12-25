@@ -14,6 +14,7 @@
 ### Bug fixes
 
 - Fixed different profiles with the same name in `TickTock` causing incorrect behavior
+- Fixed `Parser` being unable to read cased arguments from config files
 
 ## 1.1.0
 
