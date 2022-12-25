@@ -8,6 +8,7 @@
 - Added `HardwareInfo`, which contains a bunch of system hardware information
 - `Figure` now automatically creates necessary subdirectories
 - Added `add_external_measurements` method to `TickTock`
+- Added `tex` method to `Table` for producing LaTeX code for a `tabular` environment
 
 ### Bug fixes
 
