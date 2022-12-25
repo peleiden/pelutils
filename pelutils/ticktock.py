@@ -1,7 +1,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from time import perf_counter
-from typing import Generator, Iterable
+from typing import Generator, Optional
 
 from pelutils import thousands_seperators
 from pelutils.format import Table
@@ -189,7 +189,7 @@ class TickTock:
         if name is not None and name != self._profile_stack[-1].name:
             raise NameError(f"Expected to pop profile '{self._profile_stack[-1].name}', received '{name}'")
         nhits = self._nhits.pop()
-        self._profile_stack[-1].hits.extend([dt/nhits] * nhits)
+        self._profile_stack[-1]._hits += [dt/nhits] * nhits
         self._profile_stack.pop()
         return dt
 
@@ -198,6 +198,19 @@ class TickTock:
         if self._profile_stack:
             raise TickTockException("Cannot reset TickTock while profiling is active")
         self.__init__()
+
+    def add_external_measurements(self, name: Optional[str], time: float, *, hits=1):
+        """ Allows adding data to a (new) profile with given time spread over given hits.
+        If name is a string, it will act like .profile(name). If it is none, the current
+        active profile will be used. """
+        measurements = [time / hits] * hits
+        if name is not None:
+            self.profile(name, hits=hits)
+            profile = self._profile_stack[-1]
+            self.end_profile()
+            profile._hits[-hits:] = measurements
+        else:
+            self._profile_stack[-1]._hits += measurements
 
     def fuse(self, tt: TickTock):
         """ Fuses a TickTock instance into self """
