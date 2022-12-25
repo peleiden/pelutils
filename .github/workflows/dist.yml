@@ -34,7 +34,7 @@ jobs:
           CIBW_ARCHS_WINDOWS: auto64
           CIBW_BEFORE_BUILD: git submodule update --init --recursive
           CIBW_BEFORE_TEST: pip install -e .[tests]
-          CIBW_TEST_COMMAND: pytest {project}/tests
+          CIBW_TEST_COMMAND: date ; pytest {project}/tests
 
       - uses: actions/upload-artifact@v2
         with:
