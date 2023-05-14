@@ -71,35 +71,25 @@ while True:
 ## Data Storage
 
 The DataStorage class is an augmentation of the dataclass that incluces save and load functionality.
-This simplifies saving data, as only save command has to be issued for all data, and it keeps type hinting when loading data compared to e.g. a dictionary.
+This simplifies saving data, as only save command has to be issued for all data, and it keeps type
+hinting when loading data compared to e.g. a dictionary.
 
-Currently works specifically with:
-
-- Numpy arrays (`numpy.ndarray`)
-- Torch tensors (`torch.Tensor`)
-- Any `json` serializable data (as determined by the `rapidjson` library)
-
-All other data is pickled.
-
-DataStorage classes must inherit from DataStorage and be annotated with `@dataclass`.
-
-It is further possible to give arguments to the class definition:
-
-- `json_name`: Name of the saved json file
-- `indent`: How many spaces to use for indenting in the json file
+Data is in general preserved exactly as-is when saved data is loaded into memory with few exceptions.
+Notably, tuples are considered json-serializble, and so will be saved to the json file and will be
+loaded as lists.
 
 Usage example:
 
 ```py
 @dataclass
-class ResultData(DataStorage, json_name="game.json", indent=4):
+class ResultData(DataStorage):
     shots: int
     goalscorers: list
     dists: np.ndarray
 
 rdata = ResultData(shots=1, goalscorers=["Max Fenger"], dists=np.ones(22)*10)
 rdata.save("max")
-# Now shots and goalscorers are saved in <pwd>/max/game.json and dists in <pwd>/max/dists.npy
+# Now shots and goalscorers are saved in <pwd>/max/ResultData.json and dists in <pwd>/max/ResultData.pkl
 
 # Then to load
 rdata = ResultData.load("max")

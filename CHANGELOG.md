@@ -1,12 +1,14 @@
 # History
 
-## Unreleased
+## Unreleased - Breaking changes
 
 - Strip all logged lines of extra whitespace
 - Align logged lines with four space indents
 - Do not automatically create subplots figure and axis in Figure
 - Changed default axis timestamp labels to be more readable
 - Support lists in moving average functions
+- Changed DataStorage to have default name based on class name
+- Non json-serializable data in DataStorage instances are now saved to a single pickle file
 
 ## 2.0.0 - Breaking changes
 
