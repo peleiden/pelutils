@@ -23,7 +23,7 @@ class TCompatible(T):
     e: str = "loadable from T"
 
 @dataclass
-class TExtra(T, indent=4):
+class TExtra(T):
     e: np.ndarray
     f: float
 
@@ -38,18 +38,18 @@ class TestDatahandler(UnitTestCollection):
         # Use dict data that is not json serializable
         t = T(**self.data)
         t.save(self.test_dir)
-        for f in ("a.npy", "b.pt", "data.json", "d.pkl"):
-            assert os.path.isfile(os.path.join(self.test_dir, f))
+        assert os.path.isfile(os.path.join(self.test_dir, T.json_name()))
+        assert os.path.isfile(os.path.join(self.test_dir, T.pickle_name()))
         t = T.load(self.test_dir)
         for n, d in self.data.items():
             assert getattr(t, n) == d
-        with open(os.path.join(self.test_dir, "data.json")) as f:
+        with open(os.path.join(self.test_dir, T.json_name())) as f:
             assert "g" not in rapidjson.load(f)
 
     def test_compatible(self):
         t = T(**self.data)
         t.save(self.test_dir)
-        t2 = TCompatible.load(self.test_dir)
+        t2 = TCompatible.load(self.test_dir, T.__name__)
         assert t2.e == "loadable from T"
 
     def test_missing_decorator(self):
@@ -58,7 +58,16 @@ class TestDatahandler(UnitTestCollection):
 
     def test_indent(self):
         t = TExtra(**self.data, e=np.arange(5), f=5)
-        t.save(self.test_dir)
-        with open(os.path.join(self.test_dir, "data.json")) as f:
+        t.save(self.test_dir, indent=7)
+        with open(os.path.join(self.test_dir, TExtra.json_name())) as f:
             lines = f.readlines()
-        assert lines[1].startswith(4*" ")
+        assert lines[1].startswith(7 * " ")
+
+    def test_custom_save_name(self):
+        t = T(**self.data)
+        t.save(self.test_dir, "custom")
+        assert os.path.isfile(os.path.join(self.test_dir, T.json_name("custom")))
+        assert os.path.isfile(os.path.join(self.test_dir, T.pickle_name("custom")))
+        with pytest.raises(FileNotFoundError):
+            T.load(self.test_dir, "customm")
+        T.load(self.test_dir, "custom")
