@@ -143,7 +143,7 @@ def get_bins(
         x, y = x[y>0], y[y>0]
     return x, y
 
-def get_dateticks(x: _Array, num=7, date_format="%y-%m-%d") -> tuple[np.array, list[str]]:
+def get_dateticks(x: _Array, num=6, date_format="%-d %b, %Y") -> tuple[np.ndarray, list[str]]:
     """ Produces date labels for the x axis given an array of epoch times in seconds. Simple usage:
     ```py
     # x is an array of epoch times in seconds

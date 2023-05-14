@@ -4,6 +4,7 @@
 
 - Strip all logged lines of extra whitespace
 - Align logged lines with four space indents
+- Changed default axis timestamp labels to be more readable
 
 ## 2.0.0 - Breaking changes
 
