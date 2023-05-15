@@ -108,7 +108,7 @@ class TestMovingAverage:
         data = np.sin(x) + np.random.randn(len(x))
         x_smooth, y_smooth = exp_moving_avg(x, data)
         assert len(x) == len(data) == len(x_smooth) == len(y_smooth)
-        assert x is x_smooth
+        assert (x == x_smooth).all()
 
     def test_double_moving_avg(self):
         test_samples = np.arange(100, 500, step=65)
@@ -128,6 +128,15 @@ class TestMovingAverage:
         x_smooth, y_smooth = double_moving_avg(x, data, samples=300)
         assert len(x_smooth) == len(y_smooth) == samples
         assert y_smooth.std() < data.std()
+
+    def test_list_arg_avg(self):
+        # Test that it works when supplying lists instead of numpy arrays
+        moving_avg([1, 2, 3])
+        moving_avg([1, 2, 3], [1, 2, 3])
+        exp_moving_avg([1, 2, 3])
+        exp_moving_avg([1, 2, 3], [1, 2, 3])
+        double_moving_avg([1, 2, 3])
+        double_moving_avg([1, 2, 3], [1, 2, 3])
 
 class TestBinning:
 

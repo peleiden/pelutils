@@ -25,17 +25,20 @@ tab_colours:  tuple[str] = tuple(mcolour.TABLEAU_COLORS)
 colours:      tuple[str] = tab_colours[:-2] + base_colours[:-1]
 
 def moving_avg(
-    x: np.ndarray,
-    y: np.ndarray | None = None, *,
-    neighbors            = 3,
+    x: _Array,
+    y: Optional[_Array] = None, *,
+    neighbors               = 3,
 ) -> tuple[np.ndarray, np.ndarray]:
     """ Calculates the moving average assuming even spacing
     If one array of size n is given, it is assumed to run from 0 to n-1 on the x axis
     If two are given, the first are the x axis coordinates
-    Returns x and y coordinate arrays of same size """
+    Returns x and y coordinate arrays of same size. """
+    x = np.array(x)
     if y is None:
         y = x
         x = np.arange(x.size)
+    else:
+        y = np.array(y)
     x = x[neighbors:-neighbors]
     kernel = np.arange(1, 2*neighbors+2)
     kernel[-neighbors:] = np.arange(neighbors, 0, -1)
@@ -44,18 +47,21 @@ def moving_avg(
     return x, rolling
 
 def exp_moving_avg(
-    x: np.ndarray,
-    y: np.ndarray | None = None, *,
-    alpha                = 0.2,
-    reverse              = False,
+    x: _Array,
+    y: Optional[_Array] = None, *,
+    alpha               = 0.2,
+    reverse             = False,
 ) -> np.ndarray:
     """ Calculates the exponential moving average
     alpha is a smoothing factor between 0 and 1 - the lower the value, the smoother the curve
     Returns two arrays of same size as x
-    This function optionally takes y as `moving_avg` """
+    This function optionally takes y as `moving_avg`. """
+    x = np.array(x)
     if y is None:
         y = x
         x = np.arange(x.size)
+    else:
+        y = np.array(y)
     if reverse:
         y = y[::-1]
 
@@ -68,11 +74,11 @@ def exp_moving_avg(
     return x, exp if not reverse else np.array(exp)[::-1]
 
 def double_moving_avg(
-    x: np.ndarray,
-    y: np.ndarray | None = None, *,
-    inner_neighbors      =   1,
-    outer_neighbors      =  12,
-    samples              = 300,
+    x: _Array,
+    y: Optional[_Array] = None, *,
+    inner_neighbors     =   1,
+    outer_neighbors     =  12,
+    samples             = 300,
 ) -> tuple[np.ndarray, np.ndarray]:
     """ Moving avg. function that produces smoother curves than normal moving avg.
     Also handles uneven data spacing better, and produces smoothed values for the entire span.
@@ -81,9 +87,12 @@ def double_moving_avg(
     inner_neighbors: How many neighbors to use for the initial moving average.
     outer_neighbors: How many neighbors to use for for the second moving average.
     samples: How many points to sample the moving avg. at. """
+    x = np.array(x)
     if y is None:
         y = x
         x = np.arange(x.size)
+    else:
+        y = np.array(y)
     x = np.pad(x, pad_width=inner_neighbors)
     y = np.array([*[y[0]]*inner_neighbors, *y, *[y[-1]]*inner_neighbors])
     x, y = moving_avg(x, y, neighbors=inner_neighbors)
