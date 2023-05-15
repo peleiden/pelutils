@@ -1,5 +1,10 @@
 # History
 
+## Unreleased
+
+- Strip all logged lines of extra whitespace
+- Align logged lines with four space indents
+
 ## 2.0.0 - Breaking changes
 
 - Added `reset` method to `TickTock`

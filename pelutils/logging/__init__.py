@@ -111,18 +111,18 @@ class Logger:
         tolog = sep.join([str(x) for x in tolog])
         time_spaces = len(time) * " "
         level_format = level.name + (self._maxlen - len(level.name)) * " "
-        space = self._spacing + self._maxlen * " " + self._spacing
+        space = self._spacing + self._maxlen * " " + self._spacing + " "
         logs = tolog.split("\n")
         rs = RichString()
         if with_info and tolog:
             rs.add_string(
-                f"{time}{self._spacing}{level_format}{self._spacing}",
+                f"{time}{self._spacing}{level_format}{self._spacing} ",
                 self._format(time, TIMESTAMP_COLOR) +\
                     self._spacing +\
                     self._format(level_format, LEVEL_FORMAT[level]) +\
                     self._spacing,
             )
-            rs.add_string(logs[0])
+            rs.add_string(logs[0].rstrip())
         else:
             rs.add_string(f"{time_spaces}{space}{logs[0]}".rstrip())
         for i in range(1, len(logs)):
