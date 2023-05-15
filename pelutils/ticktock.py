@@ -84,9 +84,14 @@ class _ProfileContext:
     def __enter__(self):
         pass
 
-    def __exit__(self, et, ev, tb):
+    def __exit__(self, et, _, __):
         if et == KeyboardInterrupt:
             return
+        if et is not None:
+            # If an exception occured in deeper profiling sections, make sure to end them
+            # before continuing, as a NameError otherwise will be raised due to unclosed profilings.
+            while self.tt._profile_stack[-1].name != self.profile_name:
+                self.tt.end_profile()
         self.tt.end_profile(self.profile_name)
 
 class TickTockException(RuntimeError):
@@ -163,7 +168,7 @@ class TickTock:
         profile = Profile(
             name,
             len(self._profile_stack),
-            self._profile_stack[-1] if self._profile_stack else None
+            self._profile_stack[-1] if self._profile_stack else None,
         )
 
         if hash(profile) in self._id_to_profile:
