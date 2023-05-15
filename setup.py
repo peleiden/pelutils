@@ -25,7 +25,7 @@ requirements_ds = [
     "tqdm>=4.0.0",
 ]
 requirements_dev = [
-    "pytest>=6.2.4",
+    "pytest>=6.2.4,<=7.2",
     "pytest-cov>=2.12.1",
     "coveralls>=3.2.0",
     "coverage>=5.5",
