@@ -247,7 +247,8 @@ r, lower_r, upper_r, p = corr_ci(a, b, alpha=0.01)
 ## Plotting
 
 `pelutils` provides plotting utilities based on `matplotlib`.
-Most notable is the `Figure` context class, which attempts to remedy some of the common grievances with `matplotlib`, e.g. having to remember the correct `kwargs` and `rcParams` for setting font sizes, grid line colours etc, and notably adding type hinting to `fig` and `ax` produced by `plt.subplots`.
+Most notable is the `Figure` context class, which attempts to remedy some of the common grievances with `matplotlib`,
+e.g. having to remember the correct `kwargs` and `rcParams` for setting font sizes, legend edge colour etc.
 ```py
 from pelutils.ds.plots import Figure
 
@@ -265,14 +266,6 @@ with Figure("plot.png", figsize=(20, 10), style="seaborn", fontsize=20):
 # plt.plot can be used again from here.
 # Figure changes `matplotlib.rcParams`, but these changes are also undone
 # after the end of the `with statement`.
-
-# For more complex plots, it is also possible to access the `fig` and `ax`
-# variables usually assigned as `fig, ax = plt.subplots()`.
-# These are type hinted, so no more remembering if it is `ax.title()` or
-# `ax.set_title()`.
-with Figure("plot.png") as f:
-    f.fig  # fig available as attribute on the Figure instance
-    f.ax.set_title("Very nice plot")  # The same goes for `ax`
 ```
 
 The plotting utilies also include binning functions for creating nice histograms.

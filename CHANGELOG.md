@@ -7,6 +7,7 @@
 - Changed default axis timestamp labels to be more readable
 - Strip all logged lines of extra whitespace
 - Align logged lines with four space indents
+- Do not automatically create subplots figure and axis in Figure
 
 ## 2.0.0 - Breaking changes
 

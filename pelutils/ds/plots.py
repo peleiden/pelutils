@@ -167,24 +167,11 @@ class Figure:
         plt.grid()
     # The finished figure is saved to "figure.png"
     # All settings are reset here
-    ```
-    It is also possible to access the figure and axis produced by plt.subplots.
-    These have type hinting, so it is for once possible to know what methods
-    and attributes exist on fig and ax.
-    In the example, the seaborn style is used (similar to `plt.style.use("seaborn"))`.
-    ```py
-    with Figure("figure.png", figsize=(20, 10), style="seaborn") as f:
-        f.ax.set_title("Normal sized title")
-        f.figure.add_axes(...)
     ``` """
 
     def __init__(
         self,
         savepath:     str, *,
-        # nrow and ncol are given to plt.subplots
-        # If either is larger than 1, the .ax attribute will be a numpy array
-        nrow:         int  = 1,
-        ncol:         int  = 1,
         tight_layout: bool = True,
         style:        Optional[str] = None,
         # Arguments below here go into mpl.rcParams
@@ -199,8 +186,6 @@ class Figure:
         other_rc_params:   dict[str, Any] = dict(),
     ):
         self._savepath = savepath
-        self._nrow = nrow
-        self._ncol = ncol
         self._tight_layout = tight_layout
         self._style = style
 
@@ -224,12 +209,6 @@ class Figure:
         self._rc_context = plt.rc_context(self._rc_params)
         self._rc_context.__enter__()
 
-        self.fig, self.ax = plt.subplots(self._nrow, self._ncol)
-        self.fig: mpl.figure.Figure
-        self.ax: mpl.axes.Axes | np.ndarray
-
-        return self
-
     def __exit__(self, et, ev, tb):
         if self._tight_layout:
             plt.tight_layout()
@@ -238,8 +217,9 @@ class Figure:
             if directory:
                 os.makedirs(directory, exist_ok=True)
             plt.savefig(self._savepath)
+
         plt.close()
 
         self._rc_context.__exit__(et, ev, tb)
 
-        del self.fig, self.ax, self._rc_context
+        del self._rc_context
