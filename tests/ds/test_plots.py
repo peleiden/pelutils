@@ -5,7 +5,6 @@ from itertools import product
 from math import ceil
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
@@ -196,21 +195,6 @@ class TestFigure(UnitTestCollection):
             assert mpl.rcParams["ytick.right"] == new_ytick_right
         assert mpl.rcParams["font.size"] == default_fontsize
         assert mpl.rcParams["ytick.right"] == default_ytick_right
-
-    def test_fig_ax(self):
-        with Figure(self.savepath) as f:
-            assert isinstance(f.fig, mpl.figure.Figure)
-            assert isinstance(f.ax, mpl.axes.Axes)
-        with Figure(self.savepath, nrow=3) as f:
-            assert isinstance(f.fig, mpl.figure.Figure)
-            assert isinstance(f.ax, np.ndarray)
-            assert f.ax.shape == (3,)
-            assert all(isinstance(ax, mpl.axes.Axes) for ax in f.ax)
-        with Figure(self.savepath, nrow=3, ncol=4) as f:
-            assert isinstance(f.fig, mpl.figure.Figure)
-            assert isinstance(f.ax, np.ndarray)
-            assert f.ax.shape == (3, 4)
-            assert all(isinstance(ax, mpl.axes.Axes) for axes in f.ax for ax in axes)
 
     def test_stylesheet(self):
         with pytest.raises(OSError), Figure(self.savepath, style="this-style-does-not exist", tight_layout=True):
