@@ -1,5 +1,8 @@
 # pelutils
 
+[![pytest](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml/badge.svg?branch=master)](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml)
+[![Coverage Status](https://coveralls.io/repos/github/peleiden/pelutils/badge.svg?branch=master)](https://coveralls.io/github/peleiden/pelutils?branch=master)
+
 Various utilities useful for Python projects. Features include
 
 - A simple and powerful logger with colourful printing and stacktrace logging
@@ -13,9 +16,6 @@ Various utilities useful for Python projects. Features include
 - Linear time `unique` function in the style of `numpy.unique`
 
 `pelutils` supports Python 3.7+.
-
-[![pytest](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml/badge.svg?branch=master)](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml)
-[![Coverage Status](https://coveralls.io/repos/github/peleiden/pelutils/badge.svg?branch=master)](https://coveralls.io/github/peleiden/pelutils?branch=master)
 
 ## Timing and Code Profiling
 
