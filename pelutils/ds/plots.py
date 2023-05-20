@@ -7,7 +7,6 @@ from typing import Any, Callable, List, Optional, Union
 import numpy as np
 from . import _import_error
 try:
-    import matplotlib as mpl
     import matplotlib.pyplot as plt
     import matplotlib.colors as mcolour
     from scipy import stats
@@ -152,7 +151,7 @@ def get_bins(
         x, y = x[y>0], y[y>0]
     return x, y
 
-def get_dateticks(x: _Array, num=6, date_format="%-d %b, %Y") -> tuple[np.ndarray, list[str]]:
+def get_dateticks(x: _Array, num=6, date_format="%b %d") -> tuple[np.ndarray, list[str]]:
     """ Produces date labels for the x axis given an array of epoch times in seconds. Simple usage:
     ```py
     # x is an array of epoch times in seconds

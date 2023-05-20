@@ -9,9 +9,9 @@ import numpy as np
 import pytest
 
 from pelutils.tests import UnitTestCollection
-from pelutils.ds.plots import linear_binning, log_binning, normal_binning,\
-    colours, base_colours, tab_colours,\
-    moving_avg, exp_moving_avg, double_moving_avg,\
+from pelutils.ds.plots import linear_binning, log_binning, normal_binning, \
+    colours, base_colours, tab_colours, \
+    moving_avg, exp_moving_avg, double_moving_avg, \
     Figure, get_dateticks
 
 
@@ -26,7 +26,6 @@ def test_get_dateticks():
 
     num_datapoints = 50
     x = np.linspace(start_time.timestamp(), end_time.timestamp(), num_datapoints)
-    date_format = "%-d %b, %Y"
 
     for num_ticks in range(10):
         if num_ticks < 2:
@@ -35,12 +34,12 @@ def test_get_dateticks():
         else:
             with pytest.raises(ValueError):
                 get_dateticks(x, float(num_ticks))
-            ticks, labels = get_dateticks(x, num_ticks, date_format=date_format)
+            ticks, labels = get_dateticks(x, num_ticks)
             assert num_ticks == len(ticks) == len(labels)
             assert np.isclose(x[0], ticks[0])
             assert np.isclose(x[-1], ticks[-1])
-            assert labels[0] == start_time.strftime(date_format)
-            assert labels[-1] == end_time.strftime(date_format)
+            assert labels[0] == start_time.strftime("%b %d")
+            assert labels[-1] == end_time.strftime("%b %d")
 
 class TestMovingAverage:
 
