@@ -10,10 +10,16 @@ import subprocess
 import sys
 
 import cpuinfo
-import git
+try:
+    # If git is not installed, this import fails
+    import git
+    _has_git = True
+except ImportError:
+    _has_git = False
 import psutil
 import numpy as np
 try:
+    # torch is only to be installed if pelutils[ds] has been installed
     import torch
     _has_torch = True
 except:
@@ -49,6 +55,8 @@ def get_repo(path: str | None=None) -> tuple[str | None, str | None]:
     Searches for repo by searching upwards from given directory (if None: uses working dir).
     If it cannot find a repository, returns (None, None)
     """
+    if not _has_git:
+        return None, None
     if path is None:
         path = os.getcwd()
     cdir = os.path.join(path, ".")
