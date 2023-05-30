@@ -1,6 +1,6 @@
 # History
 
-## Unreleased - Breaking changes
+## 3.0.0 - Breaking changes
 
 - Strip all logged lines of extra whitespace
 - Align logged lines with four space indents
