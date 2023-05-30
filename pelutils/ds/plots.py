@@ -163,7 +163,7 @@ def get_dateticks(x: _Array, num=6, date_format="%b %d") -> tuple[np.ndarray, li
         raise ValueError("num must int of value 2 or greater, not %s" % num)
     x = np.array(x)
     xticks = np.linspace(x.min(), x.max(), num)
-    xticklabels = [time.strftime(date_format, time.gmtime(et)) for et in xticks]
+    xticklabels = [time.strftime(date_format, time.localtime(et)) for et in xticks]
     return xticks, xticklabels
 
 class Figure:
