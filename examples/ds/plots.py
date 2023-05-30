@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pelutils.ds.plots import (
-    linear_binning, log_binning, normal_binning, get_bins,
+    linear_binning, log_binning, normal_binning, histogram,
     moving_avg, exp_moving_avg, double_moving_avg, tab_colours,
     Figure,
 )
@@ -26,14 +26,14 @@ def plots_binning():
         x = np.linspace(y.min(), y.max(), 100)
         plt.subplot(131)
         plt.plot(x, norm(mu, sigma2).pdf(x))
-        plt.plot(*get_bins(y, bins=bins), marker=".")
+        plt.plot(*histogram(y, bins=bins), marker=".")
         plt.title("Normal distribution\nLinear binning")
         plt.grid()
 
         # Normal distribution using normal binning
         plt.subplot(132)
         plt.plot(x, norm(mu, sigma2).pdf(x))
-        plt.plot(*get_bins(y, binning_fn=normal_binning, bins=bins), marker=".")
+        plt.plot(*histogram(y, binning_fn=normal_binning, bins=bins), marker=".")
         plt.title("Normal distribution\nNormal binning")
         plt.grid()
 
@@ -41,7 +41,7 @@ def plots_binning():
         x = np.logspace(np.log10(y_log.min()), np.log10(y_log.max()), 100)
         plt.subplot(133)
         plt.plot(x, lognorm(mu, sigma2).pdf(x))
-        plt.plot(*get_bins(y_log, binning_fn=log_binning, bins=bins), marker=".")
+        plt.plot(*histogram(y_log, binning_fn=log_binning, bins=bins), marker=".")
         plt.title("Log normal distribution\nLogarithmic binning")
         plt.grid()
         plt.xscale("log")

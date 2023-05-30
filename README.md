@@ -259,7 +259,7 @@ with Figure("plot.png", figsize=(20, 10), style="seaborn", fontsize=20):
 ```
 
 The plotting utilies also include binning functions for creating nice histograms.
-The `get_bins` function produces bins based on a binning function, of which three are provided:
+The `histogram` function produces bins based on a binning function, of which three are provided:
 
 - `linear_binning`: Bins are spaced evenly from the lowest to the largest value of the data.
 - `log_binning`: Bins are log-spaced from the lowest to the largest value of the data, which is assumed to be positive.
@@ -267,16 +267,16 @@ The `get_bins` function produces bins based on a binning function, of which thre
 
 It is also possible to provide custom binning functions.
 
-`get_bins` provide both `x` and `y` coordinates, making it simple to use with argument unpacking:
+`histogram` provide both `x` and `y` coordinates, making it simple to use with argument unpacking:
 ```py
 import matplotlib.pyplot as plt
 import numpy as np
-from pelutils.ds.plots import get_bins, normal_binning
+from pelutils.ds.plots import histogram, normal_binning
 
 # Generate normally distributed data
 x = np.random.randn(100)
 # Plot distribution
-plt.plot(*get_bins(x, binning_fn=normal_binning))
+plt.plot(*histogram(x, binning_fn=normal_binning))
 ```
 
 Finally, different smoothing functions are provided.

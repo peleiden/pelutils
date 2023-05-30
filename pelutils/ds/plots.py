@@ -136,19 +136,20 @@ def normal_binning(x: _Array, bins: int) -> np.ndarray:
     uniform_spacing = np.linspace(p, 1-p, bins)
     return dist.ppf(uniform_spacing)
 
-def get_bins(
+def histogram(
     data:         np.ndarray | list[float],
     binning_fn:   Callable[[_Array, int], _Array] = linear_binning,
     bins:         int  = 25,
     density:      bool = True,
     ignore_zeros: bool = False,
 ):
-    """ Create bins for plotting a line histogram. Simplest usage is plt.plot(*get_bins(data)) """
+    """ Create bins for plotting a line histogram. Simplest usage is plt.plot(*histogram(data)) """
     bins = np.array(binning_fn(data, bins+1))
     y, edges = np.histogram(data, bins=bins, density=density)
     x = (edges[1:] + edges[:-1]) / 2
     if ignore_zeros:
-        x, y = x[y>0], y[y>0]
+        keep = y > 0
+        x, y = x[keep], y[keep]
     return x, y
 
 def get_dateticks(x: _Array, num=6, date_format="%b %d") -> tuple[np.ndarray, list[str]]:
