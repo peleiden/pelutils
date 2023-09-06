@@ -7,6 +7,7 @@ on:
         - tests/**.py
         - setup.py
         - .github/workflows
+        - .coveragerc
 
   pull_request:
     paths:
@@ -14,6 +15,7 @@ on:
         - tests/**.py
         - setup.py
         - .github/workflows
+        - .coveragerc
 
 jobs:
   test:

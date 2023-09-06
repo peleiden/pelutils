@@ -1,2 +1,2 @@
 [run]
-omit=pelutils/_entry_points
+omit=pelutils/_entry_points/*
