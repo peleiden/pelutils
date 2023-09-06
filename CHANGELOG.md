@@ -11,6 +11,10 @@
 - Non json-serializable data in DataStorage instances are now saved to a single pickle file
 - Prevent NameError being raised if an exception was raised inside nested profiling without the use of `with TT.profile`
 
+### Bug fixes
+
+- Fixed missing `__init__.py` in `_entry_points` module
+
 ## 2.0.0 - Breaking changes
 
 - Added `reset` method to `TickTock`
