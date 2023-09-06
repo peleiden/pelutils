@@ -172,3 +172,15 @@ class TestInit(UnitTestCollection):
             assert isinstance(HardwareInfo.gpu, str) and len(HardwareInfo.gpu) > 0
         else:
             assert HardwareInfo.gpu is None
+
+        string = HardwareInfo.string()
+        assert HardwareInfo.cpu in string
+        if HardwareInfo.sockets:
+            # This is a very shitty test
+            assert str(HardwareInfo.sockets) in string
+        if HardwareInfo.threads:
+            # This is also a very shitty test
+            assert thousands_seperators(HardwareInfo.threads) in string
+        assert str(round(HardwareInfo.memory / 2 ** 30, 2)) in string
+        if HardwareInfo.gpu:
+            assert HardwareInfo.gpu in string

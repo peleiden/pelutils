@@ -239,7 +239,7 @@ def except_keys(d: dict[_T, Any], except_keys: Iterable[_T]) -> dict[_T, Any]:
 class HardwareInfo:
 
     # Name of the CPU
-    cpu     = cpuinfo.get_cpu_info()["brand_raw"]
+    cpu: str = cpuinfo.get_cpu_info()["brand_raw"]
     # How many CPU sockets there are on the system
     # Only works on Linux, otherwise None
     sockets = int(subprocess.check_output(
@@ -248,10 +248,22 @@ class HardwareInfo:
     # Total threads available across all CPU sockets
     threads = os.cpu_count()
     # Total system memory in bytes
-    memory  = psutil.virtual_memory().total
+    memory = psutil.virtual_memory().total
     # Available gpu
     # Requires torch, otherwise None
-    gpu     = torch.cuda.get_device_name() if _has_torch and torch.cuda.is_available() else None
+    gpu = torch.cuda.get_device_name() if _has_torch and torch.cuda.is_available() else None
+
+    @classmethod
+    def string(cls) -> str:
+        """ Pretty string-representation of hardware. """
+        lines = [
+            "CPU:     %s" % cls.cpu,
+            "Sockets: %i" % cls.sockets if cls.sockets else None,
+            "Threads: %s" % thousands_seperators(cls.threads) if cls.threads else None,
+            "RAM:     %s GiB" % thousands_seperators(round(cls.memory / 2 ** 30, 2)),
+            "GPU:     %s" % cls.gpu if cls.gpu else None,
+        ]
+        return os.linesep.join(line for line in lines if line)
 
 # To allow imports directly from utils
 # Placed down here to prevent issues with circular imports

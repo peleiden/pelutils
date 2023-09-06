@@ -10,6 +10,7 @@
 - Changed DataStorage to have default name based on class name
 - Non json-serializable data in DataStorage instances are now saved to a single pickle file
 - Prevent NameError being raised if an exception was raised inside nested profiling without the use of `with TT.profile`
+- Added `string` method to `HardwareInfo` for easy formatting
 
 ### Bug fixes
 
