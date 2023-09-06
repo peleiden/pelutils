@@ -265,3 +265,32 @@ class TestLogger(UnitTestCollection):
             with log.log_errors:
                 raise SystemExit(1)
         assert SystemExit.__name__ in self.get_last_line()
+
+    def test_whitespace(self, capfd: pytest.CaptureFixture):
+        string = "dQw4w9WgXcQ"
+        printed_lines = list()
+        logged_lines = list()
+
+        log(string, string)
+        stdout, _ = capfd.readouterr()
+
+        printed_lines += (x for x in stdout.split(os.linesep) if x)
+
+        with open(self.logfile) as fh:
+            lines = fh.readlines()
+            logged_lines += lines[-2:]
+
+        log(string, string, with_info=False)
+        stdout, _ = capfd.readouterr()
+
+        printed_lines += (x for x in stdout.split(os.linesep) if x)
+
+        with open(self.logfile) as fh:
+            lines = fh.readlines()
+            logged_lines += lines[-2:]
+
+        for i in range(3):
+            assert printed_lines[i].index(string) == \
+                   printed_lines[i+1].index(string) == \
+                   logged_lines[i].index(string) == \
+                   logged_lines[i+1].index(string)

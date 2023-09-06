@@ -14,6 +14,7 @@
 ### Bug fixes
 
 - Fixed missing `__init__.py` in `_entry_points` module
+- Fixed incorrect whitespace when printing multiline logs
 
 ## 2.0.0 - Breaking changes
 

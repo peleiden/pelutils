@@ -117,10 +117,10 @@ class Logger:
         if with_info and tolog:
             rs.add_string(
                 f"{time}{self._spacing}{level_format}{self._spacing} ",
-                self._format(time, TIMESTAMP_COLOR) +\
-                    self._spacing +\
-                    self._format(level_format, LEVEL_FORMAT[level]) +\
-                    self._spacing,
+                self._format(time, TIMESTAMP_COLOR) + \
+                    self._spacing + \
+                    self._format(level_format, LEVEL_FORMAT[level]) + \
+                    self._spacing + " ",
             )
             rs.add_string(logs[0].rstrip())
         else:
