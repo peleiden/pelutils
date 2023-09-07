@@ -274,7 +274,7 @@ class TestLogger(UnitTestCollection):
         log(string, string)
         stdout, _ = capfd.readouterr()
 
-        printed_lines += (x for x in stdout.split(os.linesep) if x)
+        printed_lines += (x for x in stdout.split("\n") if x)
 
         with open(self.logfile) as fh:
             lines = fh.readlines()
@@ -283,7 +283,7 @@ class TestLogger(UnitTestCollection):
         log(string, string, with_info=False)
         stdout, _ = capfd.readouterr()
 
-        printed_lines += (x for x in stdout.split(os.linesep) if x)
+        printed_lines += (x for x in stdout.split("\n") if x)
 
         with open(self.logfile) as fh:
             lines = fh.readlines()
