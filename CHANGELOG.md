@@ -16,6 +16,7 @@
 - Updated `JobDescription` to only include relevant and nonprivate attributes
 - Renamed development distribution from `tests` to `dev`
 - Added `tensor_bytesize` function to get the size of NumPy arrays and PyTorch tensors in bytes
+- Added optional ID to `TickTock.tick` and `TickTock.tock` methods for multiple concurrent timings
 
 ### Bug fixes
 

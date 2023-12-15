@@ -1,7 +1,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from time import perf_counter
-from typing import Generator, Optional
+from typing import Generator, Hashable, Optional
 
 from pelutils import thousands_seperators
 from pelutils.format import Table
@@ -144,22 +144,22 @@ class TickTock:
     ``` """
 
     def __init__(self):
-        self._start:         float | None = None
+        self._tick_starts:   dict[Hashable, float] = dict()
         self._id_to_profile: dict[int, Profile] = dict()
         self.profiles:       list[Profile] = list()
         self._profile_stack: list[Profile] = list()
         self._nhits:         list[int] = list()
 
-    def tick(self):
-        """ Start a timer """
-        self._start = perf_counter()
+    def tick(self, id: Hashable = None):
+        """ Start a timer. Use id if you want to time multiple overlapping things. """
+        self._tick_starts[id] = perf_counter()
 
-    def tock(self) -> float:
+    def tock(self, id: Hashable = None) -> float:
         """ End current timer """
         end = perf_counter()
-        if self._start is None:
-            raise TickTockException("You must start the timer by calling .tick()")
-        return end - self._start
+        if id not in self._tick_starts:
+            raise TickTockException("A timer for the given ID (%s) has not been started with .tick()" % id)
+        return end - self._tick_starts[id]
 
     def profile(self, name: str, *, hits=1) -> _ProfileContext:
         """ Begin profile with given name. Optionally it is possible to
