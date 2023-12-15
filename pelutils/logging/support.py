@@ -53,11 +53,15 @@ class _LogErrors:
 
 class _CollectLogs:
 
-    """ Wrap functions with this class to have them output all their output at once.
-    Useful with multiprocessing, e.g.
+    """ Used for producing all logging output from a block at once. This is useful with
+    multiprocessing to prevent the logs getting mixed up.
     ```
+    def fun():
+        with log.collect:
+            do stuff
+
     with mp.Pool() as p:
-        p.map(log.collect(fun), ...)
+        p.map(fun, ...)
     ``` """
 
     def __init__(self, logger):

@@ -190,10 +190,11 @@ cont = log.parse_bool_input(inp, default=True)
 # Log all logs from a function at the same time
 # This is especially useful when using multiple threads so logging does not get mixed up
 def fun():
-    log("Hello there")
-    log("General Kenobi!")
+    with log.collect:
+        log("Hello there")
+        log("General Kenobi!")
 with mp.Pool() as p:
-    p.map(log.collect_logs(fun), args)
+    p.map(fun, args)
 
 # It is also possible to create multiple loggers by importing the Logger class, e.g.
 log2 = Logger()
