@@ -46,10 +46,10 @@ class Logger:
 
     def configure(
         self,
-        fpath: Optional[str], *,                # Path to logfile. Missing directories are created
-        default_seperator    = "\n",            # Default seperator when logging multiple strings in a single call
-        append               = False,           # Set to True to append to old log file instead of overwriting it
-        print_level          = LogLevels.INFO,  # Highest level that will be printed. All will be logged. None for no print
+        fpath: Optional[str], *,  # Path to logfile. Missing directories are created
+        default_seperator: str  = "\n",  # Default seperator when logging multiple strings in a single call
+        append: bool = False,  # Set to True to append to old log file instead of overwriting it
+        print_level: Optional[LogLevels] = LogLevels.INFO,  # Highest level that will be printed. All will be logged. None for no print
     ):
         """ This configures a logfile and must be called for a logger to work.
         Loggers can be reconfigured at any time, so long as they are not collecting. """
