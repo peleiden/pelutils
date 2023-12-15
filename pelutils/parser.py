@@ -161,7 +161,10 @@ class JobDescription(Namespace):
         self._docfile_content = docfile_content
 
     def todict(self) -> dict[str, Any]:
-        return vars(self)
+        """ Returns a dictionary version of itself which excludes private variables and other irrelevant attributes. """
+        d = vars(self)
+        d = { kw: v for kw, v in d.items() if not kw.startswith("_") and kw not in { "explicit_args" } }
+        return d
 
     def prepare_directory(self, encoding: Optional[str] = None):
         """ Clears the job directory and puts a documentation file in it. The file has
