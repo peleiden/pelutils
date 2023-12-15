@@ -211,16 +211,6 @@ pip install pelutils\[ds\]
 
 ## Deep Learning
 
-All PyTorch functions work independently of whether CUDA is available or not.
-
-```py
-# Inference only: No gradients should be tracked in the following function
-# Same as putting entire function body inside `with torch.no_grad()`
-@no_grad
-def infer():
-    <code that includes feedforwarding>
-```
-
 ## Statistics
 
 Includes various commonly used statistical functions.
