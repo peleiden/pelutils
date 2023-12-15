@@ -50,7 +50,7 @@ def exp_moving_avg(
     y: Optional[_Array] = None, *,
     alpha               = 0.2,
     reverse             = False,
-) -> np.ndarray:
+) -> tuple[np.ndarray, np.ndarray]:
     """ Calculates the exponential moving average
     alpha is a smoothing factor between 0 and 1 - the lower the value, the smoother the curve
     Returns two arrays of same size as x
