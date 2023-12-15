@@ -266,6 +266,27 @@ class TestLogger(UnitTestCollection):
                 raise SystemExit(1)
         assert SystemExit.__name__ in self.get_last_line()
 
+    def test_log_with_stacktrace(self, capfd: pytest.CaptureFixture):
+        msg = "sneaky"
+        error = SyntaxError(msg)
+        try:
+            raise error
+        except error.__class__ as e:
+            log.log_with_stacktrace(e)
+            assert e.__class__.__name__ in self.get_last_line()
+            assert msg in self.get_last_line()
+            stdout, stderr = capfd.readouterr()
+            assert len(stdout) == 0
+            assert len(stderr) == 0
+
+            log.log_with_stacktrace(e, with_print=True)
+            assert e.__class__.__name__ in self.get_last_line()
+            assert msg in self.get_last_line()
+            stdout, _ = capfd.readouterr()
+            assert e.__class__.__name__ in stdout
+            assert msg in stdout
+            assert len(stderr) == 0
+
     def test_whitespace(self, capfd: pytest.CaptureFixture):
         string = "dQw4w9WgXcQ"
         printed_lines = list()
