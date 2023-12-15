@@ -10,7 +10,7 @@ sys.path.append("pelutils")
 from __version__ import __version__
 
 requirements = [
-    "numpy>=1.17.0",
+    "numpy>=1.21.0",
     "gitpython>=3.1.0",
     "rich>=10.0.0",
     "click>=7.0.0",
@@ -19,16 +19,16 @@ requirements = [
     "psutil>=5.8.0",
 ]
 requirements_ds = [
-    "torch>=1.7.0",
-    "matplotlib>=3.1.0",
-    "scipy>=1.4.1",
-    "tqdm>=4.0.0",
+    "torch>=2",
+    "matplotlib>=3.3",
+    "scipy>=1.6",
+    "tqdm>=4.55",
 ]
 requirements_dev = [
     "pytest>=6.2.4,<=7.2",
     "pytest-cov>=2.12.1",
-    "coveralls>=3.2.0",
-    "coverage>=5.5",
+    "coveralls>=3.3.1",
+    "coverage>=6,<7",
     "wheel",
     "setuptools>=60.0.0",
 ]
@@ -87,7 +87,7 @@ setup_args = dict(
         )
     ],
     license_files    = [ os.path.join("pelutils", "_c", "hashmap.c", "LICENSE") ],
-    python_requires  = ">=3.7",
+    python_requires  = ">=3.9",
 )
 
 if __name__ == "__main__":
