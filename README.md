@@ -133,6 +133,8 @@ location = parser.location  # Experiments are stored here. In this case path/to/
 job_descriptions = parser.parse_args()
 # Run each experiment
 for job in job_descriptions:
+    # Get the job as a dictionary
+    job_dict = job.todict()
     # Clear directory where job is located and put a documentation file there
     job.prepare_directory()
     # Get location of this job as job.location

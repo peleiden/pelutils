@@ -126,6 +126,12 @@ class TestParser(UnitTestCollection):
         with pytest.raises(AttributeError):
             j.ab
 
+        job_dict = j.todict()
+        for kw, v in job_dict.items():
+            assert getattr(j, kw) == v
+            assert not kw.startswith("_")
+            assert kw != "explicit_args"
+
     @restore_argv
     def test_name_and_abbrv_handling(self):
         """ Test that name abbreviation ordering and collisions are handled properly """
