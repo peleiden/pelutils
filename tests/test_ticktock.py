@@ -11,6 +11,39 @@ def test_ticktock():
     tt.tick()
     assert isinstance(tt.tock(), float)
 
+def test_ticktock_id():
+    tt = TickTock()
+
+    # Test that different ids behave as expected
+    tt.tick()
+    tt.tick("inner")
+    time_inner = tt.tock("inner")
+    time_outer = tt.tock()
+    time_inner2 = tt.tock("inner")
+
+    assert time_inner < time_outer
+    assert time_inner < time_inner2
+
+    # Test that swapping ids still leads to expected behaviour
+    tt.tick("inner")
+    tt.tick()
+    time_inner = tt.tock()
+    time_outer = tt.tock("inner")
+    time_inner2 = tt.tock()
+
+    assert time_inner < time_outer
+    assert time_inner < time_inner2
+
+    # Test that unknown and unhashable ids cause correct exceptions
+    with pytest.raises(TickTockException):
+        tt.tock("outer")
+    with pytest.raises(TypeError):
+        tt.tick([1])
+    with pytest.raises(TypeError):
+        tt.tock([1])
+    tt.reset()
+    assert len(tt._tick_starts) == 0
+
 def test_profiling():
     """ Test profiling """
     tt = TickTock()
@@ -84,10 +117,10 @@ def test_timeunits():
 
 def test_reset():
     tt = TickTock()
-    assert tt._start is None
+    assert len(tt._tick_starts) == 0
     tt.tick()
     tt.reset()
-    assert tt._start is None
+    assert len(tt._tick_starts) == 0
     with pytest.raises(TickTockException):
         tt.tock()
 
