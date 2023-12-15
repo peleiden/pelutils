@@ -139,13 +139,13 @@ class Logger:
             if with_print:
                 self._collected_print.append(rs)
 
-    def log_with_stacktrace(self, error: Exception, level=LogLevels.ERROR):
+    def log_with_stacktrace(self, error: Exception, level=LogLevels.ERROR, with_print=False):
         self._log(
-            f"A {type(error)} was thrown with the following stacktrace:",
+            f"{type(error)} was thrown with the following stacktrace:",
             tb.format_exc(),
             level=level,
             sep="\n",
-            with_print=False,
+            with_print=with_print,
         )
 
     def _input(self, prompt: str) -> str:
