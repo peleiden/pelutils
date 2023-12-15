@@ -14,6 +14,7 @@
 - Added `string` method to `HardwareInfo` for easy formatting
 - Removed `no_grad` decorator, as this was already implemented in PyTorch
 - Updated `JobDescription` to only include relevant and nonprivate attributes
+- Renamed development distribution from `tests` to `dev`
 
 ### Bug fixes
 
