@@ -60,16 +60,3 @@ def unique(
         # pylint: disable=unsubscriptable-object
         ret.append(counts[index])
     return tuple(ret) if len(ret) > 1 else ret[0]
-
-def no_grad(fun: Callable) -> Callable:
-    """ Decorator for running functions without pytorch tracking gradients, e.g.
-    ```
-    @no_grad
-    def feed_forward(x):
-        return net(x)
-    ``` """
-    functools.wraps(fun)
-    def wrapper(*args, **kwargs):
-        with torch.no_grad():
-            return fun(*args, **kwargs)
-    return wrapper

@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 from pelutils import set_seeds
-from pelutils.ds import unique, no_grad
+from pelutils.ds import unique
 
 set_seeds(sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀"))
 
@@ -51,23 +51,3 @@ def test_unique():
     # Check error handling
     with pytest.raises(ValueError):
         unique(np.array([]))
-
-def test_no_grad():
-    # Simulate simple data with a batch size of three,
-    # four data points per batch and five features
-    def with_grad():
-        x = torch.randn(3, 4, 5)
-        y = torch.randn(3, 4, 1)
-        simple_net = nn.Linear(5, 1)
-        loss = (y - simple_net(x)).abs().sum()
-        loss.backward()
-
-    @no_grad
-    def without_grad():
-        with_grad()
-
-    # This should work without problems
-    with_grad()
-    # This should fails, as gradients need to be tracked
-    with pytest.raises(RuntimeError):
-        without_grad()
