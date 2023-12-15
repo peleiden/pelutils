@@ -15,6 +15,7 @@
 - Removed `no_grad` decorator, as this was already implemented in PyTorch
 - Updated `JobDescription` to only include relevant and nonprivate attributes
 - Renamed development distribution from `tests` to `dev`
+- Added `tensor_bytesize` function to get the size of NumPy arrays and PyTorch tensors in bytes
 
 ### Bug fixes
 
@@ -45,7 +46,7 @@
 - Include `hashmap.c` license in distributions
 - Include all header files in source distributions
 - Fix `log.log_errors` logging `SystemExit(0)` as raised by `click` upon successful execution
-- Moved away from `numpy` API for easier install
+- Moved away from NumPy API for easier install
 - Added `get_timestamp_for_files`
 - Fixed various parser bugs
 
