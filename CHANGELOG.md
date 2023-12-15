@@ -22,6 +22,8 @@
 
 - Fixed missing `__init__.py` in `_entry_points` module
 - Fixed incorrect whitespace when printing multiline logs
+- Fixed wrong type annotation in `log.configure`
+- Fixed wrong return type in `exp_moving_avg`
 
 ## 2.0.0 - Breaking changes
 
