@@ -2,6 +2,7 @@
 
 ## 3.0.0 - Breaking changes
 
+- Minimum Python version is now 3.9
 - Strip all logged lines of extra whitespace
 - Align logged lines with four space indents
 - Do not automatically create subplots figure and axis in Figure
