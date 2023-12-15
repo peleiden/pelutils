@@ -22,7 +22,7 @@ def unique(
     return_counts=False,
     axis: int=0,
 ) -> np.ndarray | Iterable[np.ndarray]:
-    """ Similar to np.unique, but in linear time and returns unsorted """
+    """ Similar to np.unique, but in linear time and returns unsorted. """
     if not array.size:
         raise ValueError("Array must be non-empty")
 
@@ -60,3 +60,9 @@ def unique(
         # pylint: disable=unsubscriptable-object
         ret.append(counts[index])
     return tuple(ret) if len(ret) > 1 else ret[0]
+
+def tensor_bytesize(x: np.ndarray | torch.Tensor) -> int:
+    """ Calculates the size of a numpy array or torch tensor in bytes. """
+    if isinstance(x, np.ndarray):
+        return x.nbytes
+    return x.element_size() * x.numel()
