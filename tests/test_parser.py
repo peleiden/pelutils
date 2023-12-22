@@ -369,6 +369,12 @@ class TestParser(UnitTestCollection):
         assert _sample_no_default.replace("=", " = ").strip() in content.strip()
         assert " ".join(_sample_argv_conf(self._no_default_file)) in content
 
+        # Write documentation manually again
+        job.write_documentation()
+        with open(os.path.join(job.location, job.document_filename)) as fh:
+            content2 = fh.read()
+        assert content2 == content*2
+
     @restore_argv
     def test_names(self):
         sys.argv = _sample_argv
