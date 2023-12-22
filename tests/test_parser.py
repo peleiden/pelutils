@@ -9,7 +9,7 @@ import pytest
 from pelutils import except_keys
 from pelutils.tests import restore_argv, UnitTestCollection
 from pelutils.parser import Argument, Option, Flag, Parser, JobDescription,\
-    _fixdash, ParserError, CLIError, ConfigError
+    _fixdash, ParserError,  ConfigError
 
 
 _testdir = "parser_test"
@@ -250,11 +250,13 @@ class TestParser(UnitTestCollection):
         assert jobs[1].opt_many == [float("1"), float("4.5"), float("-3")]
         assert jobs[1].iam_bool
 
-        # Make sure an error is thrown if name is set from the command line
-        sys.argv = _sample_argv_conf(self._default_file) + ["--name", "forbidden-name"]
+        # We allow setting default section name from CLI
+        sys.argv = _sample_argv_conf(self._default_file) + ["--name", "funky-name"]
         parser = Parser(*_sample_arguments, multiple_jobs=True)
-        with pytest.raises(CLIError):
-            parser.parse_args()
+        jobs = parser.parse_args()
+        assert len(jobs) == 1
+        assert jobs[0].name == "funky-name"
+        assert jobs[0].location == os.path.join(self.test_dir, _testdir, "funky-name")
 
     @restore_argv
     def test_no_default_section(self):

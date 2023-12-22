@@ -30,9 +30,6 @@ def _fixdash(argname: str) -> str:
 class ParserError(Exception):
     pass
 
-class CLIError(ParserError):
-    pass
-
 class ConfigError(ParserError):
     pass
 
@@ -397,17 +394,17 @@ class Parser:
             # If any section other than DEFAULT is given, then the sections consist of DEFAULT and the others
             # In that case the DEFAULT is not used and is thus discarded
             if len(config_dict) > 1:
-                del config_dict["DEFAULT"]
+                del config_dict[self._default_config_job]
             if len(config_dict) > 1 and not self._multiple_jobs:
                 raise ConfigError("Multiple sections found in config file, yet multiple_jobs has been set to `False`")
-            if self._multiple_jobs and self._name_arg.name in explicit_cli_args:
-                raise CLIError("When configuring multiple jobs, `name` cannot be set from the command line")
 
             # Create job descriptions section-wise
             for section, config_args in config_dict.items():
                 if self._multiple_jobs:
                     name = section
-                    location = os.path.join(self.location, section)
+                    if section == self._default_config_job:
+                        name = section if self._name_arg.name not in explicit_cli_args else args.name
+                    location = os.path.join(self.location, name)
                 else:
                     name = section if self._name_arg.name not in explicit_cli_args else args.name
                     location = self.location
