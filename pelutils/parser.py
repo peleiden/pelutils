@@ -167,14 +167,19 @@ class JobDescription(Namespace):
         return d
 
     def prepare_directory(self, encoding: Optional[str] = None):
-        """ Clears the job directory and puts a documentation file in it. The file has
-        the CLI command user for running the program as a comment as well as the config file,
-        if such a one was used. """
+        """ Clears the job directory and puts a documentation file in it. """
         rmtree(self.location, ignore_errors=True)
         os.makedirs(self.location)
+        self.write_documentation(encoding)
+
+    def write_documentation(self, encoding: Optional[str] = None):
+        """ Writes, possibly appends, a documentation file in the location. The file has
+        the CLI command user for running the program as a comment as well as the config file,
+        if such a one was used. """
         path = os.path.join(self.location, self.document_filename)
-        with open(path, "w", encoding=encoding) as docfile:
+        with open(path, "a", encoding=encoding) as docfile:
             docfile.write(self._docfile_content)
+
 
     def __getitem__(self, key: str) -> Any:
         if key in self.__dict__:
