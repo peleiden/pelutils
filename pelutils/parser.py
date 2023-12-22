@@ -245,6 +245,9 @@ class Parser:
         if len(self._arguments) != len(self._reserved_arguments) + len(arguments):
             raise ParserError("Conflicting arguments found. Notice that '-' and '_' are counted the same,"
                 "so e.g. 'a-b' and 'a_b' would cause a conflict")
+
+        self._location_arg.help = "Directory containing all job directories" if self._multiple_jobs else "Job directory"
+
         # Build abbrevations for arguments
         # Those with explicit abbreviations are handled first to prevent being overwritten
         _used_abbrvs = { "h" }  # Reserved by argparse
