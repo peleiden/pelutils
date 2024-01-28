@@ -18,6 +18,8 @@
 - Added `tensor_bytesize` function to get the size of NumPy arrays and PyTorch tensors in bytes
 - Added optional ID to `TickTock.tick` and `TickTock.tock` methods for multiple concurrent timings
 - Added option to print the stacktrace with `log.log_with_stacktrace`
+- Allowed setting `--name` with `Parser` even when `multiple_jobs` is `True`
+- Exposed method for writing or appending configuration file to existing job folder
 
 ### Bug fixes
 
@@ -25,6 +27,7 @@
 - Fixed incorrect whitespace when printing multiline logs
 - Fixed wrong type annotation in `log.configure`
 - Fixed wrong return type in `exp_moving_avg`
+- Appending now works with `jsonl`
 
 ## 2.0.0 - Breaking changes
 
