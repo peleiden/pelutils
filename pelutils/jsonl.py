@@ -1,7 +1,7 @@
 """ This module contains utility methods for the .jsonl file format.
 .jsonl are files where each line is a json string. """
-from typing import Generator, Iterable, TextIO
 import os
+from typing import Generator, Iterable, TextIO
 
 import rapidjson
 
@@ -25,7 +25,7 @@ def dump(objects: Iterable, f: TextIO, single_block=True):
     If single_block is True, objects will be joined to a single block before being written.
     It can be usefull to set this to False if there is a large amount of lazily generated data. """
     if single_block:
-        f.write(os.linesep.join(rapidjson.dumps(obj) for obj in objects) + "\n")
+        f.write(os.linesep.join(rapidjson.dumps(obj) for obj in objects) + os.linesep)
     else:
         for obj in objects:
             f.write(rapidjson.dumps(obj) + os.linesep)
