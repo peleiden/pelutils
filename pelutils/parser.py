@@ -193,7 +193,7 @@ class Parser:
 
     _default_config_job = "DEFAULT"
 
-    _location_arg = Argument("location", help="Job folder if multiple_jobs is False else folder containing all job folders")
+    _location_arg = Argument("location")
     _location_arg.name_or_flags = lambda: ("location",)
     _name_arg = Option("name", default=None, abbrv="n", help="Name of the job")
     _seperator = "::"
