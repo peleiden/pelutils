@@ -8,8 +8,8 @@ import pytest
 
 from pelutils import except_keys
 from pelutils.tests import restore_argv, UnitTestCollection
-from pelutils.parser import Argument, Option, Flag, Parser, JobDescription,\
-    _fixdash, ParserError,  ConfigError
+from pelutils.parser import Argument, Option, Flag, Parser, JobDescription, \
+    _fixdash, ParserError, ConfigError
 
 
 _testdir = "parser_test"
@@ -375,7 +375,7 @@ class TestParser(UnitTestCollection):
         job.write_documentation()
         with open(os.path.join(job.location, job.document_filename)) as fh:
             content2 = fh.read()
-        assert content2 == content*2
+        assert content2 == 2 * content
 
     @restore_argv
     def test_names(self):
