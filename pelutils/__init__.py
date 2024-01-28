@@ -22,7 +22,7 @@ try:
     # torch is only to be installed if pelutils[ds] has been installed
     import torch
     _has_torch = True
-except:
+except ModuleNotFoundError:
     _has_torch = False
 
 

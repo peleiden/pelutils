@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pelutils.ds.plots import (
-    linear_binning, log_binning, normal_binning, histogram,
+    log_binning, normal_binning, histogram,
     moving_avg, exp_moving_avg, double_moving_avg, tab_colours,
     Figure,
 )

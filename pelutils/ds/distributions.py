@@ -1,12 +1,7 @@
 """ This file contains functions that returns scipy.stats distribution
 objects reparameterized to Jim Pitman's "Probability". """
-from . import _import_error
-
-try:
-    from scipy import stats
-except ModuleNotFoundError as e:
-    raise _import_error from e
 import numpy as np
+from scipy import stats
 
 
 # Continuous distributions

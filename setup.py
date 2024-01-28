@@ -17,14 +17,12 @@ requirements = [
     "python-rapidjson>=1.5",
     "py-cpuinfo>=8.0.0",
     "psutil>=5.8.0",
-]
-requirements_ds = [
-    "torch>=2",
     "matplotlib>=3.3",
     "scipy>=1.6",
     "tqdm>=4.55",
 ]
 requirements_dev = [
+    "torch>=2",
     "pytest>=6.2.4,<=7.2",
     "pytest-cov>=2.12.1",
     "coveralls>=3.3.1",
@@ -73,7 +71,7 @@ setup_args = dict(
     url              = "https://github.com/peleiden/pelutils",
     download_url     = "https://pypi.org/project/pelutils/",
     install_requires = [ requirements ],
-    extras_require   = { "ds": requirements_ds, "dev": requirements_ds+requirements_dev },
+    extras_require   = { "dev": requirements_dev },
     entry_points     = { "console_scripts": [
         "linecounter = pelutils._entry_points.linecounter:linecounter",
         "pelexamples = examples.cli:run",

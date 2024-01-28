@@ -8,7 +8,7 @@ import numpy as np
 try:
     import torch
     _has_torch = True
-except:
+except ModuleNotFoundError:
     _has_torch = False
 
 

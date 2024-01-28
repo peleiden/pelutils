@@ -1,14 +1,8 @@
 from __future__ import annotations
-from typing import Callable, Iterable, Optional
+from typing import Iterable
 
 import numpy as np
-
-from . import _import_error
-
-try:
-    from scipy import stats
-except ModuleNotFoundError as e:
-    raise _import_error from e
+from scipy import stats
 
 
 def z(alpha=0.05, two_sided=True, distribution=stats.norm()) -> np.float64:

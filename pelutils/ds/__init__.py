@@ -1,18 +1,15 @@
 from __future__ import annotations
-from typing import Callable, Iterable
-import functools
-
-_import_error = ModuleNotFoundError("To use the ds submodule, you must install pelutils[ds]")
+from typing import Iterable
 
 import numpy as np
 try:
     import torch
-except ModuleNotFoundError as e:
-    raise _import_error from e
+    _has_torch = True
+except ModuleNotFoundError:
+    _has_torch = False
 
 import _pelutils_c as _c
 import pelutils._c as _c_utils
-from pelutils import c_ptr
 
 
 def unique(
@@ -61,8 +58,11 @@ def unique(
         ret.append(counts[index])
     return tuple(ret) if len(ret) > 1 else ret[0]
 
-def tensor_bytesize(x: np.ndarray | torch.Tensor) -> int:
+def tensor_bytes(x: np.ndarray | torch.Tensor) -> int:
     """ Calculates the size of a numpy array or torch tensor in bytes. """
     if isinstance(x, np.ndarray):
         return x.nbytes
-    return x.element_size() * x.numel()
+    elif _has_torch and isinstance(x, torch.Tensor):
+        return x.element_size() * x.numel()
+    else:
+        raise TypeError("Unable to calculate the number of bytes of a tensor with type %s" % type(x))

@@ -1,6 +1,6 @@
 import click
 
-from examples.ds.plots import plots_binning, plots_moving, plots_smoothing
+from examples.plots import plots_binning, plots_moving, plots_smoothing
 
 
 @click.group()
