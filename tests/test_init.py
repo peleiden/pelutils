@@ -169,9 +169,12 @@ class TestInit(UnitTestCollection):
         assert isinstance(HardwareInfo.threads, int) and HardwareInfo.threads > 0
         assert isinstance(HardwareInfo.memory, int) and HardwareInfo.memory > 0
         if torch.cuda.is_available():
-            assert isinstance(HardwareInfo.gpu, str) and len(HardwareInfo.gpu) > 0
+            assert isinstance(HardwareInfo.gpus, list)
+            assert len(HardwareInfo.gpus) > 0
+            for gpu in HardwareInfo.gpus:
+                assert isinstance(gpu, str)
         else:
-            assert HardwareInfo.gpu is None
+            assert HardwareInfo.gpus is None
 
         string = HardwareInfo.string()
         assert HardwareInfo.cpu in string
@@ -182,5 +185,6 @@ class TestInit(UnitTestCollection):
             # This is also a very shitty test
             assert thousands_seperators(HardwareInfo.threads) in string
         assert str(round(HardwareInfo.memory / 2 ** 30, 2)) in string
-        if HardwareInfo.gpu:
-            assert HardwareInfo.gpu in string
+        if HardwareInfo.gpus:
+            for gpu in HardwareInfo.gpus:
+                assert gpu in string
