@@ -170,13 +170,12 @@ class JobDescription(Namespace):
         self.write_documentation(encoding)
 
     def write_documentation(self, encoding: Optional[str] = None):
-        """ Writes, possibly appends, a documentation file in the location. The file has
+        """ Writes, or appends if one already exists, a documentation file in the location. The file has
         the CLI command user for running the program as a comment as well as the config file,
         if such a one was used. """
         path = os.path.join(self.location, self.document_filename)
         with open(path, "a", encoding=encoding) as docfile:
             docfile.write(self._docfile_content)
-
 
     def __getitem__(self, key: str) -> Any:
         if key in self.__dict__:
