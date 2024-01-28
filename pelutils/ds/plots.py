@@ -4,14 +4,10 @@ import os
 import time
 from typing import Any, Callable, List, Optional, Union
 
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolour
 import numpy as np
-from . import _import_error
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib.colors as mcolour
-    from scipy import stats
-except ModuleNotFoundError as e:
-    raise _import_error from e
+from scipy import stats
 
 
 _Array = Union[List[Union[float, int]], np.ndarray]

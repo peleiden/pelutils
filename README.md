@@ -15,7 +15,10 @@ Various utilities useful for Python projects. Features include
 - Data-science submodule with extra utilities for statistics, plotting with `matplotlib`, and machine learning using `PyTorch`
 - Linear time `unique` function in the style of `numpy.unique`
 
-`pelutils` supports Python 3.7+.
+`pelutils` supports Python 3.9+.
+
+To install, simply run `pip install pelutils`.
+A small subset of the functionality requires `PyTorch`, which has to be installed separately.
 
 ## Timing and Code Profiling
 
@@ -203,14 +206,7 @@ log2.configure("path/to/save/log2.log")
 
 # Data Science
 
-This submodule contains various utility functions for data science and machine learning. To make sure the necessary requirements are installed, install using
-```
-pip install pelutils[ds]
-```
-Note that in some terminals (e.g. `zsh`), you will have escape the brackets:
-```
-pip install pelutils\[ds\]
-```
+This submodule contains various utility functions for data science, statistics, plotting, and machine learning.
 
 ## Deep Learning
 

@@ -20,6 +20,7 @@
 - Added option to print the stacktrace with `log.log_with_stacktrace`
 - Allowed setting `--name` with `Parser` even when `multiple_jobs` is `True`
 - Exposed method for writing or appending configuration file to existing job folder
+- Removed `[ds]` submodule as an install option -- PyTorch now has to be installed separately if the relevant features are needed
 
 ### Bug fixes
 
