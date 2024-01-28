@@ -251,7 +251,7 @@ class HardwareInfo:
     memory = psutil.virtual_memory().total
     # Available gpu
     # Requires torch, otherwise None
-    gpu = torch.cuda.get_device_name() if _has_torch and torch.cuda.is_available() else None
+    gpus = [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())] if _has_torch and torch.cuda.is_available() else None
 
     @classmethod
     def string(cls) -> str:
@@ -261,7 +261,8 @@ class HardwareInfo:
             "Sockets: %i" % cls.sockets if cls.sockets else None,
             "Threads: %s" % thousands_seperators(cls.threads) if cls.threads else None,
             "RAM:     %s GiB" % thousands_seperators(round(cls.memory / 2 ** 30, 2)),
-            "GPU:     %s" % cls.gpu if cls.gpu else None,
+            "GPU(s):  %s" % cls.gpus[0] if cls.gpus else None,
+            *["         %s" % gpu for gpu in (cls.gpus[1:] if cls.gpus is not None and len(cls.gpus) > 1 else [])],
         ]
         return os.linesep.join(line for line in lines if line)
 
