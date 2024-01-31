@@ -24,6 +24,8 @@
 - `HardwareInfo` now supports multiple GPUs
 - Removed `click` as a dependency
 - Improved default table entry alignment
+- Improved default `Figure` parameters
+- Added option to set label size in `Figure`
 
 ### Bug fixes
 
@@ -32,6 +34,7 @@
 - Fixed wrong type annotation in `log.configure`
 - Fixed wrong return type in `exp_moving_avg`
 - Appending now works with `jsonl`
+- Fixed wrong type annotation in `Figure`'s `figsize` argument
 
 ## 2.0.0 - Breaking changes
 
