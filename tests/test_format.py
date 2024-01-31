@@ -1,8 +1,8 @@
-from string import ascii_letters
 import os
+from string import ascii_letters
 
-from pelutils import Table
 import pytest
+from pelutils import Table
 
 
 def test_table():
@@ -21,6 +21,9 @@ def test_table():
     t = Table()
     for i in range(3):
         t.add_row([i, str(i+1), i+2])
+        with pytest.raises(ValueError):
+            t.add_row([i, i, i], [1, 0])
+
     assert "+" not in str(t)  # Check no header formatting
 
 def test_tex():

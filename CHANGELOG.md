@@ -23,6 +23,7 @@
 - Removed `[ds]` submodule as an install option -- PyTorch now has to be installed separately if the relevant features are needed
 - `HardwareInfo` now supports multiple GPUs
 - Removed `click` as a dependency
+- Improved default table entry alignment
 
 ### Bug fixes
 

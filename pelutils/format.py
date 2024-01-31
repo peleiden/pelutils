@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
 import os
 import re
 
@@ -57,7 +57,7 @@ class Table:
         self._width:       int = None  # Number of elements in each row. Set when first row or header added
         self._header:      list[Any] = list()  # Header elements
         self._rows:        list[list[Any]] = list()   # All non-header rows
-        self._left_aligns: list[Iterable[bool]] = list()  # True for left align, False for right align
+        self._left_aligns: list[list[bool]] = list()  # True for left align, False for right align
         self._hlines:      set[int] = set()  # Row indexes that are followed by a horizontal line
 
     def _set_and_check_width(self, row: list[Any]):
@@ -70,10 +70,22 @@ class Table:
         self._set_and_check_width(header)
         self._header = header
 
-    def add_row(self, row: list[Any], left_align: Iterable[bool]=None):
+    def add_row(self, row: list[Any], left_align: Optional[Iterable[bool]]=None):
+        """ Add a row to the table. left_align is a boolean iterable of the same length
+        as row indicating whether each element is right or left aligned. If None, the
+        first element is left aligned and the rest right aligned. """
         self._set_and_check_width(row)
         self._rows.append(row)
-        self._left_aligns.append(left_align or [True] * self._width)
+        if left_align is None:
+            left_align = [False] * self._width
+            left_align[0] = True
+        else:
+            left_align = list(left_align)
+
+        if len(row) != len(left_align):
+            raise ValueError("Number of row elements (%i) does not match number of left aligns (%i)" % (len(row), len(left_align)))
+
+        self._left_aligns.append(left_align)
 
     def add_hline(self):
         self._hlines.add(len(self._rows)-1)
