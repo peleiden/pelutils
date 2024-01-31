@@ -180,7 +180,7 @@ class Figure:
         tight_layout: bool = True,
         style:        Optional[str] = None,
         # Arguments below here go into mpl.rcParams
-        figsize:           tuple[int, int] = (15, 10),
+        figsize:           tuple[float, float] = (15, 10),
         dpi:               float = 150,
         fontsize:          float = 26,
         title_fontsize:    float = 0.5,   # Relative to fontsize
