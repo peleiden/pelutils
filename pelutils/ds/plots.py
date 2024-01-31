@@ -181,10 +181,11 @@ class Figure:
         style:        Optional[str] = None,
         # Arguments below here go into mpl.rcParams
         figsize:           tuple[int, int] = (15, 10),
-        dpi:               float = 200,
+        dpi:               float = 150,
         fontsize:          float = 26,
-        title_fontsize:    float = 0.5,   # Fraction of fontsize
-        axes_ticksize:     float = 0.85,  # Fraction of fontsize
+        title_fontsize:    float = 0.5,   # Relative to fontsize
+        ticksize:          float = 0.85,  # Fraction of fontsize
+        labelsize:         float = 1,     # Fraction of fontsize
         legend_fontsize:   float = 0.85,  # Fraction of fontsize
         legend_framealpha: float = 0.8,
         legend_edgecolor:  tuple[float, float, float, float] = (0, 0, 0, 1),
@@ -200,8 +201,9 @@ class Figure:
             "figure.dpi": dpi,
             "figure.titlesize": title_fontsize * fontsize,
             "legend.fontsize": legend_fontsize * fontsize,
-            "xtick.labelsize": axes_ticksize * fontsize,
-            "ytick.labelsize": axes_ticksize * fontsize,
+            "xtick.labelsize": ticksize * fontsize,
+            "ytick.labelsize": ticksize * fontsize,
+            "axes.labelsize": labelsize * fontsize,
             "legend.framealpha": legend_framealpha,
             "legend.edgecolor": legend_edgecolor,
             **other_rc_params,
