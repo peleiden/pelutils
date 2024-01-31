@@ -4,6 +4,7 @@ from argparse import ArgumentParser, Namespace, SUPPRESS
 from ast import literal_eval
 from configparser import ConfigParser
 from copy import deepcopy
+from pprint import pformat
 from shutil import rmtree
 from typing import Any, Callable, Optional, TypeVar, Union
 import io
@@ -173,6 +174,7 @@ class JobDescription(Namespace):
         """ Writes, or appends if one already exists, a documentation file in the location. The file has
         the CLI command user for running the program as a comment as well as the config file,
         if such a one was used. """
+        os.makedirs(self.location, exist_ok=True)
         path = os.path.join(self.location, self.document_filename)
         with open(path, "a", encoding=encoding) as docfile:
             docfile.write(self._docfile_content)
@@ -306,7 +308,7 @@ class Parser:
         return { argname: arg.default
             for argname, arg
             in self._arguments.items()
-            if hasattr(arg, "default") }
+            if hasattr(arg, "default") and arg.name not in self._reserved_names }
 
     def _parse_explicit_cli_args(self) -> set[str]:
         """ Returns a set of arguments explicitly given from the command line.
@@ -452,12 +454,13 @@ class Parser:
     def _get_docfile_content(self) -> str:
         buffer = io.StringIO()
         self._configparser.write(buffer)
-        buffer.write(
-            os.linesep +
-            "# CLI command:" + os.linesep +
-            "# " + " ".join(sys.argv) + os.linesep +
-            "# Default values: %s" % self._get_default_values() + os.linesep
-        )
+        lines: list[str] = [
+            "CLI command",
+            " ".join(sys.argv),
+            "Default values",
+            *pformat(self._get_default_values(), width=120).splitlines(),
+        ]
+        buffer.write(os.linesep + "# " + f"{os.linesep}# ".join(lines) + os.linesep)
         content = buffer.getvalue()
         buffer.close()
         return content
