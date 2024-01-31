@@ -22,6 +22,7 @@
 - Exposed method for writing or appending configuration file to existing job folder
 - Removed `[ds]` submodule as an install option -- PyTorch now has to be installed separately if the relevant features are needed
 - `HardwareInfo` now supports multiple GPUs
+- Removed `click` as a dependency
 
 ### Bug fixes
 

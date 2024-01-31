@@ -1,4 +1,8 @@
-import click
+try:
+    import click
+except ModuleNotFoundError:
+    print("click must be installed to run examples.")
+    exit(-1)
 
 from examples.plots import plots_binning, plots_moving, plots_smoothing
 
