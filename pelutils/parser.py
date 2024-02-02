@@ -197,7 +197,7 @@ class Parser:
 
     _location_arg = Argument("location")
     _location_arg.name_or_flags = lambda: ("location",)
-    _name_arg = Option("name", default=None, abbrv="n", help="Name of the job")
+    _name_arg = Option("name", default=None, help="Name of the job")
     _seperator = "::"
     _config_arg = Option(
         "config",

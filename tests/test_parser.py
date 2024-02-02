@@ -140,8 +140,6 @@ class TestParser(UnitTestCollection):
         with pytest.raises(ParserError):
             Parser(Argument("location"))
         with pytest.raises(ParserError):
-            Parser(Argument("null", abbrv="n"))
-        with pytest.raises(ParserError):
             Parser(Argument("help"))
 
         # Test that under no permutations is the ordering changed in the argparser
