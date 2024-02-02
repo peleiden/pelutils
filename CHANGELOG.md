@@ -26,6 +26,7 @@
 - Improved default table entry alignment
 - Improved default `Figure` parameters
 - Added option to set label size in `Figure`
+- `name` no longer reserves `-n` abbreviation
 
 ### Bug fixes
 
