@@ -28,6 +28,7 @@
 - Added option to set label size in `Figure`
 - `name` no longer reserves `-n` abbreviation
 - Renamed `c_ptr` to the more sensible `array_ptr`
+- Changed parser submodule default values and error handling
 
 ### Bug fixes
 
@@ -38,6 +39,7 @@
 - Appending now works with `jsonl`
 - Fixed wrong type annotation in `Figure`'s `figsize` argument
 - `array_ptr` (formerly `c_ptr`) now works for CUDA tensors
+- Fixed `Parser` allowing `Argument` without given values when not using a config file
 
 ## 2.0.0 - Breaking changes
 

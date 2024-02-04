@@ -133,6 +133,15 @@ class TestParser(UnitTestCollection):
             assert kw != "explicit_args"
 
     @restore_argv
+    def test_job_description_format(self):
+        sys.argv = _sample_argv
+        parser = Parser(*_sample_arguments)
+
+        job = parser.parse_args()
+        for arg in _sample_arguments:
+            assert _fixdash(arg.name) in str(job)
+
+    @restore_argv
     def test_name_and_abbrv_handling(self):
         """ Test that name abbreviation ordering and collisions are handled properly """
         with pytest.raises(ParserError):
@@ -257,6 +266,13 @@ class TestParser(UnitTestCollection):
         assert jobs[0].location == os.path.join(self.test_dir, _testdir, "funky-name")
 
     @restore_argv
+    def test_missing_arg(self):
+        sys.argv = _argv_template
+        parser = Parser(*_sample_arguments)
+        with pytest.raises(ParserError):
+            parser.parse_args()
+
+    @restore_argv
     def test_no_default_section(self):
         sys.argv = _sample_argv_conf(self._no_default_file)
         parser = Parser(*_sample_arguments, multiple_jobs=False)
@@ -353,7 +369,7 @@ class TestParser(UnitTestCollection):
         # Test with config argument
         sys.argv = _argv_template + ["-c", self._sample_single_nargs_file]
         parser = Parser(Option("bar", type=int, default=[1, 2]))
-        with pytest.raises(KeyError):
+        with pytest.raises(ParserError):
             parser.parse_args()
 
     @restore_argv
