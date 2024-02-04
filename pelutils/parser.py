@@ -104,7 +104,7 @@ class Option(AbstractArgument):
     def __init__(
         self,
         name:    str, *,
-        default: _T | None,
+        default: _T | None                    = None,
         type:    Callable[[str], _T] | None   = None,
         abbrv:   str | None                   = None,
         help:    str | None                   = None,
@@ -159,9 +159,9 @@ class JobDescription(Namespace):
         self._docfile_content = docfile_content
 
     def todict(self) -> dict[str, Any]:
-        """ Returns a dictionary version of itself which excludes private variables and other irrelevant attributes. """
+        """ Returns a dictionary version of itself which contains solely the parsed values. """
         d = vars(self)
-        d = { kw: v for kw, v in d.items() if not kw.startswith("_") and kw not in { "explicit_args" } }
+        d = { kw: v for kw, v in d.items() if not kw.startswith("_") and kw not in { "config", "explicit_args" } }
         return d
 
     def prepare_directory(self, encoding: Optional[str] = None):
@@ -186,6 +186,9 @@ class JobDescription(Namespace):
             return self.__dict__[_fixdash(key)]
         else:
             raise KeyError("No such job argument '%s'" % key)
+
+    def __str__(self) -> str:
+        return pformat(self.todict())
 
 ArgumentTypes = Union[Argument, Option, Flag]
 
@@ -343,6 +346,8 @@ class Parser:
             config_dict[section] = dict()
             for argname, value in arguments.items():
                 argname = _fixdash(argname)
+                if argname not in self._arguments:
+                    raise ParserError("Unknown argument '%s'" % argname)
                 if isinstance(self._arguments[argname], Flag):
                     # If flag value is given in config file, parse True/False
                     if isinstance(value, str):
@@ -381,6 +386,10 @@ class Parser:
             else:
                 location = self.location
             arg_dict = vars(args)
+            for argname, arg in self._arguments.items():
+                if isinstance(arg, Argument) and arg_dict[argname] is None:
+                    raise ParserError("Missing value for '%s'" % arg.name)
+
             job_descriptions.append(JobDescription(
                 name            = name,
                 location        = location,
@@ -433,10 +442,10 @@ class Parser:
 
         # Check if any arguments are missing or are invalid
         for job in job_descriptions:
-            for argname in self._arguments:
+            for argname, arg in self._arguments.items():
                 argument = self._arguments[argname]
                 if argname not in job:
-                    raise ParserError("Job '%s' missing argument '%s'" % (job.name, argname))
+                    raise ParserError("Job '%s' is missing value for '%s'" % (job.name, arg.name))
                 elif hasattr(argument, "nargs") and argument.nargs is not None:
                     if job[argname] is None and isinstance(argument, Argument):
                         raise ParserError("Argument '%s' has not been given in job '%s'" % (
