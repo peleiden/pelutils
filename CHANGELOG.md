@@ -29,6 +29,7 @@
 - `name` no longer reserves `-n` abbreviation
 - Renamed `c_ptr` to the more sensible `array_ptr`
 - Changed parser submodule default values and error handling
+- Added option to only parse a subset of sections in a config file
 
 ### Bug fixes
 
