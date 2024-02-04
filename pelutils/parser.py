@@ -201,13 +201,14 @@ class Parser:
     _location_arg = Argument("location")
     _location_arg.name_or_flags = lambda: ("location",)
     _name_arg = Option("name", default=None, help="Name of the job")
-    _seperator = "::"
+    _section_separator = ":"
+    _encoding_separator = "::"
     _config_arg = Option(
         "config",
         default = None,
         abbrv   = "c",
         help    = "Path to config file. Encoding can be specified by giving <path>%s<encoding>,"
-                  "e.g. --config path/to/config.ini%sutf-8" % (_seperator, _seperator),
+                  "e.g. --config path/to/config.ini%sutf-8" % (_encoding_separator, _encoding_separator),
     )
 
     _reserved_arguments: tuple[ArgumentTypes] = (_location_arg, _name_arg, _config_arg)
@@ -223,7 +224,7 @@ class Parser:
         return self._reserved_abbrvs
     @property
     def encoding_seperator(self):
-        return self._seperator
+        return self._encoding_separator
 
     def __init__(
         self,
@@ -333,16 +334,26 @@ class Parser:
     def _parse_config_file(self, config_path: str) -> dict[str, dict[str, Any]]:
         """ Parses a given configuration file (.ini format).
         Returns a dictionary where each section as a key pointing to corresponding argument/value pairs. """
-        if self._seperator in config_path:
-            config_path, encoding = config_path.split(self._seperator, maxsplit=1)
+        if self._encoding_separator in config_path:
+            config_path, encoding = config_path.split(self._encoding_separator, maxsplit=1)
         else:
             encoding = None
+
+        config_path, *sections = config_path.split(self._section_separator)
+        sections = set(sections)
+
         if not self._configparser.read(config_path, encoding=encoding):
             raise FileNotFoundError("Configuration file not found at %s" % config_path)
+
+        for section in sections:
+            if section not in self._configparser:
+                raise ParserError("Unable to parse unknown section '%s'" % section)
 
         # Save given values and convert to proper types
         config_dict = dict()
         for section, arguments in self._configparser.items():
+            if sections and section not in sections and section != self._default_config_job:
+                continue
             config_dict[section] = dict()
             for argname, value in arguments.items():
                 argname = _fixdash(argname)

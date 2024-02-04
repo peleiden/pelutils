@@ -185,7 +185,7 @@ class TestParser(UnitTestCollection):
     def test_parser_properties(self):
         assert Parser().reserved_names == { "location", "config", "name", "help" }
         assert Parser().reserved_abbrvs == { "c" }
-        assert Parser().encoding_seperator == Parser._seperator
+        assert Parser().encoding_seperator == Parser._encoding_separator
 
     @restore_argv
     def test_no_conf_single_job(self):
@@ -278,6 +278,26 @@ class TestParser(UnitTestCollection):
         assert len(jobs) == 1
         assert jobs[0].name == "funky-name"
         assert jobs[0].location == os.path.join(self.test_dir, _testdir, "funky-name")
+
+    @restore_argv
+    def test_conf_specific_jobs(self):
+        sys.argv = _sample_argv_conf(f"{self._multiple_jobs_file}:BUTWHATABOUTSECONDJOB")
+        parser = Parser(*_sample_arguments, multiple_jobs=True)
+        jobs = parser.parse_args()
+        assert len(jobs) == 1
+        assert jobs[0].name == "BUTWHATABOUTSECONDJOB"
+
+        sys.argv = _sample_argv_conf(f"{self._multiple_jobs_file}:THETHIRDJOB:BUTWHATABOUTSECONDJOB")
+        parser = Parser(*_sample_arguments, multiple_jobs=True)
+        jobs = parser.parse_args()
+        assert len(jobs) == 2
+        assert jobs[0].name == "BUTWHATABOUTSECONDJOB"
+        assert jobs[1].name == "THETHIRDJOB"
+
+        sys.argv = _sample_argv_conf(f"{self._multiple_jobs_file}:THETHIRDJOB:FAKEJOB:BUTWHATABOUTSECONDJOB")
+        parser = Parser(*_sample_arguments, multiple_jobs=True)
+        with pytest.raises(ParserError):
+            jobs = parser.parse_args()
 
     @restore_argv
     def test_missing_arg(self):
