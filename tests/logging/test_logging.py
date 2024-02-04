@@ -1,9 +1,10 @@
-from itertools import chain, permutations, product
-from string import ascii_lowercase
 import multiprocessing as mp
 import os
 import re
+from itertools import chain, permutations, product
+from string import ascii_lowercase
 
+import pelutils
 import pytest
 from pelutils import UnsupportedOS, OS
 
@@ -130,10 +131,19 @@ class TestLogger(UnitTestCollection):
         pelutils git repository root or above. If not, this test will fail. """
         log.log_repo()
         stdout, _ = capfd.readouterr()
-        if ".git" in os.listdir("."):
+        if ".git" in os.listdir():
             assert re.search(r"\b[0-9a-f]{40}\b", stdout)
+            assert "Unable" not in stdout
         else:
             assert re.search(r"\b[0-9a-f]{40}\b", stdout) is None
+            assert "Unable" in stdout
+
+        pelutils._has_git = False
+        log.log_repo()
+        stdout, _ = capfd.readouterr()
+        assert re.search(r"\b[0-9a-f]{40}\b", stdout) is None
+        assert "Unable" in stdout
+        pelutils._has_git = True
 
     @pytest.mark.skipif(OS.is_windows, reason="Log collection is not supported on Windows")
     def test_collect(self):

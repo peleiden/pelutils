@@ -26,6 +26,13 @@ def test_table():
 
     assert "+" not in str(t)  # Check no header formatting
 
+    t = Table()
+    t.add_header(["a", "b", "c"])
+    t.add_row([1, 2, 3])
+    t.add_hline()
+    t.add_row([3, 4, 5])
+    assert str(t).count("+") == 4
+
 def test_tex():
     t = Table()
     t.add_header(list(ascii_letters))

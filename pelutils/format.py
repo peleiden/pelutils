@@ -132,4 +132,5 @@ class Table:
             ))
             if i in self._hlines:
                 strs.append(hline)
+
         return os.linesep.join(strs)
