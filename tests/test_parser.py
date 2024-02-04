@@ -141,6 +141,15 @@ class TestParser(UnitTestCollection):
         for arg in _sample_arguments:
             assert _fixdash(arg.name) in str(job)
 
+    def test_argument_format(self):
+        for arg in _sample_arguments:
+            assert arg.name in str(arg)
+            assert arg.__class__.__name__ in str(arg)
+
+    def test_argument_hash(self):
+        assert hash(Argument("name")) == hash(Option("name")) == hash(Flag("name"))
+        assert hash(Argument("name")) != hash(Option("namer")) != hash(Flag("namerr"))
+
     @restore_argv
     def test_name_and_abbrv_handling(self):
         """ Test that name abbreviation ordering and collisions are handled properly """
@@ -172,6 +181,11 @@ class TestParser(UnitTestCollection):
         # Test naming conflicts
         with pytest.raises(ParserError):
             Parser(Argument("a-b"), Flag("a_b"))
+
+    def test_parser_properties(self):
+        assert Parser().reserved_names == { "location", "config", "name", "help" }
+        assert Parser().reserved_abbrvs == { "c" }
+        assert Parser().encoding_seperator == Parser._seperator
 
     @restore_argv
     def test_no_conf_single_job(self):

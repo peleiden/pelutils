@@ -1,2 +1,5 @@
 [run]
 omit=pelutils/_entry_points/*
+
+[report]
+show_missing=true
