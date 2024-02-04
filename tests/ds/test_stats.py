@@ -1,8 +1,22 @@
 import numpy as np
 import pytest
+from scipy.stats import norm
 
-from pelutils.ds.stats import corr_ci
+from pelutils.ds.stats import z, corr_ci
 
+
+def test_z():
+    with pytest.raises(ValueError):
+        z(alpha=-0.01)
+    with pytest.raises(ValueError):
+        z(alpha=1.01)
+    t = z()
+    assert np.isclose(norm().cdf(t), 0.975)
+    assert np.isclose(norm().cdf(-t), 0.025)
+
+    t = z(two_sided=False)
+    assert np.isclose(norm().cdf(t), 0.95)
+    assert np.isclose(norm().cdf(-t), 0.05)
 
 @pytest.mark.filterwarnings("ignore:divide by zero")
 @pytest.mark.filterwarnings("ignore:invalid value")

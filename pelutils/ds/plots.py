@@ -137,7 +137,7 @@ def histogram(
     binning_fn:   Callable[[_Array, int], _Array] = linear_binning,
     bins:         int  = 25,
     density:      bool = True,
-    ignore_zeros: bool = False,
+    ignore_zeros: bool = False,  # Be careful about this one, but it can be practical with log scales
 ):
     """ Create bins for plotting a line histogram. Simplest usage is plt.plot(*histogram(data)) """
     bins = np.array(binning_fn(data, bins+1))

@@ -4,14 +4,16 @@ import ctypes
 import os
 import platform
 from string import ascii_letters
+from shutil import move
 
 import numpy as np
 import pytest
 import torch
 
+import pelutils
 from pelutils import EnvVars, UnsupportedOS, reverse_line_iterator, except_keys,\
     split_path, binary_search, raises, thousands_seperators, OS, array_ptr,\
-    get_timestamp, get_timestamp_for_files, HardwareInfo
+    get_timestamp, get_timestamp_for_files, HardwareInfo, get_repo
 from pelutils.tests import UnitTestCollection
 
 class TestInit(UnitTestCollection):
@@ -45,6 +47,7 @@ class TestInit(UnitTestCollection):
             (1.234567e4, "12,345.67", "12.345,67"),
             (1234567890, "1,234,567,890", "1.234.567.890"),
             (0.03413, "0.03413", "0,03413"),
+            (-0.03413, "-0.03413", "-0,03413"),
         )
         for num, with_dot, with_comma in cases:
             for neg in False, True:
@@ -54,6 +57,9 @@ class TestInit(UnitTestCollection):
                     with_comma = "-" + with_comma
                 assert with_dot == thousands_seperators(num, ".")
                 assert with_comma == thousands_seperators(num, ",")
+
+        with pytest.raises(ValueError):
+            thousands_seperators(1, "a")
 
     def test_raises(self):
         assert raises(IndexError, lambda x: x[0], [])
@@ -190,3 +196,22 @@ class TestInit(UnitTestCollection):
         if HardwareInfo.gpus:
             for gpu in HardwareInfo.gpus:
                 assert gpu in string
+
+    def test_get_repo(self):
+        if ".git" in os.listdir() and pelutils._has_git:
+            a, b = get_repo()
+            assert isinstance(a, str)
+            assert isinstance(b, str)
+
+        pelutils._has_git = False
+        a, b = get_repo()
+        assert a is None
+        assert b is None
+
+        pelutils._has_git = True
+        if ".git" in os.listdir():
+            move(".git", ".gittmp")
+            a, b = get_repo()
+            assert a is None
+            assert b is None
+            move(".gittmp", ".git")

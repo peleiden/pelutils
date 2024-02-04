@@ -12,7 +12,7 @@ from pelutils.tests import UnitTestCollection
 from pelutils.ds.plots import linear_binning, log_binning, normal_binning, \
     colours, base_colours, tab_colours, \
     moving_avg, exp_moving_avg, double_moving_avg, \
-    Figure, get_dateticks
+    Figure, get_dateticks, histogram
 
 
 def test_colours():
@@ -40,6 +40,16 @@ def test_get_dateticks():
             assert np.isclose(x[-1], ticks[-1])
             assert labels[0] == start_time.strftime("%b %d")
             assert labels[-1] == end_time.strftime("%b %d")
+
+def test_histogram():
+    obs = [1, 2, 2, 1, 2]
+    x, y = histogram(obs)
+    assert isinstance(x, np.ndarray)
+    assert isinstance(y, np.ndarray)
+    assert (y >= 0).all()
+
+    x, y = histogram(obs, ignore_zeros=True)
+    assert (y > 0).all()
 
 class TestMovingAverage:
 
