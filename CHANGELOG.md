@@ -27,6 +27,7 @@
 - Improved default `Figure` parameters
 - Added option to set label size in `Figure`
 - `name` no longer reserves `-n` abbreviation
+- Renamed `c_ptr` to the more sensible `array_ptr`
 
 ### Bug fixes
 
@@ -36,6 +37,7 @@
 - Fixed wrong return type in `exp_moving_avg`
 - Appending now works with `jsonl`
 - Fixed wrong type annotation in `Figure`'s `figsize` argument
+- `array_ptr` (formerly `c_ptr`) now works for CUDA tensors
 
 ## 2.0.0 - Breaking changes
 

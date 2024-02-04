@@ -10,7 +10,7 @@ import pytest
 import torch
 
 from pelutils import EnvVars, UnsupportedOS, reverse_line_iterator, except_keys,\
-    split_path, binary_search, raises, thousands_seperators, OS, c_ptr,\
+    split_path, binary_search, raises, thousands_seperators, OS, array_ptr,\
     get_timestamp, get_timestamp_for_files, HardwareInfo
 from pelutils.tests import UnitTestCollection
 
@@ -146,12 +146,14 @@ class TestInit(UnitTestCollection):
         assert "a" in d and "b" in d
         assert "a" in d2 and "b" not in d2
 
-    def test_c_ptr(self):
+    def test_array_ptr(self):
         with pytest.raises(TypeError):
-            c_ptr(None)
+            array_ptr(None)
         with pytest.raises(ValueError):
-            c_ptr(np.arange(5)[::2])
-        assert isinstance(c_ptr(torch.arange(5)), ctypes.c_void_p)
+            array_ptr(np.arange(5)[::2])
+        assert isinstance(array_ptr(torch.arange(5)), ctypes.c_void_p)
+        a = torch.arange(5)
+        assert array_ptr(a).value == array_ptr(a.numpy()).value
 
     def test_get_timestamp(self):
         for date in False, True:

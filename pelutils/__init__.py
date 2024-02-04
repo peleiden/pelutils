@@ -146,15 +146,12 @@ class EnvVars:
             else:
                 os.environ[var] = value
 
-def c_ptr(arr: np.ndarray | torch.Tensor) -> ctypes.c_void_p:
-    """
-    Returns a C pointer that can be used to import a contiguous
-    numpy array or torch tensor into a C/C++/Rust function. This
-    function is mostly useful when not using Python's C api and
-    instead interfacing with .so files directly.
-    """
+def array_ptr(arr: np.ndarray | torch.Tensor) -> ctypes.c_void_p:
+    """ Returns a pointer to a numpy array or torch tensor which can be used to interact
+    with it in low-level languages like C/C++/Rust. This function is mostly useful
+    when not using Python's C api and instead interfacing with .so files directly. """
     if _has_torch and isinstance(arr, torch.Tensor):
-        arr = arr.numpy()
+        return ctypes.c_void_p(arr.data_ptr())
     if not isinstance(arr, np.ndarray):
         raise TypeError(f"Array should be of type np.ndarray or torch.Tensor, not {type(arr)}")
     if not arr.flags.c_contiguous:
@@ -166,9 +163,8 @@ def split_path(path: str) -> list[str]:
     return os.path.normpath(path).split(os.sep)
 
 def binary_search(element: _T, iterable: Sequence[_T], *, _start=0, _end=-1) -> int | None:
-    """ Get the index of element in sequence using binary search
-    Assumes iterable is sorted in ascending order
-    Returns None if the element is not found """
+    """ Get the index of element in sequence using binary search. Assumes iterable is
+    sorted in ascending order. Returns None if the element is not found. """
     if _end == -1:  # Entered on first call
         _end = len(iterable)
         # Make sure element actually exists in array
