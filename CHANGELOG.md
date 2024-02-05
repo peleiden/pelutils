@@ -30,6 +30,7 @@
 - Renamed `c_ptr` to the more sensible `array_ptr`
 - Changed parser submodule default values and error handling
 - Added option to only parse a subset of sections in a config file
+- Removed standard deviation calculation from profiles, as it was kind of pointless
 
 ### Bug fixes
 
