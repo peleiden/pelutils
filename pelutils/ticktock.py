@@ -66,8 +66,15 @@ class Profile:
         for child in self.children:
             yield from child
 
+    @property
+    def _hashable(self) -> Hashable:
+        return (self.name, self.depth, self.parent)
+
     def __hash__(self) -> int:
-        return hash((self.name, self.depth, self.parent))
+        return hash(self._hashable)
+
+    def __eq__(self, __value: object) -> bool:
+        return isinstance(__value, Profile) and self._hashable == __value._hashable
 
 class _ProfileContext:
 
@@ -140,7 +147,7 @@ class TickTock:
     def __init__(self):
         self._tick_starts:   dict[Hashable, float] = dict()
         self._id_to_profile: dict[int, Profile] = dict()
-        self.profiles:       list[Profile] = list()
+        self.profiles:       list[Profile] = list()  # Top level profiles
         self._profile_stack: list[Profile] = list()
         self._nhits:         list[int] = list()
 
@@ -165,12 +172,12 @@ class TickTock:
             self._profile_stack[-1] if self._profile_stack else None,
         )
 
-        if hash(profile) in self._id_to_profile:
-            profile = self._id_to_profile[hash(profile)]
+        if profile in self._id_to_profile:
+            profile = self._id_to_profile[profile]
             if profile.parent is not None:
                 profile.parent.children.pop()
         else:
-            self._id_to_profile[hash(profile)] = profile
+            self._id_to_profile[profile] = profile
             if not self._profile_stack:
                 self.profiles.append(profile)
 
@@ -180,7 +187,7 @@ class TickTock:
         profile.start = perf_counter()
         return pc
 
-    def end_profile(self, name: str=None) -> float:
+    def end_profile(self, name: Optional[str] = None) -> float:
         """ End profile. If name given, it is checked that it matches latest
         started profile. Return time passed since .profile was called. """
         end = perf_counter()
@@ -262,6 +269,18 @@ class TickTock:
             table.add_row(row, [True] + [False] * (len(row)-1))
 
         return str(table)
+
+    def measurements_by_profile_name(self, name: str) -> list[float]:
+        """ Returns the time measurement distribution for a profile with a given name.
+        Warning: Since the name does not uniquely identify a profile, this function
+        simply returns the first profile with this name, so be careful to check that
+        you get the correct one if you have multiple profiles with the same name. """
+        try:
+            profile = next(profile for profile in self._id_to_profile.values() if profile.name == name)
+        except StopIteration:
+            raise KeyError(f"No profile with name {name}")
+
+        return profile.hits
 
     def __str__(self) -> str:
         return self.stringify_sections(TimeUnits.second)

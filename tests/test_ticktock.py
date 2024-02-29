@@ -6,7 +6,7 @@ from pelutils.ticktock import TickTockException
 
 
 def test_ticktock():
-    """ Test base functionality """
+    """ Test base functionality. """
     tt = TickTock()
     tt.tick()
     assert isinstance(tt.tock(), float)
@@ -173,6 +173,12 @@ def test_profiles_with_same_name():
     assert profiles[2].name == "a"
     assert profiles[2].depth == 1
     assert len(profiles[2]._hits) == 4
+
+    assert len(tt.measurements_by_profile_name("b")) == 2
+    assert all(isinstance(x, float) for x in tt.measurements_by_profile_name("b"))
+
+    with pytest.raises(KeyError):
+        tt.measurements_by_profile_name("c")
 
 def test_add_external_measurements():
     tt = TickTock()
