@@ -1,7 +1,6 @@
 import os
 import sys
 from distutils.command.build import build as build_
-from distutils.core import Extension
 from glob import glob as glob  # glob
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
@@ -19,6 +18,7 @@ requirements = [
     "matplotlib>=3.3",
     "scipy>=1.6",
     "tqdm>=4.55",
+    "click>=8",
 ]
 requirements_dev = [
     "torch>=2",
