@@ -1,5 +1,9 @@
 # History
 
+## 3.0.1
+
+- Add ruff linting
+
 ## 3.0.0 - Breaking changes
 
 - Minimum Python version is now 3.9

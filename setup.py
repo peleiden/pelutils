@@ -28,6 +28,7 @@ requirements_dev = [
     "coverage>=6,<7",
     "wheel",
     "setuptools>=60.0.0",
+    "ruff>=0.3.0",
 ]
 
 with open("README.md") as readme_file:

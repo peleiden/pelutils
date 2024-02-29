@@ -34,9 +34,9 @@ jobs:
           CIBW_ARCHS_WINDOWS: auto64
           CIBW_BEFORE_BUILD: git submodule update --init --recursive
           CIBW_BEFORE_TEST: pip install -e .[dev]
-          CIBW_TEST_COMMAND_WINDOWS: pytest {project}/tests
-          CIBW_TEST_COMMAND_MACOS: pytest {project}/tests
-          CIBW_TEST_COMMAND_LINUX: timeout 150s pytest {project}/tests || true
+          CIBW_TEST_COMMAND_WINDOWS: ruff check {project}/pelutils && pytest {project}/tests
+          CIBW_TEST_COMMAND_MACOS: ruff check {project}/pelutils && pytest {project}/tests
+          CIBW_TEST_COMMAND_LINUX: ruff check {project}/pelutils && timeout 150s pytest {project}/tests || true
 
       - uses: actions/upload-artifact@v2
         with:

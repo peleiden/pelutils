@@ -29,7 +29,7 @@ class Logger:
     collecting logs for multiprocessing (see _Logger.collect), and colourful prints. """
 
     _selected_logger: str
-    _maxlen = max(len(l.name) for l in LogLevels)
+    _maxlen = max(len(level.name) for level in LogLevels)
     _spacing = 4 * " "
 
     _yes = "yes"
