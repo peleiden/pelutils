@@ -2,7 +2,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import datetime
 from io import DEFAULT_BUFFER_SIZE
-from typing import Generator, TextIO, TypeVar
+from typing import Any, Callable, Generator, Iterable, TextIO, TypeVar
 import ctypes
 import os
 import random
@@ -115,7 +115,7 @@ def raises(exc_type: type, fun: Callable, *args, **kwargs) -> bool:
         return False
     except exc_type:
         return True
-    except:
+    except:  # noqa: E722
         return False
 
 class EnvVars:
@@ -264,13 +264,13 @@ class HardwareInfo:
 
 # To allow imports directly from utils
 # Placed down here to prevent issues with circular imports
-from .__version__ import __version__
-from .logging import *
-log: Logger  # Make sure type hinting works when importing global instances
-from .parser import *
-from .ticktock import *
-TT: TickTock
-from .datastorage import *
-from .tests import *
-from .format import *
-from .jsonl import *
+from .__version__ import __version__  # noqa: F401
+from .logging import *  # noqa: F403
+log: Logger  # Make sure type hinting works when importing global instances  # noqa: F405
+from .parser import *  # noqa: F403
+from .ticktock import *  # noqa: F403
+TT: TickTock  # noqa: F405
+from .datastorage import *  # noqa: F403
+from .tests import *  # noqa: F403
+from .format import *  # noqa: F403
+from .jsonl import *  # noqa: F403

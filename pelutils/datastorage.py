@@ -1,8 +1,8 @@
 from __future__ import annotations
-from collections import defaultdict
-from typing import Optional
+
 import os
 import pickle
+from typing import Optional
 
 import rapidjson
 

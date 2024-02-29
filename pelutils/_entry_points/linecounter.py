@@ -1,6 +1,5 @@
 from __future__ import annotations
 import os
-import time
 
 import click
 import git
@@ -97,13 +96,13 @@ def linecounter(repos: list[str], output: str, extensions: str, date_format: str
 
     with Figure(output):
         for i, (repo_name, times, counts) in enumerate(zip(repo_names, all_times, all_counts)):
-            for ext, l in counts.items():
-                if not l.any():
+            for ext, line_counts in counts.items():
+                if not line_counts.any():
                     continue
-                non_zero = l != 0
-                non_zero[_last_initial_zero(l)] = 1
+                non_zero = line_counts != 0
+                non_zero[_last_initial_zero(line_counts)] = 1
                 lab = ext+(f" ({repo_name})" if len(repo_names) > 1 and not no_repo_name else "")
-                plt.plot(times[non_zero], l[non_zero], marker=".", ms=8, lw=2, label=lab)
+                plt.plot(times[non_zero], line_counts[non_zero], marker=".", ms=8, lw=2, label=lab)
 
         fused_times = _fuse_times(all_times)
         plt.xticks(*get_dateticks(fused_times, date_format=date_format))
