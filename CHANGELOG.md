@@ -3,6 +3,8 @@
 ## 3.0.1
 
 - Add ruff linting
+- Fixed hashing of TickTock profiles, removing the chance of potential hash collisions
+- Added `TickTock.measurements_by_profile_name` which exposes measurements from a given profile
 
 ## 3.0.0 - Breaking changes
 
