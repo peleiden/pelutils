@@ -3,6 +3,8 @@ from copy import deepcopy
 from time import perf_counter
 from typing import Generator, Hashable, Optional
 
+from deprecated import deprecated
+
 from pelutils import thousands_seperators
 from pelutils.format import Table
 
@@ -33,8 +35,9 @@ class TimeUnits:
 
 class Profile:
 
-    def __init__(self, name: str, depth: int, parent: Profile):
-        self._hits: list[float] = []
+    def __init__(self, name: str, depth: int, parent: Optional[Profile]):
+        self._n: int = 0
+        self._total_time: float = 0
         self.name = name
         self.depth = depth
         self.parent = parent
@@ -43,25 +46,28 @@ class Profile:
         self.children = list()
 
     @property
+    @deprecated(version="3.1.0", reason="Length of individual hits are no longer saved, only aggregated statistics. This will return hits of average length.")
     def hits(self):
-        return self._hits
+        return [self.mean()] * self._n
 
     def sum(self) -> float:
-        """ Returns total runtime """
-        return sum(self._hits)
+        """ Returns total runtime, the sum of all registered hits. """
+        return self._total_time
 
     def mean(self) -> float:
-        """ Returns mean runtime lengths """
-        return self.sum() / len(self) if self._hits else 0
+        """ Returns mean runtime lengths. Returns 0 if no hits have been registered. """
+        if self._n == 0:
+            return 0
+        return self._total_time / self._n
 
     def __str__(self) -> str:
         return self.name
 
     def __len__(self) -> int:
-        return len(self._hits)
+        return self._n
 
     def __iter__(self) -> Generator[Profile, None, None]:
-        """ Yields a generator that is first self and then all descendants """
+        """ Yields a generator that is first self and then all descendants. """
         yield self
         for child in self.children:
             yield from child
@@ -195,7 +201,8 @@ class TickTock:
         if name is not None and name != self._profile_stack[-1].name:
             raise NameError(f"Expected to pop profile '{self._profile_stack[-1].name}', received '{name}'")
         nhits = self._nhits.pop()
-        self._profile_stack[-1]._hits += [dt/nhits] * nhits
+        self._profile_stack[-1]._n += nhits
+        self._profile_stack[-1]._total_time += dt
         self._profile_stack.pop()
         return dt
 
@@ -209,14 +216,14 @@ class TickTock:
         """ Allows adding data to a (new) profile with given time spread over given hits.
         If name is a string, it will act like .profile(name). If it is none, the current
         active profile will be used. """
-        measurements = [time / hits] * hits
         if name is not None:
             self.profile(name, hits=hits)
             profile = self._profile_stack[-1]
             self.end_profile()
-            profile._hits[-hits:] = measurements
+            profile._total_time += time
         else:
-            self._profile_stack[-1]._hits += measurements
+            self._profile_stack[-1]._n += hits
+            self._profile_stack[-1]._total_time += time
 
     def fuse(self, tt: TickTock):
         """ Fuses a TickTock instance into self """
@@ -228,7 +235,8 @@ class TickTock:
 
         for key, profile in tt._id_to_profile.items():
             existing = self._id_to_profile[key]
-            existing._hits += profile._hits
+            existing._n += profile._n
+            existing._total_time += profile._total_time
 
     @staticmethod
     def fuse_multiple(*tts: TickTock) -> TickTock:
@@ -270,6 +278,7 @@ class TickTock:
 
         return str(table)
 
+    @deprecated(version="3.1.0", reason="Individual hits are no longer recorded, only aggregated statistics. Use stats_by_profile_name instead.")
     def measurements_by_profile_name(self, name: str) -> list[float]:
         """ Returns the time measurement distribution for a profile with a given name.
         Warning: Since the name does not uniquely identify a profile, this function
@@ -281,6 +290,19 @@ class TickTock:
             raise KeyError(f"No profile with name {name}")
 
         return profile.hits
+
+    def stats_by_profile_name(self, name: str) -> tuple[int, float]:
+        """ Returns the number of hits and sum of measurement lengths for a profile with a given name.
+        Warning: Since the name does not uniquely identify a profile, this function
+        simply returns the first profile with this name, so be careful to check that
+        you get the correct one if you have multiple profiles with the same name. """
+
+        try:
+            profile = next(profile for profile in self._id_to_profile.values() if profile.name == name)
+        except StopIteration:
+            raise KeyError(f"No profile with name {name}")
+
+        return len(profile), profile.sum()
 
     def __str__(self) -> str:
         return self.stringify_sections(TimeUnits.second)

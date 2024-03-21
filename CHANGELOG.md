@@ -1,5 +1,11 @@
 # History
 
+## 3.1.0
+
+- Removed final newline from Logger.log_repo and added option to set level
+- Deprecated `Profile.hits` to instead only save aggregated statistics to prevent potential memory issues
+- Deprecated `TickTock.measurements_by_profile_name` in favour of `TickTock.stats_by_profile_name`
+
 ## 3.0.1
 
 - Add ruff linting

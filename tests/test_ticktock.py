@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import pytest
-from pelutils import TickTock, TT, TimeUnits
+from pelutils import TickTock, TT, TimeUnits, Profile
 from pelutils.ticktock import TickTockException
 
 
@@ -99,7 +99,8 @@ def test_fuse():
     tt1 = deepcopy(tt2)
     tt1 = TickTock.fuse_multiple(tt1, tt2)
     for p1, p2 in zip(tt1, tt2):
-        assert p1._hits == 2 * p2._hits
+        assert p1._n == 2 * p2._n
+        assert p1._total_time == 2 * p2._total_time
 
 def test_global_tt():
     assert isinstance(TT, TickTock)
@@ -164,21 +165,29 @@ def test_profiles_with_same_name():
     profiles = list(tt)
     assert profiles[0].name == "a"
     assert profiles[0].depth == 0
-    assert len(profiles[0]._hits) == 3
+    assert len(profiles[0]) == 3
 
     assert profiles[1].name == "b"
     assert profiles[1].depth == 0
-    assert len(profiles[1]._hits) == 2
+    assert len(profiles[1]) == 2
 
     assert profiles[2].name == "a"
     assert profiles[2].depth == 1
-    assert len(profiles[2]._hits) == 4
+    assert len(profiles[2]) == 4
 
-    assert len(tt.measurements_by_profile_name("b")) == 2
-    assert all(isinstance(x, float) for x in tt.measurements_by_profile_name("b"))
+    with pytest.warns(DeprecationWarning):
+        assert len(tt.measurements_by_profile_name("b")) == 2
+    b_n, b_sum = tt.stats_by_profile_name("b")
+    assert b_n == 2
+    assert isinstance(b_sum, float)
+    assert b_sum > 0
+    with pytest.warns(DeprecationWarning):
+        assert all(isinstance(x, float) for x in tt.measurements_by_profile_name("b"))
 
-    with pytest.raises(KeyError):
+    with pytest.warns(DeprecationWarning), pytest.raises(KeyError):
         tt.measurements_by_profile_name("c")
+    with pytest.raises(KeyError):
+        tt.stats_by_profile_name("c")
 
 def test_add_external_measurements():
     tt = TickTock()
@@ -191,9 +200,11 @@ def test_add_external_measurements():
 
     for profile in tt.profiles:
         if profile.name == "a":
-            assert len(profile.hits) == 3
+            with pytest.warns(DeprecationWarning):
+                assert len(profile.hits) == 3
         elif profile.name == "b":
-            assert len(profile.hits) == 7
+            with pytest.warns(DeprecationWarning):
+                assert len(profile.hits) == 7
 
 def test_print(capfd: pytest.CaptureFixture):
     tt = TickTock()
@@ -264,3 +275,12 @@ def test_exit_in_nested():
         tt.end_profile()
     # Two outermost did not using with construct, so expect two unclosed profiles
     assert len(tt._profile_stack) == 2
+
+def test_profile(capfd: pytest.CaptureFixture):
+    p = Profile("tester", 0, None)
+    assert len(p) == 0
+    assert p.mean() == 0
+
+    print(p)
+    stdout, _ = capfd.readouterr()
+    assert stdout.strip() == "tester"
