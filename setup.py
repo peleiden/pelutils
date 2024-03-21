@@ -19,6 +19,7 @@ requirements = [
     "scipy>=1.6",
     "tqdm>=4.55",
     "click>=8",
+    "deprecated>=1.2",
 ]
 requirements_dev = [
     "torch>=2",

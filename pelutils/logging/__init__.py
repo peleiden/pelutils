@@ -184,13 +184,14 @@ class Logger:
         if cls._no.startswith(answer.lower()):
             return False
 
-    def log_repo(self):
+    def log_repo(self, level=LogLevels.DEBUG):
         """ Niceness method for logging the git repo that the code is run in. """
         repo, commit = get_repo()
         if repo is not None:
-            self.debug(
-                "Executing in repository: %s" % repo,
-                "Commit: %s\n" % commit,
+            self._log(
+                f"Executing in repository: {repo}",
+                f"Commit: {commit}",
+                level=level,
             )
         else:
             self.debug("Unable to find repository that code was executed in")
