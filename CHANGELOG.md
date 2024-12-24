@@ -5,6 +5,7 @@
 - Deprecated `TickTock.__len__`
 - Deprecated `thousands_separators` due to better built-in syntax
 - Added support for `pathlib.Path` instead of solely using string paths
+- Added `torch` support to `unique` function
 
 ## 3.1.0
 

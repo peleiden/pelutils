@@ -17,10 +17,27 @@ def test_unique():
     u = unique(a)
     assert np.all(a == u)
     u, index, inverse, counts = unique(a, return_index=True, return_inverse=True, return_counts=True)
+    assert isinstance(u, np.ndarray)
+    assert isinstance(index, np.ndarray)
+    assert isinstance(inverse, np.ndarray)
+    assert isinstance(counts, np.ndarray)
     assert np.all(a == u)
     assert np.all(a == index)
     assert np.all(a == inverse)
     assert np.all(counts == 1)
+
+    # Test torch support
+    a_t = torch.from_numpy(a)
+    u_t, index_t, inverse_t, counts_t = unique(a_t, return_index=True, return_inverse=True, return_counts=True)
+    assert isinstance(u_t, torch.Tensor)
+    assert isinstance(index_t, torch.Tensor)
+    assert isinstance(inverse_t, torch.Tensor)
+    assert isinstance(counts_t, torch.Tensor)
+    assert np.all(a == a_t.numpy())
+    assert np.all(u == u_t.numpy())
+    assert np.all(index == index_t.numpy())
+    assert np.all(inverse == inverse_t.numpy())
+    assert np.all(counts == counts_t.numpy())
 
     # Slightly more complex case with some non-unique values
     a[2:4] = 50
