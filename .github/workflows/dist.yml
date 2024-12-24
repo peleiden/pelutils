@@ -16,16 +16,16 @@ jobs:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4.2.2
 
       - name: Set up QEMU
         if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3.2.0
         with:
           platforms: all
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_SKIP: cp36-* cp37-* cp38-* pp* *musllinux*
           CIBW_BUILD_VERBOSITY: 1
@@ -38,7 +38,7 @@ jobs:
           CIBW_TEST_COMMAND_MACOS: ruff check {project}/pelutils && pytest {project}/tests
           CIBW_TEST_COMMAND_LINUX: ruff check {project}/pelutils && timeout 150s pytest {project}/tests || true
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4.5.0
         with:
           path: ./wheelhouse/*.whl
 
@@ -46,14 +46,14 @@ jobs:
     name: Make source dist
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4.2.2
       with:
         submodules: true
 
     - name: Build source dist
       run: python setup.py sdist
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4.5.0
       with:
         path: dist/*.tar.gz
 
@@ -63,12 +63,12 @@ jobs:
     # Upload to PyPI when pushing new version tag
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v4.1.8
       with:
         name: artifact
         path: dist
 
-    - uses: pypa/gh-action-pypi-publish@v1.8.11
+    - uses: pypa/gh-action-pypi-publish@v1.12.3
       with:
         user: __token__
         password: ${{ secrets.pypi_password }}
