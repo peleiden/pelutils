@@ -92,7 +92,7 @@ class _ProfileContext:
         pass
 
     def __exit__(self, et, _, __):
-        if et == KeyboardInterrupt:
+        if et is KeyboardInterrupt:
             return
         if et is not None:
             # If an exception occured in deeper profiling sections, make sure to end them
@@ -307,12 +307,17 @@ class TickTock:
     def __str__(self) -> str:
         return self.stringify_sections(TimeUnits.second)
 
+    @deprecated(version="3.2.0", reason="Profiler length does not have a reasonable meaning.")
     def __len__(self) -> int:
-        """ Returns number of profiles """
+        """Returns number of top-level profiles."""
         return len(self.profiles)
 
+    def __bool__(self) -> bool:
+        """Returns True if any profiling has been performed."""
+        return len(self.profiles) > 0
+
     def __iter__(self) -> Generator[Profile, None, None]:
-        """ Recursively returns all profiles in the tree """
+        """Recursively returns all profiles in the tree."""
         for profile in self.profiles:
             yield from profile
 

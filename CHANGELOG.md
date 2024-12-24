@@ -1,5 +1,9 @@
 # History
 
+## 3.2.0
+
+- Deprecated `TickTock.__len__`
+
 ## 3.1.0
 
 - Removed final newline from Logger.log_repo and added option to set level
