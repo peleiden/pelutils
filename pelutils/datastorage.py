@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import pickle
+from pathlib import Path
 from typing import Optional
 
 import rapidjson
@@ -49,7 +50,7 @@ class DataStorage:
     def pickle_name(cls, save_name: Optional[str] = None):
         return (save_name or cls.__name__) + ".pkl"
 
-    def save(self, loc: str, save_name: Optional[str] = None, *, indent: Optional[int] = 4) -> list[str]:
+    def save(self, loc: str | Path, save_name: Optional[str] = None, *, indent: Optional[int] = 4) -> list[str]:
         """ Saves all the fields of the instatiated data classes as either json,
         pickle or designated serialization function. Use save_name to overwrite
         default behavior of using the class name for file names. E.g. in a DataStorage
@@ -58,6 +59,7 @@ class DataStorage:
         Returns list of saved files.
         :param str loc: Path to directory in which to save data. """
 
+        loc = str(loc)
         os.makedirs(loc, exist_ok=True)
 
         to_json = dict()
@@ -93,14 +95,14 @@ class DataStorage:
         return paths
 
     @classmethod
-    def load(cls, loc: str, save_name: Optional[str] = None):
+    def load(cls, loc: str | Path, save_name: Optional[str] = None):
         """
         Instantiates the DataStorage-inherited class by loading all files saved by `save` of that same class.
         Use save_name to load json and pickle files that have been saved using explicitly set save_name.
         :param str loc: Path to directory from which to load data
         :return: An instance of this class with the content of the files
         """
-
+        loc = str(loc)
         json_file = os.path.join(loc, cls.json_name(save_name))
         pickle_file = os.path.join(loc, cls.pickle_name(save_name))
 
@@ -115,8 +117,6 @@ class DataStorage:
                 fields.update(pickle.load(f))
 
         if not os.path.isfile(json_file) and not os.path.isfile(pickle_file):
-            raise FileNotFoundError("Unable to find saved %s files in directory %s with name %s" % (
-                cls.__name__, loc, (save_name or cls.__name__)
-            ))
+            raise FileNotFoundError(f"Unable to load {cls.__name__}; neither {json_file} nor {pickle_file} found.")
 
         return cls(**fields)

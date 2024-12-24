@@ -1,7 +1,9 @@
 from __future__ import annotations
-from typing import Generator, Iterable, Optional
+
 import os
 import traceback as tb
+from pathlib import Path
+from typing import Generator, Iterable, Optional
 
 from pelutils import UnsupportedOS, get_repo, get_timestamp, OS
 from pelutils.format import RichString
@@ -46,7 +48,7 @@ class Logger:
 
     def configure(
         self,
-        fpath: Optional[str], *,  # Path to logfile. Missing directories are created
+        fpath: Optional[str | Path], *,  # Path to logfile. Missing directories are created
         default_seperator: str  = "\n",  # Default seperator when logging multiple strings in a single call
         append: bool = False,  # Set to True to append to old log file instead of overwriting it
         print_level: Optional[LogLevels] = LogLevels.INFO,  # Highest level that will be printed. All will be logged. None for no print
@@ -59,11 +61,10 @@ class Logger:
 
         # Create logfile
         if fpath is not None:
-            dirs = os.path.split(fpath)[0]
-            if dirs:
-                os.makedirs(dirs, exist_ok=True)
-            with open(fpath, "a" if append else "w", encoding="utf-8") as logfile:
-                logfile.write("")
+            fpath = Path(fpath)
+            fpath.parent.mkdir(parents=True, exist_ok=True)
+            with fpath.open("a" if append else "w", encoding="utf-8"):
+                pass
 
         self._fpath = fpath
         self._default_sep = default_seperator
@@ -93,7 +94,7 @@ class Logger:
 
     def _write_to_log(self, content: RichString):
         if self._fpath is not None:
-            with open(self._fpath, "a", encoding="utf-8") as logfile:
+            with self._fpath.open("a", encoding="utf-8") as logfile:
                 logfile.write(f"{content}\n")
 
     @staticmethod

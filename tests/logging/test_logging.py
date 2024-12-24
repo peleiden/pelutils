@@ -2,6 +2,7 @@ import multiprocessing as mp
 import os
 import re
 from itertools import chain, permutations, product
+from pathlib import Path
 from string import ascii_lowercase
 
 import pelutils
@@ -25,7 +26,7 @@ class TestLogger(UnitTestCollection):
 
     def setup_class(self):
         super().setup_class()
-        self.logfile = os.path.join(self.test_dir, "test_logging.log")
+        self.logfile = Path(self.test_dir) / "test_logging.log"
         log.configure(
             self.logfile,
             print_level=LogLevels.DEBUG,
