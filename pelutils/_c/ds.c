@@ -32,17 +32,12 @@ static PyObject *unique(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "LkLLLLL", &array, &ndim, &dimensions, &strides, &index, &inverse, &counts))
         return NULL;
 
-    if (inverse == -1)
-        inverse = NULL;
-    if (counts == -1)
-        counts = NULL;
-
     size_t n = dimensions[0];
     size_t stride = strides[0];
     hashmap *map = hashmap_new(sizeof(struct elem*), 0, 0, 0, hash, compare, NULL, NULL);
 
     size_t n_unique = 0;
-    for (size_t i = 0; i < n; i ++) {
+    for (size_t i = 0; i < n; ++ i) {
         // Construct element
         struct elem this_elem = {
             .p_elem = (char*)array + stride * i,
@@ -56,7 +51,7 @@ static PyObject *unique(PyObject *self, PyObject *args) {
             if (inverse != NULL)
                 inverse[i] = inverse[found_index];
             if (counts != NULL)
-                counts[found_index] ++;
+                ++ counts[found_index];
         } else {
             // Set new element in hashmap
             hashmap_set(map, &this_elem);
@@ -65,7 +60,7 @@ static PyObject *unique(PyObject *self, PyObject *args) {
                 inverse[i] = n_unique;
             if (counts != NULL)
                 counts[i] = 1;
-            n_unique ++;
+            ++ n_unique;
         }
     }
     hashmap_free(map);
