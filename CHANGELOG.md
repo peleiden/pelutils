@@ -3,6 +3,7 @@
 ## 3.2.0
 
 - Deprecated `TickTock.__len__`
+- Deprecated `thousands_separators` due to better built-in syntax
 
 ## 3.1.0
 

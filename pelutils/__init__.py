@@ -1,13 +1,15 @@
 from __future__ import annotations
-from collections.abc import Sequence
-from datetime import datetime
-from io import DEFAULT_BUFFER_SIZE
-from typing import Any, Callable, Generator, Iterable, TextIO, TypeVar
+
 import ctypes
 import os
 import random
 import subprocess
 import sys
+from collections.abc import Sequence
+from datetime import datetime
+from io import DEFAULT_BUFFER_SIZE
+from pathlib import Path
+from typing import Any, Callable, Generator, Iterable, TextIO, TypeVar
 
 import cpuinfo
 try:
@@ -24,6 +26,7 @@ try:
     _has_torch = True
 except ModuleNotFoundError:
     _has_torch = False
+from deprecated import deprecated
 
 
 _T = TypeVar("_T")
@@ -49,16 +52,16 @@ def set_seeds(seed: int=0):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-def get_repo(path: str | None=None) -> tuple[str | None, str | None]:
-    """
-    Returns absolute path of git repository and commit SHA
+def get_repo(path: str | Path | None=None) -> tuple[str | None, str | None]:
+    """Returns absolute path of git repository and commit SHA.
+
     Searches for repo by searching upwards from given directory (if None: uses working dir).
-    If it cannot find a repository, returns (None, None)
-    """
+    If it cannot find a repository, returns (None, None)."""
     if not _has_git:
         return None, None
     if path is None:
         path = os.getcwd()
+    path = str(path)
     cdir = os.path.join(path, ".")
     pdir = os.path.dirname(cdir)
     while cdir != pdir:
@@ -86,8 +89,9 @@ def get_timestamp_for_files(*, with_date=True) -> str:
         tstr = tstr[11:]
     return tstr
 
+@deprecated(version="3.2.0", reason="Use built-in :, formatting syntax instead.")
 def thousands_seperators(num: float | int, decimal_seperator=".") -> str:
-    """ Formats a number using thousand seperators """
+    """Formats a number using thousand seperators."""
     if decimal_seperator not in { ".", "," }:
         raise ValueError("'%s' is not a valid decimal seperator. Use '.' or ','" % decimal_seperator)
 
@@ -253,12 +257,12 @@ class HardwareInfo:
     def string(cls) -> str:
         """ Pretty string-representation of hardware. """
         lines = [
-            "CPU:     %s" % cls.cpu,
-            "Sockets: %i" % cls.sockets if cls.sockets else None,
-            "Threads: %s" % thousands_seperators(cls.threads) if cls.threads else None,
-            "RAM:     %s GiB" % thousands_seperators(round(cls.memory / 2 ** 30, 2)),
-            "GPU(s):  %s" % cls.gpus[0] if cls.gpus else None,
-            *["         %s" % gpu for gpu in (cls.gpus[1:] if cls.gpus is not None and len(cls.gpus) > 1 else [])],
+            f"CPU:     {cls.cpu}",
+            f"Sockets: {cls.sockets}" if cls.sockets else None,
+            f"Threads: {cls.threads:,}" if cls.threads else None,
+            f"RAM:     {cls.memory / 2 ** 30:,.2f} GiB",
+            f"GPU(s):  {cls.gpus[0]}" if cls.gpus else None,
+            *[f"         {gpu}" for gpu in (cls.gpus[1:] if cls.gpus is not None and len(cls.gpus) > 1 else [])],
         ]
         return os.linesep.join(line for line in lines if line)
 

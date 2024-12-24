@@ -55,10 +55,12 @@ class TestInit(UnitTestCollection):
                     num = -num
                     with_dot = "-" + with_dot
                     with_comma = "-" + with_comma
-                assert with_dot == thousands_seperators(num, ".")
-                assert with_comma == thousands_seperators(num, ",")
+                with pytest.warns(DeprecationWarning):
+                    assert with_dot == thousands_seperators(num, ".")
+                with pytest.warns(DeprecationWarning):
+                    assert with_comma == thousands_seperators(num, ",")
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError), pytest.warns(DeprecationWarning):
             thousands_seperators(1, "a")
 
     def test_raises(self):
@@ -191,7 +193,8 @@ class TestInit(UnitTestCollection):
             assert str(HardwareInfo.sockets) in string
         if HardwareInfo.threads:
             # This is also a very shitty test
-            assert thousands_seperators(HardwareInfo.threads) in string
+            with pytest.warns(DeprecationWarning):
+                assert thousands_seperators(HardwareInfo.threads) in string
         assert str(round(HardwareInfo.memory / 2 ** 30, 2)) in string
         if HardwareInfo.gpus:
             for gpu in HardwareInfo.gpus:
