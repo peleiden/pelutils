@@ -13,7 +13,7 @@ import pelutils._c as _c_utils
 
 
 def unique(
-    array: np.ndarray, *,
+    array: np.ndarray | torch.Tensor, *,
     return_index=False,
     return_inverse=False,
     return_counts=False,
@@ -23,6 +23,10 @@ def unique(
     if not array.size:
         raise ValueError("Array must be non-empty")
 
+    is_tensor = False
+    if _has_torch and isinstance(array, torch.Tensor):
+        is_tensor = True
+        array = array.numpy()
     if axis:
         axes = list(range(len(array.shape)))
         axes[0] = axis
@@ -56,6 +60,10 @@ def unique(
     if return_counts:
         # pylint: disable=unsubscriptable-object
         ret.append(counts[index])
+
+    if _has_torch and is_tensor:
+        ret = [torch.from_numpy(x) for x in ret]
+
     return tuple(ret) if len(ret) > 1 else ret[0]
 
 def tensor_bytes(x: np.ndarray | torch.Tensor) -> int:
