@@ -162,7 +162,8 @@ def test_profiles_with_same_name():
     with tt.profile("a"):
         pass
 
-    profiles = list(tt)
+    with pytest.warns(DeprecationWarning):
+        profiles = list(tt)
     assert profiles[0].name == "a"
     assert profiles[0].depth == 0
     assert len(profiles[0]) == 3
@@ -284,3 +285,12 @@ def test_profile(capfd: pytest.CaptureFixture):
     print(p)
     stdout, _ = capfd.readouterr()
     assert stdout.strip() == "tester"
+
+def test_active():
+    tt = TickTock()
+    assert not bool(tt)
+    with tt.profile("test"):
+        pass
+    assert bool(tt)
+    with pytest.warns(DeprecationWarning):
+        len(tt)
