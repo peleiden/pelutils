@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import time
+from pathlib import Path
 from typing import Any, Callable, List, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -22,12 +23,12 @@ colours:      tuple[str] = tab_colours[:-2] + base_colours[:-1]
 def moving_avg(
     x: _Array,
     y: Optional[_Array] = None, *,
-    neighbors               = 3,
+    neighbors: int = 3,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """ Calculates the moving average assuming even spacing
-    If one array of size n is given, it is assumed to run from 0 to n-1 on the x axis
-    If two are given, the first are the x axis coordinates
-    Returns x and y coordinate arrays of same size. """
+    """Calculates the moving average assuming even spacing.
+    If one array of size n is given, it is assumed to run from 0 to n-1 on the x axis.
+    If two are given, the first are the x axis coordinates.
+    Returns x and y coordinate arrays of same size."""
     x = np.array(x)
     if y is None:
         y = x
@@ -44,12 +45,12 @@ def moving_avg(
 def exp_moving_avg(
     x: _Array,
     y: Optional[_Array] = None, *,
-    alpha               = 0.2,
-    reverse             = False,
+    alpha: float = 0.2,
+    reverse: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """ Calculates the exponential moving average
-    alpha is a smoothing factor between 0 and 1 - the lower the value, the smoother the curve
-    Returns two arrays of same size as x
+    """Calculates the exponential moving average.
+    alpha is a smoothing factor between 0 and 1 - the lower the value, the smoother the curve.
+    Returns two arrays of same size as x.
     This function optionally takes y as `moving_avg`. """
     x = np.array(x)
     if y is None:
@@ -71,17 +72,17 @@ def exp_moving_avg(
 def double_moving_avg(
     x: _Array,
     y: Optional[_Array] = None, *,
-    inner_neighbors     =   1,
-    outer_neighbors     =  12,
-    samples             = 300,
+    inner_neighbors: int = 1,
+    outer_neighbors: int = 12,
+    samples: int = 300,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """ Moving avg. function that produces smoother curves than normal moving avg.
+    """Moving avg. function that produces smoother curves than normal moving avg.
     Also handles uneven data spacing better, and produces smoothed values for the entire span.
     This function optionally takes y as `moving_avg`.
     If both x and y are given, x must be sorted in ascending order.
     inner_neighbors: How many neighbors to use for the initial moving average.
     outer_neighbors: How many neighbors to use for for the second moving average.
-    samples: How many points to sample the moving avg. at. """
+    samples: How many points to sample the moving average at."""
     x = np.array(x)
     if y is None:
         y = x
@@ -117,16 +118,16 @@ def double_moving_avg(
 
 # Utility functions for histograms
 def linear_binning(x: _Array, bins: int) -> np.ndarray:
-    """ Standard linear binning """
+    """Standard linear binning."""
     return np.linspace(min(x), max(x), bins)
 
 def log_binning(x: _Array, bins: int) -> np.ndarray:
-    """ Logarithmic binning """
+    """Logarithmic binning."""
     return np.logspace(np.log10(min(x)), np.log10(max(x)), bins)
 
 def normal_binning(x: _Array, bins: int) -> np.ndarray:
-    """ Creates bins that fits nicely to a normally distributed variable
-    Bins are smaller close to the mean of x """
+    """Creates bins that fits nicely to a normally distributed variable.
+    Bins are smaller close to the mean of x."""
     dist = stats.norm(np.mean(x), 3*np.std(x))
     p = min(dist.cdf(min(x)), 1-dist.cdf(max(x)))
     uniform_spacing = np.linspace(p, 1-p, bins)
@@ -139,7 +140,7 @@ def histogram(
     density:      bool = True,
     ignore_zeros: bool = False,  # Be careful about this one, but it can be practical with log scales
 ):
-    """ Create bins for plotting a line histogram. Simplest usage is plt.plot(*histogram(data)) """
+    """Create bins for plotting a line histogram. Simplest usage is plt.plot(*histogram(data))."""
     bins = np.array(binning_fn(data, bins+1))
     y, edges = np.histogram(data, bins=bins, density=density)
     x = (edges[1:] + edges[:-1]) / 2
@@ -149,7 +150,7 @@ def histogram(
     return x, y
 
 def get_dateticks(x: _Array, num=6, date_format="%b %d") -> tuple[np.ndarray, list[str]]:
-    """ Produces date labels for the x axis given an array of epoch times in seconds. Simple usage:
+    """Produces date labels for the x axis given an array of epoch times in seconds. Simple usage:
     ```py
     # x is an array of epoch times in seconds
     plt.plot(x, y)
@@ -176,7 +177,7 @@ class Figure:
 
     def __init__(
         self,
-        savepath:     str, *,
+        savepath:     str | Path, *,
         tight_layout: bool = True,
         style:        Optional[str] = None,
         # Arguments below here go into mpl.rcParams
@@ -191,7 +192,7 @@ class Figure:
         legend_edgecolor:  tuple[float, float, float, float] = (0, 0, 0, 1),
         other_rc_params:   dict[str, Any] = dict(),
     ):
-        self._savepath = savepath
+        self._savepath = Path(savepath)
         self._tight_layout = tight_layout
         self._style = style
 
@@ -220,9 +221,7 @@ class Figure:
         if self._tight_layout:
             plt.tight_layout()
         if not et:
-            directory = os.path.split(self._savepath)[0]
-            if directory:
-                os.makedirs(directory, exist_ok=True)
+            self._savepath.parent.mkdir(parents=True, exist_ok=True)
             plt.savefig(self._savepath)
 
         plt.close()

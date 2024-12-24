@@ -5,7 +5,6 @@ from typing import Generator, Hashable, Optional
 
 from deprecated import deprecated
 
-from pelutils import thousands_seperators
 from pelutils.format import Table
 
 
@@ -251,9 +250,8 @@ class TickTock:
 
     @staticmethod
     def stringify_time(dt: float, unit: tuple[str, float]=TimeUnits.millisecond) -> str:
-        """ Stringify a time given in seconds with a given unit """
-        str_ = f"{dt/unit[1]:.3f} {unit[0]}"
-        return thousands_seperators(str_)
+        """Stringify a time given in seconds with a given unit."""
+        return f"{dt/unit[1]:,.3f} {unit[0]}"
 
     def stringify_sections(self, unit: tuple[str, float]=TimeUnits.second) -> str:
         """ Returns a pretty print of profiles """
@@ -271,7 +269,7 @@ class TickTock:
                 self.stringify_time(profile.sum(), unit),
                 "%.3f" % (100 * profile.sum() / (profile.parent.sum() if profile.parent else total_time))
                     + (" <" if profile.depth else "") + "--" * (profile.depth-1),
-                thousands_seperators(len(profile)),
+                f"{len(profile):,}",
                 self.stringify_time(profile.mean(), TimeUnits.next_smaller(unit))
             ]
             table.add_row(row, [True] + [False] * (len(row)-1))

@@ -3,6 +3,7 @@ import time
 from datetime import datetime, timedelta
 from itertools import product
 from math import ceil
+from pathlib import Path
 
 import matplotlib as mpl
 import numpy as np
@@ -176,7 +177,7 @@ class TestFigure(UnitTestCollection):
     savepath = os.path.join(UnitTestCollection.test_dir, "test.png")
 
     def test_save(self):
-        with Figure(self.savepath):
+        with Figure(Path(self.savepath)):
             pass
         assert os.path.isfile(self.savepath)
         path = os.path.join(UnitTestCollection.test_dir, "many", "long", "subdirectories.png")
