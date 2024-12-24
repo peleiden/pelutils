@@ -42,8 +42,8 @@ def unique(
     c = _c.unique(
         *_c_utils.get_array_c_args(array),
         index.ctypes.data,
-        inverse.ctypes.data if return_inverse else -1,
-        counts.ctypes.data if return_counts else -1,
+        inverse.ctypes.data if return_inverse else 0,
+        counts.ctypes.data if return_counts else 0,
     )
 
     index = index[:c]
