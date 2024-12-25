@@ -38,7 +38,9 @@ jobs:
           CIBW_TEST_COMMAND_MACOS: ruff check {project}/pelutils && pytest {project}/tests
           CIBW_TEST_COMMAND_LINUX: ruff check {project}/pelutils && timeout 150s pytest {project}/tests || true
 
-      - uses: actions/upload-artifact@v4.5.0
+      # v4 is currently the newest, but there is some breaking change with it that causes the run to fail
+      # https://github.com/actions/upload-artifact/issues/478
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 
@@ -53,7 +55,7 @@ jobs:
     - name: Build source dist
       run: python setup.py sdist
 
-    - uses: actions/upload-artifact@v4.5.0
+    - uses: actions/upload-artifact@v3
       with:
         path: dist/*.tar.gz
 
