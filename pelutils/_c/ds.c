@@ -1,13 +1,14 @@
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
+#define PY_Suint64_t_CLEAN
+#include <inttypes.h>
 #include <string.h>
+#include <Python.h>
 #include "hashmap.c/hashmap.h"
 
 
 // Contains a pointer to an array element and a reference to the stride
 struct elem {
     void* p_elem;
-    size_t stride;
+    uint64_t stride;
 };
 
 typedef struct hashmap hashmap;
@@ -25,19 +26,21 @@ int compare(const void *elem1, const void *elem2, void *udata) {
 }
 
 static PyObject *unique(PyObject *self, PyObject *args) {
+    /* Do NOT use int, long, size_t etc., as these can cause cross-platform issues.
+    See https://stackoverflow.com/questions/7456902/long-vs-int-c-c-whats-the-point. */
     void *array;
-    unsigned long ndim;
-    unsigned long *dimensions, *strides;
-    long *index, *inverse, *counts;
+    int64_t ndim;
+    int64_t *dimensions, *strides;
+    int64_t *index, *inverse, *counts;
     if (!PyArg_ParseTuple(args, "LkLLLLL", &array, &ndim, &dimensions, &strides, &index, &inverse, &counts))
         return NULL;
 
-    size_t n = dimensions[0];
-    size_t stride = strides[0];
+    uint64_t n = dimensions[0];
+    uint64_t stride = strides[0];
     hashmap *map = hashmap_new(sizeof(struct elem*), 0, 0, 0, hash, compare, NULL, NULL);
 
-    size_t n_unique = 0;
-    for (size_t i = 0; i < n; ++ i) {
+    uint64_t n_unique = 0;
+    for (uint64_t i = 0; i < n; ++ i) {
         // Construct element
         struct elem this_elem = {
             .p_elem = (char*)array + stride * i,
@@ -47,7 +50,7 @@ static PyObject *unique(PyObject *self, PyObject *args) {
         struct elem *p_found_elem = hashmap_get(map, &this_elem);
         if (p_found_elem != NULL) {
             // Get index of found element by difference in memory address
-            size_t found_index = ((char*)(p_found_elem->p_elem) - (char*)array) / stride;
+            uint64_t found_index = ((char*)(p_found_elem->p_elem) - (char*)array) / stride;
             if (inverse != NULL)
                 inverse[i] = inverse[found_index];
             if (counts != NULL)

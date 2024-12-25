@@ -35,9 +35,9 @@ def unique(
     if not array.flags["C_CONTIGUOUS"]:
         array = np.ascontiguousarray(array)
 
-    index   = np.empty(len(array), dtype=int)
-    inverse = np.empty(len(array), dtype=int) if return_inverse else None
-    counts  = np.empty(len(array), dtype=int) if return_counts  else None
+    index   = np.empty(len(array), dtype=np.int64)
+    inverse = np.empty(len(array), dtype=np.int64) if return_inverse else None
+    counts  = np.empty(len(array), dtype=np.int64) if return_counts  else None
 
     c = _c.unique(
         *_c_utils.get_array_c_args(array),
