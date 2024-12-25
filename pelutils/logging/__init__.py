@@ -8,7 +8,7 @@ from typing import Generator, Iterable, Optional
 from pelutils import UnsupportedOS, get_repo, get_timestamp, OS
 from pelutils.format import RichString
 
-from .support import LogLevels, _LevelManager, _LogErrors, _CollectLogs
+from ._utils import LogLevels, _LevelManager, _LogErrors, _CollectLogs
 
 
 # https://rich.readthedocs.io/en/stable/appendix/colors.html
