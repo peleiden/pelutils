@@ -1,6 +1,7 @@
 .vscode
 *.png
 logs/
+nohup.out
 
 # Files and folders prepended by local_
 **/local_*/
