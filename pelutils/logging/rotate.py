@@ -18,7 +18,10 @@ class _LogFileRotater:
         self.value = None
         self.unit = None
         if self.rotate_cmd is not None:
+            self.rotate_cmd = self.rotate_cmd.strip()
             self.value, self.unit = self.parse_rotate_cmd(self.rotate_cmd)
+            if self.value <= 0:
+                raise ValueError(f"Rotation quantity must be positive, not {self.value}")
 
         self._is_time_constrained = self.unit in self.supported_time_units
         if self.is_size_constrained:
@@ -33,11 +36,11 @@ class _LogFileRotater:
 
     @property
     def is_time_constrained(self) -> bool:
-        return self._is_time_constrained
+        return self._is_time_constrained and self.rotate_cmd is not None
 
     @property
     def is_size_constrained(self) -> bool:
-        return not self._is_time_constrained
+        return not self._is_time_constrained and self.rotate_cmd is not None
 
     @classmethod
     def parse_rotate_cmd(cls, rotate_cmd: str) -> tuple[int, str]:
@@ -61,13 +64,12 @@ class _LogFileRotater:
             f.write(text)
 
     def rotate_size_constrained_files(self):
-        print("Rotating")
+        assert self.is_size_constrained
         i = 0
         current_file = str(self.base_file)
         base_file_base, base_file_ext = os.path.splitext(current_file)
         new_file = f"{base_file_base}.{i}{base_file_ext}"
         shutil.move(current_file, current_file + ".tmp")
-        print(current_file, new_file)
         while os.path.isfile(new_file):
             i += 1
             shutil.move(new_file, new_file + ".tmp")
@@ -82,11 +84,9 @@ class _LogFileRotater:
             return self.base_file
 
         if self.is_size_constrained:
-            print(f"{os.path.getsize(self.base_file) if self.base_file.is_file() else 0:,} {writesize:,} {self.max_file_size:,}")
             if self.base_file.is_file() and os.path.getsize(self.base_file) + writesize > self.max_file_size:
                 self.rotate_size_constrained_files()
             return self.base_file
-
 
 if __name__ == "__main__":
     # Temporary, for testing
