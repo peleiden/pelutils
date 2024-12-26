@@ -6,6 +6,7 @@
 - Deprecated `thousands_separators` due to better built-in syntax
 - Added support for `pathlib.Path` instead of solely using string paths
 - Added `torch` support to `unique` function
+- Added rotation support to logger
 
 ## 3.1.0
 
