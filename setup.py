@@ -30,6 +30,7 @@ requirements_dev = [
     "wheel",
     "setuptools>=60.0.0",
     "ruff>=0.3.0",
+    "freezegun>=1.5",
 ]
 
 with open("README.md") as readme_file:
