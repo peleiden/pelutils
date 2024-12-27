@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from copy import deepcopy
 from time import perf_counter
 from typing import Generator, Hashable, Optional
@@ -83,22 +84,20 @@ class Profile:
 
 class _ProfileContext:
 
-    def __init__(self, tt, profile_name: str):
-        self.tt = tt
-        self.profile_name = profile_name
+    def __init__(self, tt, profile: Profile):
+        self._tt: "TickTock" = tt
+        self._profile = profile
 
     def __enter__(self):
         pass
 
     def __exit__(self, et, _, __):
-        if et is KeyboardInterrupt:
-            return
         if et is not None:
             # If an exception occured in deeper profiling sections, make sure to end them
             # before continuing, as a NameError otherwise will be raised due to unclosed profilings.
-            while self.tt._profile_stack[-1].name != self.profile_name:
-                self.tt.end_profile()
-        self.tt.end_profile(self.profile_name)
+            while self._tt._profile_stack and self._tt._profile_stack[-1] != self._profile:
+                self._tt.end_profile()
+        self._tt.end_profile(self._profile.name)
 
 class TickTockException(RuntimeError):
     pass
@@ -188,7 +187,7 @@ class TickTock:
 
         self._profile_stack.append(profile)
         self._nhits.append(hits)
-        pc = _ProfileContext(self, name)
+        pc = _ProfileContext(self, profile)
         profile.start = perf_counter()
         return pc
 

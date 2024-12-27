@@ -7,6 +7,7 @@
 - Added support for `pathlib.Path` instead of solely using string paths
 - Added `torch` support to `unique` function
 - Added rotation support to logger
+- Fixed keyboard interrupts not killing profiles
 
 ## 3.1.0
 
