@@ -3,17 +3,17 @@
 [![pytest](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml/badge.svg?branch=master)](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml)
 [![Coverage Status](https://coveralls.io/repos/github/peleiden/pelutils/badge.svg?branch=master)](https://coveralls.io/github/peleiden/pelutils?branch=master)
 
-Various utilities useful for Python projects. Features include
+The Swiss army knife of Python projects.
 
-- A simple and powerful logger with colourful printing and stacktrace logging
-- Parsing for combining config files and command-line arguments - especially useful for algorithms with several parameters
-- A timer inspired by Matlab's `tic` and `toc`
-- Simple code profiler
-- An extension to the built-in `dataclass` for saving and loading data
-- Table formatting
-- Miscellaneous standalone functions - see `pelutils/__init__.py`
-- Data-science submodule with extra utilities for statistics, plotting with `matplotlib`, and machine learning using `PyTorch`
-- Linear time `unique` function in the style of `numpy.unique`
+- A simple and powerful logger with colourful printing, stacktraces, and log file rotation.
+- Parsing for combining config files and command-line arguments - especially useful developing algorithms with many parameters.
+- A timer inspired by Matlab's `tic` and `toc`.
+- Simple, near-zero cost performance profiler.
+- An extension to the built-in `dataclass` for saving and loading data.
+- Table formatting with built-in LaTeX support.
+- Miscellaneous standalone functions - see `pelutils/__init__.py`.
+- Data-science submodule with extra utilities for statistics, plotting with `matplotlib`, and machine learning using `PyTorch`.
+- `unique` function in the style of `numpy.unique` which runs in linear time, making it significantly.
 
 `pelutils` supports Python 3.9+.
 
@@ -25,6 +25,8 @@ A small subset of the functionality requires `PyTorch`, which has to be installe
 Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
 
 ```py
+from pelutils import TT, TickTock
+
 # Time a task
 TT.tick()
 <some task>
@@ -99,21 +101,22 @@ rdata = ResultData.load("max")
 print(rdata.goalscorers)  # ["Max Fenger"]
 ```
 
-## Parsing
+## Config and Command-line Argument Parsing
 
-A parsing tool for combining command-line and config file arguments.
-Useful for parametric methods such as machine learning.
-The first argument must always be a path. This can for instance be used to put log files, results, plots etc.
+Python has built-in support for both config files (the `ArgumentParser` and `ConfigParser`, respectively), but nothing for parsing both.
+The Pelutils `Parser` supports both, while also allowing for much stricter checking of types and presence of arguments.
+It is useful for any application relying on config files where one may want to overwrite certain arguments from the command-line.
+It's prime usecase, though, is for development of parametric algorithms, such as machine learning engineering.
 
 Consider the execution of a file `main.py` with the command line call
 ```
-python main.py path/to/put/results -c path/to/config/file.ini --data-path path/to/data
+python main.py path/to/output -c path/to/config/file.ini --data-path path/to/data
 ```
 The config file could contain
-```
+```ini
 [DEFAULT]
-fp16
 learning-rate=1e-4
+fp16
 
 [LOWLR]
 learning-rate=1e-5
@@ -132,7 +135,7 @@ options = [
     Flag("fp16", help="Use mixed precision for training"),
 ]
 parser = Parser(*options, multiple_jobs=True)  # Two jobs are specified in the config file, so multiple_jobs=True
-location = parser.location  # Experiments are stored here. In this case path/to/put/results
+location = parser.location  # Experiments are stored here. In this case path/to/output
 job_descriptions = parser.parse_args()
 # Run each experiment
 for job in job_descriptions:
@@ -157,6 +160,8 @@ where `cfg.ini` could contain
 The logging submodule contains a simple yet feature-rich logger which fits common needs. Can be imported from `pelutils` directly, e.g. `from pelutils import log`.
 
 ```py
+from pelutils import log, Logger
+
 # Configure logger for the script
 log.configure("path/to/save/log.log")
 
@@ -173,6 +178,12 @@ with log.level(LogLevels.ERROR):  # Only log at ERROR level or above
     log.warning("Will not be logged")
 with log.no_log:
     log.section("I will not be logged")
+
+# Rotation
+# Start a new log file every hour (or day, month, or year)
+log.configure("path/to/save/log.log", rotation="hour")
+# Start a new log file when the current one reaches a certain size
+log.configure("path/to/save/log.log", rotation="5 MB")
 
 # Error handling
 # The zero-division error and stacktrace is logged
@@ -208,15 +219,17 @@ log2.configure("path/to/save/log2.log")
 
 This submodule contains various utility functions for data science, statistics, plotting, and machine learning.
 
-## Deep Learning
-
 ## Statistics
 
 Includes various commonly used statistical functions.
+There are also wrappers around a number of scipy distributions reparametrized as in Jim Pitman's "Probability", instead of using scale and loc, which can be quite unintuitive for many distributions.
 
 ```py
+from pelutils.ds.stats import z, corr_zi
+from pelutils.ds.distributions import expon
+
 # Get one sided z value for exponential(lambda=2) distribution with a significance level of 1 %
-zval = z(alpha=0.01, two_sided=False, distribution=scipy.stats.expon(loc=1/2))
+zval = z(alpha=0.01, two_sided=False, distribution=expon(2))
 
 # Get correlation, confidence interval, and p value for two vectors
 a, b = np.random.randn(100), np.random.randn(100)
