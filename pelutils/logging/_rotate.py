@@ -37,7 +37,7 @@ class _LogFileRotater:
 
         if self.is_time_constrained:
             # Current time is the start of the current time block
-            self.current_time = self.get_start_time()
+            self.current_time = self.get_current_time()
             # Next time is the start of the next file block at which point the log file will change
             self.next_time = self.get_next_time()
 
@@ -76,26 +76,6 @@ class _LogFileRotater:
         with file.open(f"{mode}b") as f:
             f.write(text)
 
-    def get_start_time(self, time: datetime | None = None) -> datetime:
-        """Get the starting time for a time constrained rotater.
-
-        Abstracted into a method to allow for easier testing when initializing from different times.
-        As such this method should only be called outside __init__ for testing purposes.
-
-        If time is not given, datetime.now() is used."""
-        if time is None:
-            time = datetime.now()
-        if self.unit == "year":
-            return datetime(time.year, 1, 1)
-        elif self.unit == "month":
-            return datetime(time.year, time.month, 1)
-        elif self.unit == "day":
-            return datetime(time.year, time.month, time.day)
-        elif self.unit == "hour":
-            return datetime(time.year, time.month, time.day, time.hour)
-        else:
-            raise ValueError(f"Invalid time unit \"{self.unit}\", must be one of {self.supported_time_units}")
-
     def rotate_size_constrained_files(self):
         assert self.is_size_constrained
         i = 0
@@ -110,6 +90,18 @@ class _LogFileRotater:
             current_file = new_file
             new_file = f"{base_file_base}.{i}{base_file_ext}"
         shutil.move(current_file + ".tmp", new_file)
+
+    def get_current_time(self) -> datetime:
+        now = datetime.now()
+        if self.unit == "year":
+            return datetime(now.year, 1, 1)
+        elif self.unit == "month":
+            return datetime(now.year, now.month, 1)
+        elif self.unit == "day":
+            return datetime(now.year, now.month, now.day)
+        elif self.unit == "hour":
+            return datetime(now.year, now.month, now.day, now.hour)
+        raise ValueError(f"Invalid time unit \"{self.unit}\", must be one of {self.supported_time_units}")
 
     def get_next_time(self) -> datetime:
         next_hour = self.current_time.hour + (self.unit == "hour")
@@ -145,7 +137,7 @@ class _LogFileRotater:
         if self.is_time_constrained:
             if datetime.now() >= self.next_time:
                 # If time has passed into the next time, update the current and next time
-                self.current_time = self.next_time
+                self.current_time = self.get_current_time()
                 self.next_time = self.get_next_time()
             # Format current time
             # Format specifiers at https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior

@@ -8,6 +8,7 @@ from typing import Generator, Iterable, Optional
 from pelutils import UnsupportedOS, get_repo, get_timestamp, OS
 from pelutils.format import RichString
 
+from ._rotate import _LogFileRotater
 from ._utils import LogLevels, _LevelManager, _LogErrors, _CollectLogs
 
 
@@ -48,10 +49,11 @@ class Logger:
 
     def configure(
         self,
-        fpath: Optional[str | Path], *,  # Path to logfile. Missing directories are created
+        fpath: str | Path | None, *,  # Path to logfile. Missing directories are created
         default_seperator: str  = "\n",  # Default seperator when logging multiple strings in a single call
         append: bool = False,  # Set to True to append to old log file instead of overwriting it
         print_level: Optional[LogLevels] = LogLevels.INFO,  # Highest level that will be printed. All will be logged. None for no print
+        rotation: str | None = None,  # Command specifying when to rotate, e.g. "day" or "1 GB"
     ):
         """ This configures a logfile and must be called for a logger to work.
         Loggers can be reconfigured at any time, so long as they are not collecting. """
@@ -61,17 +63,19 @@ class Logger:
 
         # Create logfile
         if fpath is not None:
-            fpath = Path(fpath)
-            fpath.parent.mkdir(parents=True, exist_ok=True)
-            with fpath.open("a" if append else "w", encoding="utf-8"):
+            self._rotater = _LogFileRotater(rotation, Path(fpath))
+            self._rotater.base_file.parent.mkdir(parents=True, exist_ok=True)
+            # Create file if it doesn't exist
+            with self._rotater.resolve_logfile(0).open("a" if append else "w", encoding="utf-8"):
                 pass
+        else:
+            self._rotater = None
 
-        self._fpath = fpath
         self._default_sep = default_seperator
         self._print_level = print_level if print_level is not None else max(LogLevels) + 1
         self._is_configured = True
 
-        # Make it easier to create new loggers by making it possible to chain configure on __init__
+        # Allow for easier logger creation, e.g. `log = Logger().configure(...)`
         return self
 
     def level(self, level: LogLevels):
@@ -93,9 +97,10 @@ class Logger:
         self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 
     def _write_to_log(self, content: RichString):
-        if self._fpath is not None:
-            with self._fpath.open("a", encoding="utf-8") as logfile:
-                logfile.write(f"{content}\n")
+        if self._rotater is not None:
+            content = f"{content}\n".encode("utf-8")
+            with self._rotater.resolve_logfile(len(content)).open("ab") as f:
+                f.write(content)
 
     @staticmethod
     def _format(s: str, format: str) -> str:
