@@ -1,7 +1,9 @@
 from __future__ import annotations
-from typing import Iterable
+
+from collections.abc import Iterable
 
 import numpy as np
+
 try:
     import torch
     _has_torch = True
@@ -9,6 +11,7 @@ except ModuleNotFoundError:
     _has_torch = False
 
 import _pelutils_c as _c
+
 import pelutils._c as _c_utils
 
 
@@ -19,7 +22,7 @@ def unique(
     return_counts=False,
     axis: int=0,
 ) -> np.ndarray | Iterable[np.ndarray]:
-    """ Similar to np.unique, but in linear time and returns unsorted. """
+    """Similar to np.unique, but in linear time and returns unsorted."""
     if not array.size:
         raise ValueError("Array must be non-empty")
 
@@ -67,7 +70,7 @@ def unique(
     return tuple(ret) if len(ret) > 1 else ret[0]
 
 def tensor_bytes(x: np.ndarray | torch.Tensor) -> int:
-    """ Calculates the size of a numpy array or torch tensor in bytes. """
+    """Calculates the size of a numpy array or torch tensor in bytes."""
     if isinstance(x, np.ndarray):
         return x.nbytes
     elif _has_torch and isinstance(x, torch.Tensor):

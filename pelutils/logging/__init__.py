@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import os
 import traceback as tb
+from collections.abc import Generator, Iterable
 from pathlib import Path
-from typing import Generator, Iterable, Optional
+from typing import Optional
 
-from pelutils import UnsupportedOS, get_repo, get_timestamp, OS
+from pelutils import OS, UnsupportedOS, get_repo, get_timestamp
 from pelutils.format import RichString
 
 from ._rotate import _LogFileRotater
-from ._utils import LogLevels, _LevelManager, _LogErrors, _CollectLogs
-
+from ._utils import LogLevels, _CollectLogs, _LevelManager, _LogErrors
 
 # https://rich.readthedocs.io/en/stable/appendix/colors.html
 TIMESTAMP_COLOR = "#72b9e0"
@@ -27,9 +27,10 @@ class LoggingException(RuntimeError):
     pass
 
 class Logger:
-    """ A simple logger which creates a log file and pushes strings both to stdout and the log file.
+    """A simple logger which creates a log file and pushes strings both to stdout and the log file.
     Main features include automatically logging errors and their stacktrace (see _Logger.log_errors),
-    collecting logs for multiprocessing (see _Logger.collect), and colourful prints. """
+    collecting logs for multiprocessing (see _Logger.collect), and colourful prints.
+    """
 
     _selected_logger: str
     _maxlen = max(len(level.name) for level in LogLevels)
@@ -55,9 +56,9 @@ class Logger:
         print_level: Optional[LogLevels] = LogLevels.INFO,  # Highest level that will be printed. All will be logged. None for no print
         rotation: str | None = None,  # Command specifying when to rotate, e.g. "day" or "1 GB"
     ):
-        """ This configures a logfile and must be called for a logger to work.
-        Loggers can be reconfigured at any time, so long as they are not collecting. """
-
+        """This configures a logfile and must be called for a logger to work.
+        Loggers can be reconfigured at any time, so long as they are not collecting.
+        """
         if self._collect:
             raise LoggingException("Logger cannot be reconfigured while collecting")
 
@@ -79,7 +80,7 @@ class Logger:
         return self
 
     def level(self, level: LogLevels):
-        """ Log only at given level and above. Use with a with block. """
+        """Log only at given level and above. Use with a with block."""
         return self._level_mgr.with_level(level)
 
     @property
@@ -93,12 +94,12 @@ class Logger:
         return self._log_errors
 
     def __call__(self, *tolog, level=LogLevels.INFO, with_info=True, sep=None, with_print=None):
-        """ Shorthand for specific logging methods where level is specified as an argument. """
+        """Shorthand for specific logging methods where level is specified as an argument."""
         self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 
     def _write_to_log(self, content: RichString):
         if self._rotater is not None:
-            content = f"{content}\n".encode("utf-8")
+            content = f"{content}\n".encode()
             with self._rotater.resolve_logfile(len(content)).open("ab") as f:
                 f.write(content)
 
@@ -161,8 +162,9 @@ class Logger:
         return response
 
     def input(self, prompt: str | Iterable[str] = "") -> str | Generator[str]:
-        """ Get user input and log both prompt an input.
-        If prompt is an iterable, a generator of user inputs will be returned. """
+        """Get user input and log both prompt an input.
+        If prompt is an iterable, a generator of user inputs will be returned.
+        """
         self._log("Waiting for user input", with_print=False)
         if isinstance(prompt, str):
             return self._input(prompt)
@@ -171,7 +173,7 @@ class Logger:
 
     @classmethod
     def parse_bool_input(cls, answer: str, *, default: Optional[bool]=None) -> bool | None:
-        """ Validate user yes/no input. Returns None if input is not parsable. Example:
+        """Validate user yes/no input. Returns None if input is not parsable. Example:
         ```
         answer = log.input("Do you like this question? [y/N] ")
         likes_answer = log.bool_input(answer, default=False)
@@ -181,7 +183,8 @@ class Logger:
         likes_answer == False
         # User answered something unparsable as yes/no
         likes_answer == None
-        ``` """
+        ```
+        """
         answer = answer.strip()
         if not answer:
             return default
@@ -191,7 +194,7 @@ class Logger:
             return False
 
     def log_repo(self, level=LogLevels.DEBUG):
-        """ Niceness method for logging the git repo that the code is run in. """
+        """Niceness method for logging the git repo that the code is run in."""
         repo, commit = get_repo()
         if repo is not None:
             self._log(

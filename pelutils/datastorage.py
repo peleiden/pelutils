@@ -9,7 +9,7 @@ import rapidjson
 
 
 class DataStorage:
-    """ The DataStorage class is an augmentation of the dataclass that incluces save and load functionality.
+    """The DataStorage class is an augmentation of the dataclass that incluces save and load functionality.
     DataStorage classes must inherit from DataStorage and be annotated with `@dataclass`. Data will be saved
     to two files: A json files for json-serializable data and a pickle file for everything else. These files
     are by default named after the class, but it is possible to use a custom name in the save and load methods.
@@ -35,11 +35,13 @@ class DataStorage:
     # Then to load
     rdata = ResultData.load("max")
     print(rdata.goalscorers)  # ["Max Fenger"]
-    ``` """
+    ```
+    """
 
     def __init__(self, *args, **kwargs):
-        """ This method is overwritten class is decorated with @dataclass.
-        Therefore, if this method is called, it is an error. """
+        """This method is overwritten class is decorated with @dataclass.
+        Therefore, if this method is called, it is an error.
+        """
         raise TypeError("DataStorage class %s must be decorated with @dataclass" % self.__class__.__name__)
 
     @classmethod
@@ -51,14 +53,14 @@ class DataStorage:
         return (save_name or cls.__name__) + ".pkl"
 
     def save(self, loc: str | Path, save_name: Optional[str] = None, *, indent: Optional[int] = 4) -> list[str]:
-        """ Saves all the fields of the instatiated data classes as either json,
+        """Saves all the fields of the instatiated data classes as either json,
         pickle or designated serialization function. Use save_name to overwrite
         default behavior of using the class name for file names. E.g. in a DataStorage
         class named Results, the defualt saved file names would be Results.json and
         Results.pkl. Settings save_name="gollum" would result in file names
         Returns list of saved files.
-        :param str loc: Path to directory in which to save data. """
-
+        :param str loc: Path to directory in which to save data.
+        """
         loc = str(loc)
         os.makedirs(loc, exist_ok=True)
 

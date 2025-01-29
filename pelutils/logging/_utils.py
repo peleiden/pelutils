@@ -1,5 +1,6 @@
-""" This file contains supporting elements to the logger, such as levels,
-colours, collection of logs, etc. """
+"""This file contains supporting elements to the logger, such as levels,
+colours, collection of logs, etc.
+"""
 from __future__ import annotations
 
 from enum import IntEnum
@@ -7,7 +8,8 @@ from typing import Optional
 
 
 class LogLevels(IntEnum):
-    """ Logging levels by priority. """
+    """Logging levels by priority."""
+
     SECTION  = 5
     CRITICAL = 4
     ERROR    = 3
@@ -22,7 +24,8 @@ class _LevelManager:
     with log.level(Levels.WARNING):
         log.error("This will be logged")
         log.info("This will not be logged")
-    ``` """
+    ```
+    """
 
     def __init__(self):
         self.level: Optional[LogLevels] = None
@@ -38,7 +41,7 @@ class _LevelManager:
         self.level = None
 
 class _LogErrors:
-    """ Used for catching exceptions with logger and logging them before reraising them. """
+    """Used for catching exceptions with logger and logging them before reraising them."""
 
     def __init__(self, log):
         self._log = log
@@ -52,8 +55,7 @@ class _LogErrors:
             self._log.log_with_stacktrace(ev, level=LogLevels.CRITICAL)
 
 class _CollectLogs:
-
-    """ Used for producing all logging output from a block at once. This is useful with
+    """Used for producing all logging output from a block at once. This is useful with
     multiprocessing to prevent the logs getting mixed up.
     ```
     def fun():
@@ -62,7 +64,8 @@ class _CollectLogs:
 
     with mp.Pool() as p:
         p.map(fun, ...)
-    ``` """
+    ```
+    """
 
     def __init__(self, logger):
         self._log = logger

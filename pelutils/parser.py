@@ -1,20 +1,20 @@
 from __future__ import annotations
-from abc import ABC
-from argparse import ArgumentParser, Namespace, SUPPRESS
-from ast import literal_eval
-from configparser import ConfigParser
-from copy import deepcopy
-from pprint import pformat
-from shutil import rmtree
-from typing import Any, Callable, Optional, TypeVar, Union
+
 import io
 import os
 import re
 import shlex
 import sys
+from abc import ABC
+from argparse import SUPPRESS, ArgumentParser, Namespace
+from ast import literal_eval
+from configparser import ConfigParser
+from copy import deepcopy
+from pprint import pformat
+from shutil import rmtree
+from typing import Any, Callable, TypeVar, Union
 
-from pelutils import get_timestamp_for_files, except_keys
-
+from pelutils import except_keys, get_timestamp_for_files
 
 _T = TypeVar("_T")
 _type = type  # Save `type` under different name to prevent name collisions
@@ -25,7 +25,7 @@ _type = type  # Save `type` under different name to prevent name collisions
 _NargsTypes = Union[int, None]
 
 def _fixdash(argname: str) -> str:
-    """ Replaces dashes in argument names with underscores """
+    """Replace dashes in argument names with underscores."""
     return argname.replace("-", "_")
 
 class ParserError(Exception):
@@ -34,9 +34,11 @@ class ParserError(Exception):
 class ConfigError(ParserError):
     pass
 
-class AbstractArgument(ABC):
-    """ Contains description of an argument.
-    '--' is automatically prepended to `name` when given from the command line. """
+class _AbstractArgument(ABC):
+    """Contains description of an argument.
+
+    '--' is automatically prepended to `name` when given from the command line.
+    """
 
     def __init__(self, name: str, abbrv: str | None, help: str | None, **kwargs):
         self._validate(name, abbrv)
@@ -49,15 +51,15 @@ class AbstractArgument(ABC):
     @staticmethod
     def _validate(name: str, abbrv: str | None):
         if not name:
-            raise ValueError("name must not be an empty string")
+            raise ValueError(f"`name` ('{name}') must not be an empty string")
         if name.startswith("-"):
-            raise ValueError("Double dashes are automatically prepended and should not be given by user: '%s'" % name)
+            raise ValueError(f"Double dashes are automatically prepended and should not be given by user: '{name}'")
         if isinstance(abbrv, str) and (len(abbrv) != 1 or not abbrv.isalpha()):
-            raise ValueError("abbrv must be an alpha character and have length 1: '%s'" % abbrv)
+            raise ValueError(f"`abbrv` ('{abbrv}') must be an alpha character and have length 1")
         if re.search(r"\s", name):
-            raise ValueError("name cannot contain whitespace")
+            raise ValueError(f"`name` ('{name}') cannot contain whitespace")
 
-    def name_or_flags(self) -> tuple[str, ...]:
+    def _name_or_flags(self) -> tuple[str, ...]:
         if self.abbrv:
             return ("-" + self.abbrv, "--" + self.name)
         else:
@@ -66,7 +68,7 @@ class AbstractArgument(ABC):
     @staticmethod
     def _validate_nargs(nargs: _NargsTypes):
         if type(nargs) not in _NargsTypes.__args__:
-            raise TypeError("'nargs' type must be one of %s, not %s" % (_NargsTypes.__args__, type(nargs)))
+            raise TypeError(f"`nargs` type must be one of {_NargsTypes.__args__}, not {type(nargs)}")
         if isinstance(nargs, int) and nargs < 0:
             raise ValueError("When expecting a set number of arguments, the number must be at least 0")
 
@@ -77,8 +79,8 @@ class AbstractArgument(ABC):
     def __hash__(self) -> int:
         return hash(self.name)
 
-class Argument(AbstractArgument):
-    """ Argument that must be given a value. """
+class Argument(_AbstractArgument):
+    """Argument that must be given a value."""
 
     def __init__(
         self,
@@ -98,8 +100,8 @@ class Argument(AbstractArgument):
         self.metavar = metavar
         self.nargs = nargs
 
-class Option(AbstractArgument):
-    """ Optional argument with a default value. """
+class Option(_AbstractArgument):
+    """Optional argument with a default value."""
 
     def __init__(
         self,
@@ -123,16 +125,14 @@ class Option(AbstractArgument):
                 self.default = list(self.default)
             self.type = _type(self.default) if nargs is None else _type(self.default[0])
             if nargs is not None and not all(isinstance(x, self.type) for x in self.default):
-                raise ValueError("All elements in default value of %s must be of type %s" % (
-                    name, self.type
-                ))
+                raise ValueError(f"All elements in default value of {name} must be of type {self.type}")
         else:
             self.type = str
         self.metavar = metavar
         self.nargs = nargs
 
-class Flag(AbstractArgument):
-    """ Boolean flag. Defaults to `False` when not given and `True` when given. """
+class Flag(_AbstractArgument):
+    """Boolean flag. Defaults to `False` when not given and `True` when given."""
 
     def __init__(
         self,
@@ -148,6 +148,10 @@ class Flag(AbstractArgument):
         return False
 
 class JobDescription(Namespace):
+    """Namespace containing the values of all defined parameters parsed from the command line and config file if given.
+
+    Functionally, it is very similar to Namespace from argpase.
+    """
 
     document_filename = "used-config.ini"
 
@@ -159,21 +163,23 @@ class JobDescription(Namespace):
         self._docfile_content = docfile_content
 
     def todict(self) -> dict[str, Any]:
-        """ Returns a dictionary version of itself which contains solely the parsed values. """
+        """Return a dictionary version of itself which contains solely the parsed values."""
         d = vars(self)
         d = { kw: v for kw, v in d.items() if not kw.startswith("_") and kw not in { "config", "explicit_args" } }
         return d
 
-    def prepare_directory(self, encoding: Optional[str] = None):
-        """ Clears the job directory and puts a documentation file in it. """
+    def prepare_directory(self, encoding: str | None = None):
+        """Clear the job directory and puts a documentation file in it."""
         rmtree(self.location, ignore_errors=True)
         os.makedirs(self.location)
         self.write_documentation(encoding)
 
-    def write_documentation(self, encoding: Optional[str] = None):
-        """ Writes, or appends if one already exists, a documentation file in the location. The file has
-        the CLI command user for running the program as a comment as well as the config file,
-        if such a one was used. """
+    def write_documentation(self, encoding: str | None = None):
+        """Write, or append if one already exists, a documentation file in the location.
+
+        The file has the CLI command user for running the program as a comment as well as the config file,
+        if such a one was used.
+        """
         os.makedirs(self.location, exist_ok=True)
         path = os.path.join(self.location, self.document_filename)
         with open(path, "a", encoding=encoding) as docfile:
@@ -185,7 +191,7 @@ class JobDescription(Namespace):
         elif _fixdash(key) in self.__dict__:
             return self.__dict__[_fixdash(key)]
         else:
-            raise KeyError("No such job argument '%s'" % key)
+            raise KeyError(f"No such job argument '{key}'")
 
     def __str__(self) -> str:
         return pformat(self.todict())
@@ -193,22 +199,23 @@ class JobDescription(Namespace):
 ArgumentTypes = Union[Argument, Option, Flag]
 
 class Parser:
+    """Extension of built-in argparse.ArgumentParser which also supports reading from config files."""
 
     location: str | None = None  # Set in `parse` method
 
     _default_config_job = "DEFAULT"
 
     _location_arg = Argument("location")
-    _location_arg.name_or_flags = lambda: ("location",)
+    _location_arg._name_or_flags = lambda: ("location",)
     _name_arg = Option("name", default=None, help="Name of the job")
     _section_separator = ":"
     _encoding_separator = "::"
     _config_arg = Option(
         "config",
-        default = None,
-        abbrv   = "c",
-        help    = "Path to config file. Encoding can be specified by giving <path>%s<encoding>,"
-                  "e.g. --config path/to/config.ini%sutf-8" % (_encoding_separator, _encoding_separator),
+        default=None,
+        abbrv="c",
+        help=f"Path to config file. Encoding can be specified by giving <path>{_encoding_separator}<encoding>, "
+             f"e.g. --config path/to/config.ini{_encoding_separator}utf-8",
     )
 
     _reserved_arguments: tuple[ArgumentTypes] = (_location_arg, _name_arg, _config_arg)
@@ -228,9 +235,9 @@ class Parser:
 
     def __init__(
         self,
-        *arguments:  ArgumentTypes,
+        *arguments: ArgumentTypes,
         description: str | None = None,
-        multiple_jobs           = False,
+        multiple_jobs=False,
     ):
         # Modifications are made to the argument objects, so make a deep copy
         arguments = tuple(deepcopy(arg) for arg in arguments)
@@ -243,9 +250,9 @@ class Parser:
 
         # Ensure that no conflicts exist with reserved arguments
         if any(arg.name in self._reserved_names for arg in arguments):
-            raise ParserError("An argument conflicted with one of the reserved arguments: %s" % self._reserved_names)
+            raise ParserError(f"An argument conflicted with one of the reserved arguments: {self._reserved_names}")
         if any(arg.abbrv in self._reserved_abbrvs for arg in arguments):
-            raise ParserError("An argument conflicted with one of the reserved abbreviations: %s" % self._reserved_abbrvs)
+            raise ParserError(f"An argument conflicted with one of the reserved abbreviations: {self._reserved_abbrvs}")
 
         # Map argument names to arguments with dashes replaced by underscores
         self._arguments = { _fixdash(arg.name): arg for arg in self._reserved_arguments + arguments }
@@ -264,7 +271,7 @@ class Parser:
             if argument.abbrv and argument.abbrv not in _used_abbrvs:
                 _used_abbrvs.add(argument.abbrv)
             elif argument.abbrv:
-                raise ParserError("Abbreviation '%s' was used multiple times" % argument.abbrv)
+                raise ParserError(f"Abbreviation '{argument.abbrv}' was used multiple times")
             else:
                 # Autogenerate abbreviation
                 # First argname[0] is tried. If it exists, the other casing is used if it does not exist
@@ -281,42 +288,46 @@ class Parser:
             # Input validity is then checked later
             if isinstance(argument, Argument):
                 self._argparser.add_argument(
-                    *argument.name_or_flags(),
-                    type     = argument.type,
-                    help     = argument.help,
-                    metavar  = argument.metavar,
-                    nargs    = "*" if argument.nargs is not None else None,
+                    *argument._name_or_flags(),
+                    type=argument.type,
+                    help=argument.help,
+                    metavar=argument.metavar,
+                    nargs="*" if argument.nargs is not None else None,
                     **argument.kwargs,
                 )
             elif isinstance(argument, Option):
                 self._argparser.add_argument(
-                    *argument.name_or_flags(),
-                    default  = argument.default,
-                    type     = argument.type,
-                    help     = argument.help,
-                    metavar  = argument.metavar,
-                    nargs    = "*" if argument.nargs is not None else None,
+                    *argument._name_or_flags(),
+                    default=argument.default,
+                    type=argument.type,
+                    help=argument.help,
+                    metavar=argument.metavar,
+                    nargs="*" if argument.nargs is not None else None,
                     **argument.kwargs,
                 )
             elif isinstance(argument, Flag):
                 self._argparser.add_argument(
-                    *argument.name_or_flags(),
-                    action   = "store_true",
-                    help     = argument.help,
+                    *argument._name_or_flags(),
+                    action="store_true",
+                    help=argument.help,
                     **argument.kwargs,
                 )
 
     def _get_default_values(self) -> dict[ArgumentTypes, Any]:
-        """ Builds a dictionary that maps argument names to their default values.
-        Arguments without defaults values are not included. """
+        """Build a dictionary that maps argument names to their default values.
+
+        Arguments without defaults values are not included.
+        """
         return { argname: arg.default
             for argname, arg
             in self._arguments.items()
             if hasattr(arg, "default") and arg.name not in self._reserved_names }
 
     def _parse_explicit_cli_args(self) -> set[str]:
-        """ Returns a set of arguments explicitly given from the command line.
-        No prepended dashes and in-word dashes have been changed to underscores. """
+        """Return a set of arguments explicitly given from the command line.
+
+        No prepended dashes and in-word dashes have been changed to underscores.
+        """
         # Create auxiliary parser to help determine if arguments are given explicitly from CLI
         # Heavily inspired by this answer: https://stackoverflow.com/a/45803037/13196863
         aux_parser = ArgumentParser(argument_default=SUPPRESS)
@@ -324,16 +335,18 @@ class Parser:
         for argname in vars(args):
             arg = self._arguments[argname]
             if isinstance(arg, Flag):
-                aux_parser.add_argument(*arg.name_or_flags(), action="store_true")
+                aux_parser.add_argument(*arg._name_or_flags(), action="store_true")
             else:
-                aux_parser.add_argument(*arg.name_or_flags(), nargs="*" if arg.nargs is not None else None)
+                aux_parser.add_argument(*arg._name_or_flags(), nargs="*" if arg.nargs is not None else None)
         explicit_cli_args = aux_parser.parse_args()
 
         return set(vars(explicit_cli_args))
 
     def _parse_config_file(self, config_path: str) -> dict[str, dict[str, Any]]:
-        """ Parses a given configuration file (.ini format).
-        Returns a dictionary where each section as a key pointing to corresponding argument/value pairs. """
+        """Parse a given configuration file (.ini format).
+
+        Return a dictionary where each section as a key pointing to corresponding argument/value pairs.
+        """
         if self._encoding_separator in config_path:
             config_path, encoding = config_path.split(self._encoding_separator, maxsplit=1)
         else:
@@ -343,11 +356,11 @@ class Parser:
         sections = set(sections)
 
         if not self._configparser.read(config_path, encoding=encoding):
-            raise FileNotFoundError("Configuration file not found at %s" % config_path)
+            raise FileNotFoundError(f"Configuration file not found at {config_path}")
 
         for section in sections:
             if section not in self._configparser:
-                raise ParserError("Unable to parse unknown section '%s'" % section)
+                raise ParserError(f"Unable to parse unknown section '{section}'")
 
         # Save given values and convert to proper types
         config_dict = dict()
@@ -358,16 +371,14 @@ class Parser:
             for argname, value in arguments.items():
                 argname = _fixdash(argname)
                 if argname not in self._arguments:
-                    raise ParserError("Unknown argument '%s'" % argname)
+                    raise ParserError(f"Unknown argument '{argname}'")
                 if isinstance(self._arguments[argname], Flag):
                     # If flag value is given in config file, parse True/False
                     if isinstance(value, str):
                         config_dict[section][argname] = literal_eval(value)
                         # Check if valid value
                         if not isinstance(config_dict[section][argname], bool):
-                            raise ValueError("Value %s in section %s must be 'True' or 'False', not '%s'" % (
-                                argname, section, value
-                            ))
+                            raise ValueError(f"Value {argname} in section {section} must be 'True' or 'False', not '{value}'")
                     else:
                         config_dict[section][argname] = True
                 else:  # Arguments and options
@@ -381,9 +392,11 @@ class Parser:
         return config_dict
 
     def parse_args(self) -> JobDescription | list[JobDescription]:
-        """ Parses command line arguments and optionally a configuration file if given.
+        """Parse command line arguments and optionally a configuration file if given.
+
         If multiple_jobs was set to True in __init__, a list of job descriptions is returned.
-        Otherwise, a single job description is returned. """
+        Otherwise, a single job description is returned.
+        """
         job_descriptions: list[JobDescription] = list()
         args = self._argparser.parse_args()
         explicit_cli_args = self._parse_explicit_cli_args()
@@ -399,7 +412,7 @@ class Parser:
             arg_dict = vars(args)
             for argname, arg in self._arguments.items():
                 if isinstance(arg, Argument) and arg_dict[argname] is None:
-                    raise ParserError("Missing value for '%s'" % arg.name)
+                    raise ParserError(f"Missing value for '{arg.name}'")
 
             job_descriptions.append(JobDescription(
                 name            = name,
@@ -444,10 +457,10 @@ class Parser:
                         if argname in explicit_cli_args },
                 }
                 job_descriptions.append(JobDescription(
-                    name            = name,
-                    location        = location,
-                    explicit_args   = { *config_args.keys(), *explicit_cli_args },
-                    docfile_content = docfile_content,
+                    name=name,
+                    location=location,
+                    explicit_args={*config_args.keys(), *explicit_cli_args},
+                    docfile_content=docfile_content,
                     **value_dict,
                 ))
 
@@ -456,18 +469,14 @@ class Parser:
             for argname, arg in self._arguments.items():
                 argument = self._arguments[argname]
                 if argname not in job:
-                    raise ParserError("Job '%s' is missing value for '%s'" % (job.name, arg.name))
+                    raise ParserError(f"Job '{job.name}' is missing value for '{arg.name}'")
                 elif hasattr(argument, "nargs") and argument.nargs is not None:
                     if job[argname] is None and isinstance(argument, Argument):
-                        raise ParserError("Argument '%s' has not been given in job '%s'" % (
-                            argname, job.name
-                        ))
+                        raise ParserError(f"Argument '{argname}' has not been given in job '{job.name}'")
                     assert isinstance(job[argname], list)
                     assert all(isinstance(x, argument.type) for x in job[argname])
                     if argument.nargs > 0 and len(job[argname]) != argument.nargs:
-                        raise ValueError("Argument '%s' in job '%s' should have %i args, but had %i" % (
-                            argname, job.name, argument.nargs, len(job[argname])
-                        ))
+                        raise ValueError(f"Argument '{argname}' in job '{job.name}' should have {argument.nargs} args but had {len(job[argname])}")
 
         return job_descriptions if self._multiple_jobs else job_descriptions[0]
 

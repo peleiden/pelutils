@@ -128,7 +128,6 @@ class _LogFileRotater:
 
     def resolve_logfile(self, writesize: int) -> Path:
         """Rotates existing files if necessary and returns the file to write to."""
-
         if self.is_size_constrained:
             if self.base_file.is_file() and os.path.getsize(self.base_file) + writesize > self.max_file_size:
                 self.rotate_size_constrained_files()

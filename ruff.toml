@@ -36,11 +36,24 @@ indent-width = 4
 target-version = "py39"
 
 [lint]
-# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`) codes by default.
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 # McCabe complexity (`C901`) by default.
-select = ["E4", "E7", "E9", "F"]
-ignore = ["E402"]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # Pyflakes
+    "B",  # flake8-bugbear
+    "I",  # isort
+    "D",  # pydocstyle
+    "UP",  # pyupgrade
+]
+ignore = [
+    "B024",  # No abstract methods
+    "D100",  # Missing docstring in public module
+    "D104",  # Missing docstring in public package
+    "D105",  # Docstring in magic method
+    "E402",  # Import not at top of file
+]
 
 [lint.pydocstyle]
 convention = "numpy"

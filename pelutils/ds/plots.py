@@ -4,11 +4,10 @@ import time
 from pathlib import Path
 from typing import Any, Callable, List, Optional, Union
 
-import matplotlib.pyplot as plt
 import matplotlib.colors as mcolour
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
-
 
 _Array = Union[List[Union[float, int]], np.ndarray]
 
@@ -27,7 +26,8 @@ def moving_avg(
     """Calculates the moving average assuming even spacing.
     If one array of size n is given, it is assumed to run from 0 to n-1 on the x axis.
     If two are given, the first are the x axis coordinates.
-    Returns x and y coordinate arrays of same size."""
+    Returns x and y coordinate arrays of same size.
+    """
     x = np.array(x)
     if y is None:
         y = x
@@ -50,7 +50,8 @@ def exp_moving_avg(
     """Calculates the exponential moving average.
     alpha is a smoothing factor between 0 and 1 - the lower the value, the smoother the curve.
     Returns two arrays of same size as x.
-    This function optionally takes y as `moving_avg`. """
+    This function optionally takes y as `moving_avg`.
+    """
     x = np.array(x)
     if y is None:
         y = x
@@ -81,7 +82,8 @@ def double_moving_avg(
     If both x and y are given, x must be sorted in ascending order.
     inner_neighbors: How many neighbors to use for the initial moving average.
     outer_neighbors: How many neighbors to use for for the second moving average.
-    samples: How many points to sample the moving average at."""
+    samples: How many points to sample the moving average at.
+    """
     x = np.array(x)
     if y is None:
         y = x
@@ -126,7 +128,8 @@ def log_binning(x: _Array, bins: int) -> np.ndarray:
 
 def normal_binning(x: _Array, bins: int) -> np.ndarray:
     """Creates bins that fits nicely to a normally distributed variable.
-    Bins are smaller close to the mean of x."""
+    Bins are smaller close to the mean of x.
+    """
     dist = stats.norm(np.mean(x), 3*np.std(x))
     p = min(dist.cdf(min(x)), 1-dist.cdf(max(x)))
     uniform_spacing = np.linspace(p, 1-p, bins)
@@ -154,7 +157,8 @@ def get_dateticks(x: _Array, num=6, date_format="%b %d") -> tuple[np.ndarray, li
     # x is an array of epoch times in seconds
     plt.plot(x, y)
     plt.xticks(*get_dateticks(x))
-    ``` """
+    ```
+    """
     if not isinstance(num, int) or num < 2:
         raise ValueError("num must int of value 2 or greater, not %s" % num)
     x = np.array(x)
@@ -163,8 +167,7 @@ def get_dateticks(x: _Array, num=6, date_format="%b %d") -> tuple[np.ndarray, li
     return xticks, xticklabels
 
 class Figure:
-
-    """ Used for more ergonomic plotting. Simple usecase:
+    """Used for more ergonomic plotting. Simple usecase:
     ```py
     with Figure("figure.png", figsize=(20, 10), fontsize=50):
         plt.plot(x, y)
@@ -172,7 +175,8 @@ class Figure:
         plt.grid()
     # The finished figure is saved to "figure.png"
     # All settings are reset here
-    ``` """
+    ```
+    """
 
     def __init__(
         self,

@@ -1,5 +1,9 @@
 # History
 
+## 3.3.0
+
+- Began stricter adherence
+
 ## 3.2.0
 
 - Deprecated `TickTock.__len__`

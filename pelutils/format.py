@@ -1,17 +1,17 @@
 from __future__ import annotations
-from typing import Any, Iterable, Optional
+
 import os
 import re
+from collections.abc import Iterable
+from typing import Any, Optional
 
 from rich.color import ANSI_COLOR_NAMES
 from rich.console import Console
-
 
 _stdout_console = Console(highlight=False)
 _stderr_console = Console(highlight=False, stderr=True)
 
 class RichString:
-
     """
     Class used for combining normal strings and rich strings
     This allows for printing and logging without rich syntax causing issues
@@ -27,7 +27,7 @@ class RichString:
         self.console = _stderr_console if stderr else _stdout_console
 
     def add_string(self, s: str, rich: str=None):
-        """ Add a new string and optionally a rich string equivalent """
+        """Add a new string and optionally a rich string equivalent"""
         if rich is None:
             # Escape beginning brackets to prevent accidental formatting when printing
             rich = re.sub(self._open_tag_regex, r"\\\1", s)
@@ -37,17 +37,17 @@ class RichString:
         self.riches.append(rich)
 
     def print(self):
-        """ Print rich text """
+        """Print rich text"""
         self.console.print("".join(r for r in self.riches))
 
     @staticmethod
     def multiprint(rss: list[RichString]):
-        """ Print content of multiple RichStrings at once """
+        """Print content of multiple RichStrings at once"""
         for rs in rss:
             rs.print()
 
     def __str__(self) -> str:
-        """ Return non-rich string """
+        """Return non-rich string"""
         return "".join(self.strings)
 
 
@@ -71,9 +71,10 @@ class Table:
         self._header = header
 
     def add_row(self, row: list[Any], left_align: Optional[Iterable[bool]]=None):
-        """ Add a row to the table. left_align is a boolean iterable of the same length
+        """Add a row to the table. left_align is a boolean iterable of the same length
         as row indicating whether each element is right or left aligned. If None, the
-        first element is left aligned and the rest right aligned. """
+        first element is left aligned and the rest right aligned.
+        """
         self._set_and_check_width(row)
         self._rows.append(row)
         if left_align is None:
@@ -91,8 +92,9 @@ class Table:
         self._hlines.add(len(self._rows)-1)
 
     def tex(self) -> str:
-        """ Produces code for rendering the table in LaTeX. The code should go
-        into a tabular environment. It assumes the booktabs package is used. """
+        """Produces code for rendering the table in LaTeX. The code should go
+        into a tabular environment. It assumes the booktabs package is used.
+        """
         formatted = str(self)
         lines = formatted.splitlines()
         lines.insert(0, r"\toprule")
