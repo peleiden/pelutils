@@ -3,6 +3,7 @@
 ## 3.3.0
 
 - Began stricter adherence
+- Improved error message for unparsable type in config files
 
 ## 3.2.0
 
