@@ -8,7 +8,7 @@ import sys
 from abc import ABC
 from argparse import SUPPRESS, ArgumentParser, Namespace
 from ast import literal_eval
-from configparser import ConfigParser
+from configparser import ConfigParser, MissingSectionHeaderError
 from copy import deepcopy
 from pprint import pformat
 from shutil import rmtree
@@ -355,8 +355,12 @@ class Parser:
         config_path, *sections = config_path.split(self._section_separator)
         sections = set(sections)
 
-        if not self._configparser.read(config_path, encoding=encoding):
-            raise FileNotFoundError(f"Configuration file not found at {config_path}")
+        try:
+            if not self._configparser.read(config_path, encoding=encoding):
+                raise FileNotFoundError(f"Configuration file not found at {config_path}")
+        except MissingSectionHeaderError as e:
+            raise ConfigError("The provided config file contains no section headers. "
+                              "This is best resolved by adding `[DEFAULT]` at the very top.") from e
 
         for section in sections:
             if section not in self._configparser:
@@ -384,10 +388,13 @@ class Parser:
                 else:  # Arguments and options
                     # If multiple values, parse each as given type
                     # Otherwise, parse single argument as given type
-                    if self._arguments[argname].nargs is not None:
-                        config_dict[section][argname] = [self._arguments[argname].type(x) for x in shlex.split(value)]
-                    else:
-                        config_dict[section][argname] = self._arguments[argname].type(value)
+                    try:
+                        if self._arguments[argname].nargs is not None:
+                            config_dict[section][argname] = [self._arguments[argname].type(x) for x in shlex.split(value)]
+                        else:
+                            config_dict[section][argname] = self._arguments[argname].type(value)
+                    except ValueError as e:
+                        raise ValueError(f"Unable to parse value '{argname}' in section '{section}': {e.args[0]}") from e
 
         return config_dict
 
