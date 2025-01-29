@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Generator, Hashable
 from copy import deepcopy
 from time import perf_counter
-from typing import Generator, Hashable, Optional
+from typing import Optional
 
 from deprecated import deprecated
 
@@ -10,7 +11,8 @@ from pelutils.format import Table
 
 
 class TimeUnits:
-    """ Enum-like list of out-of-the-box available units. Format: (suffix, length) """
+    """Enum-like list of out-of-the-box available units. Format: (suffix, length)"""
+
     nanosecond  = ("ns",  1e-9)
     microsecond = ("us",  1e-6)
     millisecond = ("ms",  1e-3)
@@ -20,17 +22,17 @@ class TimeUnits:
 
     @classmethod
     def units(cls) -> list[tuple[str, float]]:
-        """ List all time units """
+        """List all time units"""
         return [unit for name, unit in cls.__dict__.items() if not callable(getattr(cls, name)) and not name.startswith("__")]
 
     @classmethod
     def next_bigger(cls, unit: tuple[str, float]) -> tuple[str, float]:
-        """ Get smallest available time unit bigger than given """
+        """Get smallest available time unit bigger than given"""
         return min((u for u in cls.units() if u[1] > unit[1]), key=lambda x: x[1])
 
     @classmethod
     def next_smaller(cls, unit: tuple[str, float]) -> tuple[str, float]:
-        """ Get largest available time unit smaller than given """
+        """Get largest available time unit smaller than given"""
         return max((u for u in cls.units() if u[1] < unit[1]), key=lambda x: x[1])
 
 class Profile:
@@ -51,11 +53,11 @@ class Profile:
         return [self.mean()] * self._n
 
     def sum(self) -> float:
-        """ Returns total runtime, the sum of all registered hits. """
+        """Returns total runtime, the sum of all registered hits."""
         return self._total_time
 
     def mean(self) -> float:
-        """ Returns mean runtime lengths. Returns 0 if no hits have been registered. """
+        """Returns mean runtime lengths. Returns 0 if no hits have been registered."""
         if self._n == 0:
             return 0
         return self._total_time / self._n
@@ -67,7 +69,7 @@ class Profile:
         return self._n
 
     def __iter__(self) -> Generator[Profile, None, None]:
-        """ Yields a generator that is first self and then all descendants. """
+        """Yields a generator that is first self and then all descendants."""
         yield self
         for child in self.children:
             yield from child
@@ -85,7 +87,7 @@ class Profile:
 class _ProfileContext:
 
     def __init__(self, tt, profile: Profile):
-        self._tt: "TickTock" = tt
+        self._tt: TickTock = tt
         self._profile = profile
 
     def __enter__(self):
@@ -103,7 +105,7 @@ class TickTockException(RuntimeError):
     pass
 
 class TickTock:
-    """ Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
+    """Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
 
     ```py
     TT.tick()
@@ -146,7 +148,8 @@ class TickTock:
         if tt2.tock() > t2_interval:
             <task 2>
         time.sleep(0.01)
-    ``` """
+    ```
+    """
 
     def __init__(self):
         self._tick_starts:   dict[Hashable, float] = dict()
@@ -156,20 +159,21 @@ class TickTock:
         self._nhits:         list[int] = list()
 
     def tick(self, id: Hashable = None):
-        """ Start a timer. Use id if you want to time multiple overlapping things. """
+        """Start a timer. Use id if you want to time multiple overlapping things."""
         self._tick_starts[id] = perf_counter()
 
     def tock(self, id: Hashable = None) -> float:
-        """ End current timer """
+        """End current timer"""
         end = perf_counter()
         if id not in self._tick_starts:
             raise TickTockException("A timer for the given ID (%s) has not been started with .tick()" % id)
         return end - self._tick_starts[id]
 
     def profile(self, name: str, *, hits=1) -> _ProfileContext:
-        """ Begin profile with given name. Optionally it is possible to
+        """Begin profile with given name. Optionally it is possible to
         register this as several hits that sum to the total time.
-        This is usual when executing a multiprocessing mapping operation. """
+        This is usual when executing a multiprocessing mapping operation.
+        """
         profile = Profile(
             name,
             len(self._profile_stack),
@@ -192,8 +196,9 @@ class TickTock:
         return pc
 
     def end_profile(self, name: Optional[str] = None) -> float:
-        """ End profile. If name given, it is checked that it matches latest
-        started profile. Return time passed since .profile was called. """
+        """End profile. If name given, it is checked that it matches latest
+        started profile. Return time passed since .profile was called.
+        """
         end = perf_counter()
         dt = end - self._profile_stack[-1].start
         if name is not None and name != self._profile_stack[-1].name:
@@ -205,15 +210,16 @@ class TickTock:
         return dt
 
     def reset(self):
-        """ Stops all timing and profiling. """
+        """Stops all timing and profiling."""
         if self._profile_stack:
             raise TickTockException("Cannot reset TickTock while profiling is active")
         self.__init__()
 
     def add_external_measurements(self, name: Optional[str], time: float, *, hits=1):
-        """ Allows adding data to a (new) profile with given time spread over given hits.
+        """Allows adding data to a (new) profile with given time spread over given hits.
         If name is a string, it will act like .profile(name). If it is none, the current
-        active profile will be used. """
+        active profile will be used.
+        """
         if name is not None:
             self.profile(name, hits=hits)
             profile = self._profile_stack[-1]
@@ -224,7 +230,7 @@ class TickTock:
             self._profile_stack[-1]._total_time += time
 
     def fuse(self, tt: TickTock):
-        """ Fuses a TickTock instance into self """
+        """Fuses a TickTock instance into self"""
         if len(self._profile_stack) or len(tt._profile_stack):
             raise TickTockException("Unable to fuse while some profiles are still unfinished")
         # TODO allow one of them to be a subset of the other
@@ -238,7 +244,7 @@ class TickTock:
 
     @staticmethod
     def fuse_multiple(*tts: TickTock) -> TickTock:
-        """ Combine multiple TickTocks """
+        """Combine multiple TickTocks"""
         ticktock = deepcopy(tts[0])
         ids = set(id(tt) for tt in tts)
         if len(ids) < len(tts):
@@ -253,7 +259,7 @@ class TickTock:
         return f"{dt/unit[1]:,.3f} {unit[0]}"
 
     def stringify_sections(self, unit: tuple[str, float]=TimeUnits.second) -> str:
-        """ Returns a pretty print of profiles """
+        """Returns a pretty print of profiles"""
         if self._profile_stack:
             raise ValueError("TickTock instance cannot be stringified while profiling is still ongoing. "\
                 "Please end all profiles first")
@@ -277,10 +283,11 @@ class TickTock:
 
     @deprecated(version="3.1.0", reason="Individual hits are no longer recorded, only aggregated statistics. Use stats_by_profile_name instead.")
     def measurements_by_profile_name(self, name: str) -> list[float]:
-        """ Returns the time measurement distribution for a profile with a given name.
+        """Returns the time measurement distribution for a profile with a given name.
         Warning: Since the name does not uniquely identify a profile, this function
         simply returns the first profile with this name, so be careful to check that
-        you get the correct one if you have multiple profiles with the same name. """
+        you get the correct one if you have multiple profiles with the same name.
+        """
         try:
             profile = next(profile for profile in self._id_to_profile.values() if profile.name == name)
         except StopIteration:
@@ -289,11 +296,11 @@ class TickTock:
         return profile.hits
 
     def stats_by_profile_name(self, name: str) -> tuple[int, float]:
-        """ Returns the number of hits and sum of measurement lengths for a profile with a given name.
+        """Returns the number of hits and sum of measurement lengths for a profile with a given name.
         Warning: Since the name does not uniquely identify a profile, this function
         simply returns the first profile with this name, so be careful to check that
-        you get the correct one if you have multiple profiles with the same name. """
-
+        you get the correct one if you have multiple profiles with the same name.
+        """
         try:
             profile = next(profile for profile in self._id_to_profile.values() if profile.name == name)
         except StopIteration:

@@ -27,10 +27,10 @@ def restore_argv(fun):
     return wrapper
 
 class SimplePool:
-
-    """ pytest-cov does not exit properly when using mp.Pool. Using
+    """pytest-cov does not exit properly when using mp.Pool. Using
     this class as a basic drop-in replacement solves it. For details,
-    see https://github.com/pytest-dev/pytest-cov/issues/250. """
+    see https://github.com/pytest-dev/pytest-cov/issues/250.
+    """
 
     def __init__(self, processes=mp.cpu_count()):
         self._processes = processes
@@ -46,7 +46,7 @@ class SimplePool:
         self._pool = None
 
 class UnitTestCollection:
-    """ A convenience class for inheriting from when writing test classes using pytest.
+    """A convenience class for inheriting from when writing test classes using pytest.
     This class ensures that test directory is automatically created and deleted between tests.
 
     See this example for usage:
@@ -57,7 +57,8 @@ class UnitTestCollection:
             with open(f"{self.test_dir}/myresultfile.txt", "w") as f:
                 f.write(result)
             assert "myresultfile.txt" in os.listdir(self.test_dir)
-    ``` """
+    ```
+    """
 
     # Place temporary test files here
     # Directory will be creating when running test files and removed afterwards

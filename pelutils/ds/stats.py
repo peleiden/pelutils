@@ -1,12 +1,13 @@
 from __future__ import annotations
-from typing import Iterable
+
+from collections.abc import Iterable
 
 import numpy as np
 from scipy import stats
 
 
 def z(alpha=0.05, two_sided=True, distribution=stats.norm()) -> np.float64:
-    """ Get z value for a given significance level """
+    """Get z value for a given significance level"""
     if not 0 <= alpha <= 1:
         raise ValueError("alpha must be between 0 and 1, not %s" % alpha)
     if two_sided:
@@ -15,7 +16,7 @@ def z(alpha=0.05, two_sided=True, distribution=stats.norm()) -> np.float64:
         return distribution.ppf(1 - alpha)
 
 def corr_ci(x: Iterable, y: Iterable, *, alpha=0.05, return_string=False) -> tuple[float, float, float, float] | str:
-    """ A convenience function for getting a pearson correlation + confidence interval of it.
+    """A convenience function for getting a pearson correlation + confidence interval of it.
     Uses the method often called Fisher's z transformation: https://en.wikipedia.org/wiki/Fisher_transformation.
     which is only exact if X, Y follow bivariate normal.
 
@@ -25,13 +26,14 @@ def corr_ci(x: Iterable, y: Iterable, *, alpha=0.05, return_string=False) -> tup
     return_string: If true, the function returns a string with the information for easy printing.
 
     Returns
+    -------
     float: Pearson's correlation coefficient.
     float: Lower bound of confidence interval for given alpha.
     float: Upper bound of confidence interval for given alpha.
     float: The corresponding p value.
 
-    Inspired by https://zhiyzuo.github.io/Pearson-Correlation-CI-in-Python/ """
-
+    Inspired by https://zhiyzuo.github.io/Pearson-Correlation-CI-in-Python/
+    """
     # Convert x and y from arbitrary iterables to arrays
     if not hasattr(x, "__len__"):
         x = np.fromiter(x, float)

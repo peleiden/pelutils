@@ -1,5 +1,6 @@
-""" This file contains functions that returns scipy.stats distribution
-objects reparameterized to Jim Pitman's "Probability". """
+"""This file contains functions that returns scipy.stats distribution
+objects reparameterized to Jim Pitman's "Probability".
+"""
 import numpy as np
 from scipy import stats
 
@@ -50,12 +51,12 @@ def hypergeom(n: int, N: int, G: int):
     return stats.hypergeom(M=N, n=G, N=n)
 
 def geom0(p: float):
-    """ The geometric distribution defined on {0, 1, ...} """
+    """The geometric distribution defined on {0, 1, ...}"""
     assert 0 < p <= 1
     return stats.geom(loc=-1, p=p)
 
 def geom1(p: float):
-    """ The geometric distribution defined on {1, 2, ...} """
+    """The geometric distribution defined on {1, 2, ...}"""
     assert 0 < p <= 1
     return stats.geom(p=p)
 

@@ -1,15 +1,15 @@
 from __future__ import annotations
+
 import os
 
 import click
 import git
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from tqdm import tqdm
 
 from pelutils import get_repo
 from pelutils.ds.plots import Figure, get_dateticks
-
 
 _default_extensions = ", ".join((
     ".py", ".pyw",
@@ -22,8 +22,9 @@ _default_extensions = ", ".join((
 ))
 
 def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-    """ Counts lines of all files recursively in the current working directory
-    Returns an array of commit epoch times and a dict mapping file extensions to line counts """
+    """Counts lines of all files recursively in the current working directory
+    Returns an array of commit epoch times and a dict mapping file extensions to line counts
+    """
     commits = list(reversed(list(repo.iter_commits())))  # List of commit from oldest to newest
     times = np.array([c.committed_date for c in commits])
     lines = { ext: np.zeros_like(times) for ext in exts }
@@ -48,7 +49,7 @@ def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[np.ndarra
     return times, lines
 
 def _fuse_times(all_times: list[np.ndarray]) -> np.ndarray:
-    """ Merges all time arrays together into a single array that is also sorted """
+    """Merges all time arrays together into a single array that is also sorted"""
     n = sum(times.size for times in all_times)
     times = np.empty(n, dtype=int)
     idcs = [0] * len(all_times)

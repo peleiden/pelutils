@@ -5,21 +5,23 @@ import os
 import random
 import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import Generator, Iterable, Sequence
 from datetime import datetime
 from io import DEFAULT_BUFFER_SIZE
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterable, TextIO, TypeVar
+from typing import Any, Callable, TextIO, TypeVar
 
 import cpuinfo
+
 try:
     # If git is not installed, this import fails
     import git
     _has_git = True
 except ImportError:
     _has_git = False
-import psutil
 import numpy as np
+import psutil
+
 try:
     # torch is only to be installed if pelutils[ds] has been installed
     import torch
@@ -28,13 +30,13 @@ except ModuleNotFoundError:
     _has_torch = False
 from deprecated import deprecated
 
-
 _T = TypeVar("_T")
 
-class UnsupportedOS(Exception):
+class UnsupportedOS(Exception):  # noqa: D101
     pass
 
 class OS:
+    """Class for checking the current OS."""
 
     # See https://docs.python.org/3/library/sys.html#sys.platform for all platforms
     is_windows = sys.platform == "win32"
@@ -42,6 +44,10 @@ class OS:
     is_linux   = sys.platform == "linux"
 
 def set_seeds(seed: int=0):
+    """Set seeds for various RNG modules to allow for consistent executions.
+
+    Be aware that if torch is available, this can have adverse performance effects.
+    """
     np.random.seed(seed)
     random.seed(seed)
     if _has_torch:
@@ -53,10 +59,11 @@ def set_seeds(seed: int=0):
         torch.backends.cudnn.benchmark = False
 
 def get_repo(path: str | Path | None=None) -> tuple[str | None, str | None]:
-    """Returns absolute path of git repository and commit SHA.
+    """Return absolute path of git repository and commit SHA.
 
     Searches for repo by searching upwards from given directory (if None: uses working dir).
-    If it cannot find a repository, returns (None, None)."""
+    If it cannot find a repository, returns (None, None).
+    """
     if not _has_git:
         return None, None
     if path is None:
@@ -76,14 +83,14 @@ def get_repo(path: str | Path | None=None) -> tuple[str | None, str | None]:
     return None, None
 
 def get_timestamp(*, with_date=True) -> str:
-    """ Returns a timestamp formatted as YYYY-MM-DD HH:mm:SS.ms. """
+    """Return a timestamp formatted as YYYY-MM-DD HH:mm:SS.ms."""
     tstr = datetime.now().isoformat(sep=" ", timespec="milliseconds")
     if not with_date:
         tstr = tstr[11:]
     return tstr
 
 def get_timestamp_for_files(*, with_date=True) -> str:
-    """ Returns a timestamp formatted as YYYY-MM-DD_HH-mm-SS """
+    """Return a timestamp formatted as YYYY-MM-DD_HH-mm-SS."""
     tstr = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     if not with_date:
         tstr = tstr[11:]
@@ -91,9 +98,9 @@ def get_timestamp_for_files(*, with_date=True) -> str:
 
 @deprecated(version="3.2.0", reason="Use built-in :, formatting syntax instead.")
 def thousands_seperators(num: float | int, decimal_seperator=".") -> str:
-    """Formats a number using thousand seperators."""
+    """Format a number using thousand seperators."""
     if decimal_seperator not in { ".", "," }:
-        raise ValueError("'%s' is not a valid decimal seperator. Use '.' or ','" % decimal_seperator)
+        raise ValueError(f"'{decimal_seperator}' is not a valid decimal seperator. Use '.' or ','")
 
     num = str(num)
     is_negative = num.startswith("-")
@@ -113,7 +120,7 @@ def thousands_seperators(num: float | int, decimal_seperator=".") -> str:
     return num + rest
 
 def raises(exc_type: type, fun: Callable, *args, **kwargs) -> bool:
-    """ Check if fun(*args, **kwargs) throws an error of a given type. """
+    """Check if fun(*args, **kwargs) throws an error of a given type."""
     try:
         fun(*args, **kwargs)
         return False
@@ -123,14 +130,16 @@ def raises(exc_type: type, fun: Callable, *args, **kwargs) -> bool:
         return False
 
 class EnvVars:
-    """ Execute a piece of code with certain environment variables.
+    """Execute a piece of code with certain environment variables.
+
     ALl environment variables are restored after with block.
     Example: Disabling multithreading in tesseract:
     ```
     with EnvVars(OMP_THREAD_LIMIT=1):
         # Tesseract code here
     ```
-    Any existing environment variables are restored, and newly added are removed after exiting with block. """
+    Any existing environment variables are restored, and newly added are removed after exiting with block.
+    """
 
     _origs: dict
 
@@ -151,9 +160,10 @@ class EnvVars:
                 os.environ[var] = value
 
 def array_ptr(arr: np.ndarray | torch.Tensor) -> ctypes.c_void_p:
-    """ Returns a pointer to a numpy array or torch tensor which can be used to interact
-    with it in low-level languages like C/C++/Rust. This function is mostly useful
-    when not using Python's C api and instead interfacing with .so files directly. """
+    """Return a pointer to a numpy array or torch tensor which can be used to interact with it in low-level languages like C/C++/Rust.
+
+    This function is mostly useful when not using Python's C api and instead interfacing with .so files directly with ctypes.
+    """
     if _has_torch and isinstance(arr, torch.Tensor):
         return ctypes.c_void_p(arr.data_ptr())
     if not isinstance(arr, np.ndarray):
@@ -163,12 +173,15 @@ def array_ptr(arr: np.ndarray | torch.Tensor) -> ctypes.c_void_p:
     return ctypes.c_void_p(arr.ctypes.data)
 
 def split_path(path: str) -> list[str]:
-    """ Splits a path into components """
+    """Split a path into components."""
     return os.path.normpath(path).split(os.sep)
 
 def binary_search(element: _T, iterable: Sequence[_T], *, _start=0, _end=-1) -> int | None:
-    """ Get the index of element in sequence using binary search. Assumes iterable is
-    sorted in ascending order. Returns None if the element is not found. """
+    """Get the index of element in sequence using binary search.
+
+    The iterable is assumed to be sorted in ascending order.
+    None is returned if the element is not found.
+    """
     if _end == -1:  # Entered on first call
         _end = len(iterable)
         # Make sure element actually exists in array
@@ -185,11 +198,13 @@ def binary_search(element: _T, iterable: Sequence[_T], *, _start=0, _end=-1) -> 
         return index
 
 def _read_file_chunk(file: TextIO, chunksize: int) -> str:
-    """ Reads a chunk starting from `chunksize` before file pointer and up to current file pointer
-    If `chunksize` is larger than the current file pointer, the file is read from the beginning
-    Returns the read content in reverse order and moves the file pointer to where the content starts
+    """Read a chunk starting from `chunksize` before file pointer and up to current file pointer.
+
+    If `chunksize` is larger than the current file pointer, the file is read from the beginning.
+    Returns the read content in reverse order and moves the file pointer to where the content starts.
     Reverse order is used, as it will be mostly faster to search for newlines,
-    especially if there are many lines in a given chunk """
+    especially if there are many lines in a given chunk.
+    """
     mov = file.tell() - max(file.tell()-chunksize, 0)
     file.seek(file.tell()-mov)
     reversed_content = file.read(mov)[::-1]
@@ -197,13 +212,14 @@ def _read_file_chunk(file: TextIO, chunksize: int) -> str:
     return reversed_content
 
 def reverse_line_iterator(file: TextIO, chunksize=DEFAULT_BUFFER_SIZE, linesep="\n") -> Generator[str, None, None]:
-    """ Similar to file.readlines(), but lazily returns lines in reverse order.
+    """Similar to file.readlines(), but lazily returns lines in reverse order.
+
     Will move file pointer (file.tell()) throughout execution, so be careful.
     When done, file pointer will be 0. This function is especially useful for large files,
     as it will never take up more memory that size of largest line + chunksize.
     Raises an OSError on Windows, as this function currently is not supported on Windows due
-    to fuckery in how line seperators are read. """
-
+    to fuckery in how line seperators are read.
+    """
     if OS.is_windows:
         raise UnsupportedOS("reverse_line_iterator is not supported on Windows")
     if len(linesep) != 1:
@@ -232,7 +248,7 @@ def reverse_line_iterator(file: TextIO, chunksize=DEFAULT_BUFFER_SIZE, linesep="
     yield "".join(reversed_contents)[::-1]
 
 def except_keys(d: dict[_T, Any], except_keys: Iterable[_T]) -> dict[_T, Any]:
-    """ Returns the given dictionary, but with given keys removed """
+    """Return the given dictionary, but with given keys removed."""
     except_keys = set(except_keys)
     return { kw: v for kw, v in d.items() if kw not in except_keys }
 
@@ -255,7 +271,7 @@ class HardwareInfo:
 
     @classmethod
     def string(cls) -> str:
-        """ Pretty string-representation of hardware. """
+        """Pretty string-representation of hardware."""
         lines = [
             f"CPU:     {cls.cpu}",
             f"Sockets: {cls.sockets}" if cls.sockets else None,
@@ -270,11 +286,13 @@ class HardwareInfo:
 # Placed down here to prevent issues with circular imports
 from .__version__ import __version__  # noqa: F401
 from .logging import *  # noqa: F403
+
 log: Logger  # Make sure type hinting works when importing global instances  # noqa: F405
 from .parser import *  # noqa: F403
 from .ticktock import *  # noqa: F403
+
 TT: TickTock  # noqa: F405
 from .datastorage import *  # noqa: F403
-from .tests import *  # noqa: F403
 from .format import *  # noqa: F403
 from .jsonl import *  # noqa: F403
+from .tests import *  # noqa: F403
