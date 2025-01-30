@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-22.04, windows-latest, macos-latest ]
 
     steps:
       - uses: actions/checkout@v4.2.2
@@ -46,7 +46,7 @@ jobs:
 
   make_sdist:
     name: Make source dist
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4.2.2
       with:
@@ -61,7 +61,7 @@ jobs:
 
   upload_all:
     needs: [ build_wheels, make_sdist ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     # Upload to PyPI when pushing new version tag
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
