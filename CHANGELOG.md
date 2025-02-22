@@ -1,5 +1,10 @@
 # History
 
+## 3.4.0
+
+- Made `UnitTestCollection` use `tempfile` for better management of temporary directories.
+- Improved type hinting in some places.
+
 ## 3.3.0
 
 - Began stricter adherence

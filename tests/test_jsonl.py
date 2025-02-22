@@ -6,7 +6,10 @@ from pelutils.tests import UnitTestCollection
 class TestJsonl(UnitTestCollection):
 
     data = [{ l: v } for l, v in zip(("a", "b", "c"), (1, 2, 3))]
-    path = os.path.join(UnitTestCollection.test_dir, "test.jsonl")
+
+    @property
+    def path(self) -> str:
+        return self.test_path("test.jsonl")
 
     def test_jsonl(self):
 

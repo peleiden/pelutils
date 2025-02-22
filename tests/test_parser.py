@@ -68,11 +68,11 @@ class TestParser(UnitTestCollection):
 
     def setup_class(self):
         super().setup_class()
-        self._no_default_file          = os.path.join(self.test_dir, "no-default.ini")
-        self._default_file             = os.path.join(self.test_dir, "default-only.ini")
-        self._single_job_file          = os.path.join(self.test_dir, "single-job.ini")
-        self._multiple_jobs_file       = os.path.join(self.test_dir, "multiple-jobs.ini")
-        self._sample_single_nargs_file = os.path.join(self.test_dir, "single-nargs.ini")
+        self._no_default_file = self.test_path("no-default.ini")
+        self._default_file = self.test_path("default-only.ini")
+        self._single_job_file = self.test_path("single-job.ini")
+        self._multiple_jobs_file = self.test_path("multiple-jobs.ini")
+        self._sample_single_nargs_file = self.test_path("single-nargs.ini")
         with open(self._no_default_file, "w") as f:
             f.write(_sample_no_default)
         with open(self._default_file, "w") as f:
@@ -161,7 +161,7 @@ class TestParser(UnitTestCollection):
             Parser(Argument("help"))
 
         # Test that under no permutations is the ordering changed in the argparser
-        sys.argv = f"main.py {os.path.join(UnitTestCollection.test_dir, _testdir)}".split()
+        sys.argv = f"main.py {os.path.join(self.test_dir, _testdir)}".split()
         sample_args = [
             Option("quick-mafs", default=0),
             Flag("Quick-flag", abbrv="Q"),
@@ -320,7 +320,7 @@ class TestParser(UnitTestCollection):
 
     @restore_argv
     def test_non_optional_args(self):
-        sys.argv = f"main.py {os.path.join(UnitTestCollection.test_dir, _testdir)} -c {self._multiple_jobs_file}".split()
+        sys.argv = f"main.py {self.test_path(_testdir)} -c {self._multiple_jobs_file}".split()
         parser = Parser(*_sample_arguments, multiple_jobs=True)
         with pytest.raises(ParserError):
             parser.parse_args()
@@ -331,7 +331,7 @@ class TestParser(UnitTestCollection):
         os.makedirs(d)
         with open(os.path.join(d, "tmp.txt"), "w") as f:
             f.write("")
-        sys.argv = f"main.py {os.path.join(UnitTestCollection.test_dir, _testdir)}".split()
+        sys.argv = f"main.py {self.test_path(_testdir)}".split()
         parser = Parser()
         parser.parse_args()
         assert os.listdir(d)
@@ -408,7 +408,7 @@ class TestParser(UnitTestCollection):
 
     @restore_argv
     def test_document(self):
-        shutil.rmtree(os.path.join(UnitTestCollection.test_dir, _testdir))
+        shutil.rmtree(self.test_path(_testdir))
         sys.argv = _sample_argv_conf(self._no_default_file)
         parser = Parser(*_sample_arguments)
         job = parser.parse_args()
