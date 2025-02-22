@@ -1,10 +1,7 @@
-"""This file contains supporting elements to the logger, such as levels,
-colours, collection of logs, etc.
-"""
+"""Supporting elements to the logger, such as levels, colours, collection of logs, etc."""
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import Optional
 
 
 class LogLevels(IntEnum):
@@ -18,9 +15,11 @@ class LogLevels(IntEnum):
     DEBUG    = 0
 
 class _LevelManager:
-    """
-    Used for context limiting logging levels, e.g.
-    ```
+    """Used for context limiting logging levels.
+
+    Example
+    -------
+    ```py
     with log.level(Levels.WARNING):
         log.error("This will be logged")
         log.info("This will not be logged")
@@ -28,7 +27,7 @@ class _LevelManager:
     """
 
     def __init__(self):
-        self.level: Optional[LogLevels] = None
+        self.level: LogLevels | None = None
 
     def with_level(self, level: LogLevels | int) -> _LevelManager:
         self.level = level
@@ -55,8 +54,13 @@ class _LogErrors:
             self._log.log_with_stacktrace(ev, level=LogLevels.CRITICAL)
 
 class _CollectLogs:
-    """Used for producing all logging output from a block at once. This is useful with
-    multiprocessing to prevent the logs getting mixed up.
+    """Used for producing all logging output from a block at once.
+
+    This is useful with threads, asynchronous code, and multiprocessing to prevent the logs getting mixed up.
+    It is not supported on Windows.
+
+    Example
+    -------
     ```
     def fun():
         with log.collect:
