@@ -253,6 +253,7 @@ def except_keys(d: dict[_T, Any], except_keys: Iterable[_T]) -> dict[_T, Any]:
     return { kw: v for kw, v in d.items() if kw not in except_keys }
 
 class HardwareInfo:
+    """Information on the available hardware."""
 
     # Name of the CPU
     cpu: str = cpuinfo.get_cpu_info()["brand_raw"]

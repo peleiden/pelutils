@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import os
+from argparse import ArgumentParser
 
-import click
 import git
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,34 +22,37 @@ _default_extensions = ", ".join((
 ))
 
 def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-    """Counts lines of all files recursively in the current working directory
-    Returns an array of commit epoch times and a dict mapping file extensions to line counts
+    """Count lines of all files recursively in the current working directory.
+
+    Return an array of commit epoch times and a dict mapping file extensions to line counts
     """
     commits = list(reversed(list(repo.iter_commits())))  # List of commit from oldest to newest
     times = np.array([c.committed_date for c in commits])
     lines = { ext: np.zeros_like(times) for ext in exts }
-    for i, commit in enumerate(tqdm(commits)):
-        try:
-            repo.git.checkout(str(commit))
-        except git.GitCommandError as e:
-            # This error happens if there is a file that has been moved in and out of .gitignore
-            # For safety, the commit is ignored
-            if "error: The following untracked working tree files would be overwritten by checkout:" in str(e):
-                continue
-            raise
-        for path, __ in repo.index.entries:
+    try:
+        for i, commit in enumerate(tqdm(commits)):
             try:
-                ext = next(e for e in exts if path.endswith(e) and os.path.isfile(path))
-            except StopIteration:
-                continue
-            with open(path) as f:
-                lines[ext][i] += len([line for line in f.readlines() if line.strip()])
+                repo.git.checkout(str(commit))
+            except git.GitCommandError as e:
+                # This error happens if there is a file that has been moved in and out of .gitignore
+                # For safety, the commit is ignored
+                if "error: The following untracked working tree files would be overwritten by checkout:" in str(e):
+                    continue
+                raise
+            for path, __ in repo.index.entries:
+                try:
+                    ext = next(e for e in exts if path.endswith(e) and os.path.isfile(path))
+                except StopIteration:
+                    continue
+                with open(path) as f:
+                    lines[ext][i] += len([line for line in f.readlines() if line.strip()])
+    finally:
+        repo.git.checkout(branch)
 
-    repo.git.checkout(branch)
     return times, lines
 
 def _fuse_times(all_times: list[np.ndarray]) -> np.ndarray:
-    """Merges all time arrays together into a single array that is also sorted"""
+    """Merge all time arrays together into a single array that is also sorted."""
     n = sum(times.size for times in all_times)
     times = np.empty(n, dtype=int)
     idcs = [0] * len(all_times)
@@ -65,12 +68,6 @@ def _last_initial_zero(values: np.ndarray) -> int:
         return 0
     return np.where(values!=0)[0][0] - 1
 
-@click.command()
-@click.argument("repos", nargs=-1)
-@click.option("-o", "--output")
-@click.option("-e", "--extensions", default=_default_extensions, help="Comma seperated list of file extensions to look for")
-@click.option("-d", "--date-format", default="%y-%m-%d", help="How to format axis labels")
-@click.option("-n", "--no-repo-name", is_flag=True)
 def linecounter(repos: list[str], output: str, extensions: str, date_format: str, no_repo_name: bool):
     extensions = [x.strip() for x in extensions.split(",")]
     extensions = [x if x.startswith(".") else "." + x for x in extensions]
@@ -79,7 +76,7 @@ def linecounter(repos: list[str], output: str, extensions: str, date_format: str
     for repo in repos:
         repo_path, __ = get_repo(repo)
         if repo_path is None:
-            raise ValueError("%s is not a git repository" % repo_path)
+            raise ValueError(f"{repo_path} is not a git repository")
         os.chdir(repo_path)
 
         try:
@@ -96,7 +93,7 @@ def linecounter(repos: list[str], output: str, extensions: str, date_format: str
         os.chdir(wd)
 
     with Figure(output):
-        for i, (repo_name, times, counts) in enumerate(zip(repo_names, all_times, all_counts)):
+        for _i, (repo_name, times, counts) in enumerate(zip(repo_names, all_times, all_counts)):
             for ext, line_counts in counts.items():
                 if not line_counts.any():
                     continue
@@ -115,4 +112,12 @@ def linecounter(repos: list[str], output: str, extensions: str, date_format: str
         plt.grid()
 
 if __name__ == "__main__":
-    linecounter()
+    parser = ArgumentParser()
+    parser.add_argument("repos", nargs="+")
+    parser.add_argument("-o", "--output", default="linecount.png", help="Path to produce output figure to.")
+    parser.add_argument("-e", "--extensions", default=_default_extensions, help="Comma seperated list of file extensions to look for.")
+    parser.add_argument("-d", "--date-format", default="%y-%m-%d", help="How to format axis labels.")
+    parser.add_argument("-n", "--no-repo-name", action="store_true", help="Disable repository name from the produced figure.")
+    args = parser.parse_args()
+
+    linecounter(args.repos, args.output, args.extensions, args.date_format, args.no_repo_name)

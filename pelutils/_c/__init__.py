@@ -1,9 +1,5 @@
-"""Utilities for pelutils C api, including a helpful way of passing
-numpy arrays and torch tensors to C.
-"""
+"""Utilities for pelutils C api, including a helpful way of passing numpy arrays and torch tensors to C."""
 from __future__ import annotations
-
-from typing import Tuple
 
 import numpy as np
 
@@ -15,7 +11,7 @@ except ModuleNotFoundError:
 
 
 # Data pointer, num dims, dimensions pointer, strides pointer
-ArrayArgs = Tuple[int, int, int, int]
+ArrayArgs = tuple[int, int, int, int]
 
 def get_array_c_args(arr: np.ndarray | torch.Tensor) -> ArrayArgs:
     if _has_torch and isinstance(arr, torch.Tensor):

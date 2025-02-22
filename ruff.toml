@@ -27,6 +27,7 @@ exclude = [
     "site-packages",
     "venv",
     "tests",
+    "examples",
 ]
 
 line-length = 150

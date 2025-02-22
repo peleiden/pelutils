@@ -2,7 +2,8 @@ import os
 import sys
 from distutils.command.build import build as build_
 from glob import glob as glob  # glob
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 from setuptools.extension import Extension
 
 sys.path.append("pelutils")
@@ -18,7 +19,6 @@ requirements = [
     "matplotlib>=3.3",
     "scipy>=1.6",
     "tqdm>=4.55",
-    "click>=8",
     "deprecated>=1.2",
 ]
 requirements_dev = [
@@ -41,20 +41,20 @@ for root, __, files in os.walk("pelutils/_c"):
     c_files += [os.path.join(root, f) for f in files if f.endswith(".c")]
 
 class CExtension(Extension):
-    """ See this thread for details: https://stackoverflow.com/a/34830639/13196863 """
+    """See this thread for details: https://stackoverflow.com/a/34830639/13196863."""
 
-class build(build_):
+class build(build_):  # noqa: D101
 
-    def build_extension(self, ext):
+    def build_extension(self, ext):  # noqa: D102
         self._ctypes = isinstance(ext, CExtension)
         return super().build_extension(ext)
 
-    def get_export_symbols(self, ext):
+    def get_export_symbols(self, ext):  # noqa: D102
         if self._ctypes:
             return ext.export_symbols
         return super().get_export_symbols(ext)
 
-    def get_ext_filename(self, ext_name):
+    def get_ext_filename(self, ext_name):  # noqa: D102
         if self._ctypes:
             return ext_name + '.so'
         return super().get_ext_filename(ext_name)

@@ -20,6 +20,10 @@ The Swiss army knife of Python projects.
 To install, simply run `pip install pelutils`.
 A small subset of the functionality requires `PyTorch`, which has to be installed separately.
 
+There are a few examples for some parts of the library, namely plotting, in the `examples`.
+These require `click` to be installed as well as the library itself.
+However, most of the documentation and examples are listed here in this readme.
+
 ## Timing and Code Profiling
 
 Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
