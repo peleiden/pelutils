@@ -111,7 +111,7 @@ def linecounter(repos: list[str], output: str, extensions: str, date_format: str
         plt.legend(loc=2)
         plt.grid()
 
-if __name__ == "__main__":
+def run():
     parser = ArgumentParser()
     parser.add_argument("repos", nargs="+")
     parser.add_argument("-o", "--output", default="linecount.png", help="Path to produce output figure to.")
@@ -121,3 +121,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     linecounter(args.repos, args.output, args.extensions, args.date_format, args.no_repo_name)
+
+if __name__ == "__main__":
+    run()
