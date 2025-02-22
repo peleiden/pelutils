@@ -6,34 +6,41 @@ import numpy as np
 from scipy import stats
 
 
-def z(alpha=0.05, two_sided=True, distribution=stats.norm()) -> np.float64:
-    """Get z value for a given significance level"""
+def z(alpha=0.05, two_sided=True, distribution=stats.norm()) -> float:  # noqa: B008
+    """Get z value for a given significance level."""
     if not 0 <= alpha <= 1:
-        raise ValueError("alpha must be between 0 and 1, not %s" % alpha)
+        raise ValueError(f"alpha must be between 0 and 1, not {alpha}")
     if two_sided:
-        return distribution.ppf(1 - alpha / 2)
+        return distribution.ppf(1 - alpha / 2).item()
     else:
-        return distribution.ppf(1 - alpha)
+        return distribution.ppf(1 - alpha).item()
 
 def corr_ci(x: Iterable, y: Iterable, *, alpha=0.05, return_string=False) -> tuple[float, float, float, float] | str:
-    """A convenience function for getting a pearson correlation + confidence interval of it.
-    Uses the method often called Fisher's z transformation: https://en.wikipedia.org/wiki/Fisher_transformation.
-    which is only exact if X, Y follow bivariate normal.
+    """Convenience function for getting a pearson correlation and confidence interval of it.
 
-    x, y:  Data iterables to compare. Should of equal length.
+    It uses the method often called Fisher's z transformation: https://en.wikipedia.org/wiki/Fisher_transformation,
+    which is only exact if (X, Y) follow a bivariate normal.
 
-    alpha: Significance level. 0.05 by default.
-    return_string: If true, the function returns a string with the information for easy printing.
+    Inspired by https://zhiyzuo.github.io/Pearson-Correlation-CI-in-Python.
+
+    Parameters
+    ----------
+    x, y : Iterable
+        Data iterables to compare. Should of equal length and numeric.
+    alpha : float, optional
+        Significance level, by default 0.05.
+    return_string : bool, optional
+        If true, the function returns a string with the information for easy printing, by default False.
 
     Returns
     -------
-    float: Pearson's correlation coefficient.
-    float: Lower bound of confidence interval for given alpha.
-    float: Upper bound of confidence interval for given alpha.
-    float: The corresponding p value.
-
-    Inspired by https://zhiyzuo.github.io/Pearson-Correlation-CI-in-Python/
-    """
+    tuple[float, float, float, float] | str
+        If return_string is not True, the four returned floats are
+            - Pearson's correlation coefficient.
+            - Lower bound of confidence interval for given alpha.
+            - Upper bound of confidence interval for given alpha.
+            - The corresponding p value.
+    """  # noqa: D401
     # Convert x and y from arbitrary iterables to arrays
     if not hasattr(x, "__len__"):
         x = np.fromiter(x, float)

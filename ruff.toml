@@ -54,6 +54,8 @@ ignore = [
     "D104",  # Missing docstring in public package
     "D105",  # Docstring in magic method
     "E402",  # Import not at top of file
+    "UP006",  # Using type instead of typing.Type (VS Code doesn't quite know how to handle type)
+    "UP035",
 ]
 
 [lint.pydocstyle]

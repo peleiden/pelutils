@@ -29,10 +29,10 @@ def _fixdash(argname: str) -> str:
     return argname.replace("-", "_")
 
 class ParserError(Exception):
-    pass
+    """Raised when unable to parse arguments."""
 
 class ConfigError(ParserError):
-    pass
+    """Config file related errors."""
 
 class _AbstractArgument(ABC):
     """Contains description of an argument.

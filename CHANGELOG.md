@@ -6,6 +6,7 @@
 - Improved type hinting in some places.
 - Improved and expanded documentation.
 - Cleaned up `linecounter` and removed `click` as a dependency.
+- Made the whole library linter compliant and thus code style more uniform.
 
 ## 3.3.0
 
