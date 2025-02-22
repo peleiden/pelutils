@@ -8,6 +8,8 @@ from functools import wraps
 from shutil import rmtree
 from typing import Callable, TypeVar
 
+from pelutils import OS
+
 _C = TypeVar("_C", bound=Callable)
 
 def restore_argv(fun: _C) -> _C:
@@ -70,7 +72,7 @@ class UnitTestCollection:
     ```
     """
 
-    test_dir = tempfile.mkdtemp()
+    test_dir = tempfile.mkdtemp() if OS.is_linux else ".local-test-dir"
 
     @classmethod
     def setup_class(cls):
