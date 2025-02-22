@@ -174,7 +174,9 @@ class TestBinning:
 
 class TestFigure(UnitTestCollection):
 
-    savepath = os.path.join(UnitTestCollection.test_dir, "test.png")
+    @property
+    def savepath(self) -> str:
+        return self.test_path("test.png")
 
     def test_save(self):
         with Figure(Path(self.savepath)):
