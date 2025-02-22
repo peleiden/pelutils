@@ -3,13 +3,15 @@ from __future__ import annotations
 import os
 import pickle
 from pathlib import Path
-from typing import Optional
+from typing import Type, TypeVar
 
 import rapidjson
 
+_T = TypeVar("_T", bound="DataStorage")
 
 class DataStorage:
     """The DataStorage class is an augmentation of the dataclass that incluces save and load functionality.
+
     DataStorage classes must inherit from DataStorage and be annotated with `@dataclass`. Data will be saved
     to two files: A json files for json-serializable data and a pickle file for everything else. These files
     are by default named after the class, but it is possible to use a custom name in the save and load methods.
@@ -39,27 +41,38 @@ class DataStorage:
     """
 
     def __init__(self, *args, **kwargs):
-        """This method is overwritten class is decorated with @dataclass.
+        """This method is overwritten in any class decorated with @dataclass.
+
         Therefore, if this method is called, it is an error.
-        """
-        raise TypeError("DataStorage class %s must be decorated with @dataclass" % self.__class__.__name__)
+        """  # noqa: D401, D404
+        raise TypeError(f"DataStorage class {self.__class__.__name__} must be decorated with @dataclass")
 
     @classmethod
-    def json_name(cls, save_name: Optional[str] = None):
+    def json_name(cls, save_name: str | None = None):
+        """Return the name of the json file to where json serializable data will be saved."""
         return (save_name or cls.__name__) + ".json"
 
     @classmethod
-    def pickle_name(cls, save_name: Optional[str] = None):
+    def pickle_name(cls, save_name: str | None = None):
+        """Return the name of the pickle file to where non json serializable data will be saved."""
         return (save_name or cls.__name__) + ".pkl"
 
-    def save(self, loc: str | Path, save_name: Optional[str] = None, *, indent: Optional[int] = 4) -> list[str]:
-        """Saves all the fields of the instatiated data classes as either json,
-        pickle or designated serialization function. Use save_name to overwrite
-        default behavior of using the class name for file names. E.g. in a DataStorage
-        class named Results, the defualt saved file names would be Results.json and
-        Results.pkl. Settings save_name="gollum" would result in file names
-        Returns list of saved files.
-        :param str loc: Path to directory in which to save data.
+    def save(self, loc: str | Path, save_name: str | None = None, *, indent: int | None = 4) -> list[str]:
+        """Save all the fields of the instatiated data classes as either json, pickle or designated serialization function.
+
+        Parameters
+        ----------
+        loc : str | Path
+            Directory in which to save data.
+        save_name : str | None, optional
+            If given, file name (excluding extension) to use for saving, by default None.
+        indent : int | None, optional
+            Indent used for the json file, by default 4. It is recommended to set to None when large objects are saved to json.
+
+        Returns
+        -------
+        list[str]
+            Produced files containing the data.
         """
         loc = str(loc)
         os.makedirs(loc, exist_ok=True)
@@ -97,12 +110,20 @@ class DataStorage:
         return paths
 
     @classmethod
-    def load(cls, loc: str | Path, save_name: Optional[str] = None):
-        """
-        Instantiates the DataStorage-inherited class by loading all files saved by `save` of that same class.
-        Use save_name to load json and pickle files that have been saved using explicitly set save_name.
-        :param str loc: Path to directory from which to load data
-        :return: An instance of this class with the content of the files
+    def load(cls: Type[_T], loc: str | Path, save_name: str | None = None) -> _T:
+        """Instantiate the DataStorage-inherited class by loading all files saved by `save` of that same class.
+
+        Parameters
+        ----------
+        loc : str | Path
+            Directory from which to load data.
+        save_name : str | None, optional
+            If given, file name (excluding extension) to use for loading, by default None. It should match what was given to `save`.
+
+        Returns
+        -------
+        DataStorage
+            An instance of this class with the content of the files.
         """
         loc = str(loc)
         json_file = os.path.join(loc, cls.json_name(save_name))

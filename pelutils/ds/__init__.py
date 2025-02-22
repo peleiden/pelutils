@@ -70,10 +70,10 @@ def unique(
     return tuple(ret) if len(ret) > 1 else ret[0]
 
 def tensor_bytes(x: np.ndarray | torch.Tensor) -> int:
-    """Calculates the size of a numpy array or torch tensor in bytes."""
+    """Calculate the size of a numpy array or torch tensor in bytes."""
     if isinstance(x, np.ndarray):
         return x.nbytes
     elif _has_torch and isinstance(x, torch.Tensor):
         return x.element_size() * x.numel()
     else:
-        raise TypeError("Unable to calculate the number of bytes of a tensor with type %s" % type(x))
+        raise TypeError(f"Unable to calculate the number of bytes of a tensor with type {type(x)}")
