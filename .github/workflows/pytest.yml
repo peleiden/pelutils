@@ -37,7 +37,6 @@ jobs:
           pip install -e .[dev]
 
       - name: Lint
-        continue-on-error: true
         run: ruff check pelutils
 
       - name: Run test
