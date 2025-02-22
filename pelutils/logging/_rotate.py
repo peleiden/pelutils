@@ -60,7 +60,7 @@ class _LogFileRotater:
             return 1, rotate_cmd
         match = re.search(pattern, rotate_cmd)
         if match is None:
-            raise ValueError(f"Given rotate command \"{rotate_cmd}\" is invalid. It must be an integer followed by a supported unit, e.g. H (for hours).")
+            raise ValueError(f"Given rotate command \"{rotate_cmd}\" is invalid. It must be an integer followed by a supported unit, e.g. H (hours).")
         value = int(match.group(1))
         unit = match.group(2)
         if unit not in cls.supported_size_units:

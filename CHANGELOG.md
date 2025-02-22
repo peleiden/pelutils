@@ -4,6 +4,7 @@
 
 - Made `UnitTestCollection` use `tempfile` for better management of temporary directories.
 - Improved type hinting in some places.
+- Improved and expanded documentation.
 
 ## 3.3.0
 

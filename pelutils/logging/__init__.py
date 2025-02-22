@@ -24,10 +24,11 @@ LEVEL_FORMAT = {
 }
 
 class LoggingException(RuntimeError):
-    pass
+    """Raised on logging-related errors."""
 
 class Logger:
-    """A simple logger which creates a log file and pushes strings both to stdout and the log file.
+    """A simple logger which creates a log file and pushes strings both to stdout and the log file. See .configure for usage details.
+
     Main features include automatically logging errors and their stacktrace (see _Logger.log_errors),
     collecting logs for multiprocessing (see _Logger.collect), and colourful prints.
     """
@@ -50,14 +51,33 @@ class Logger:
 
     def configure(
         self,
-        fpath: str | Path | None, *,  # Path to logfile. Missing directories are created
-        default_seperator: str  = "\n",  # Default seperator when logging multiple strings in a single call
-        append: bool = False,  # Set to True to append to old log file instead of overwriting it
-        print_level: Optional[LogLevels] = LogLevels.INFO,  # Highest level that will be printed. All will be logged. None for no print
-        rotation: str | None = None,  # Command specifying when to rotate, e.g. "day" or "1 GB"
+        fpath: str | Path | None, *,
+        default_seperator: str  = "\n",
+        append: bool = False,
+        print_level: LogLevels | None = LogLevels.INFO,
+        rotation: str | None = None,
     ):
-        """This configures a logfile and must be called for a logger to work.
-        Loggers can be reconfigured at any time, so long as they are not collecting.
+        r"""Configure a logfile. This method must be called before a Logger can be used.
+
+        A Logger can be reconfigured at any time, so long as it is not collecting.
+
+        Parameters
+        ----------
+        fpath : str | Path | None
+            Path to logfile. Missing directories are created. If None, no file is created, and the logger works more like an advaned `print`.
+        default_seperator : str, optional
+            Default seperator when logging multiple strings in a single call, by default \n.
+        append : bool, optional
+            If True, existing log file(s) are appended to rather that overwritten, by default False.
+        print_level : LogLevels | None, optional
+            Highest level that will be printed. If None, nothing will be printed, by default LogLevels.INFO.
+        rotation : str | None, optional
+            Command specifying when to rotate the log file, e.g. "day" or "1 GB" or None for no rotation, by default None.
+
+        Returns
+        -------
+        Logger
+            self is returned to allow for chaining when creating a Logger instance (`log = Logger().configure(...)`).
         """
         if self._collect:
             raise LoggingException("Logger cannot be reconfigured while collecting")
@@ -76,7 +96,6 @@ class Logger:
         self._print_level = print_level if print_level is not None else max(LogLevels) + 1
         self._is_configured = True
 
-        # Allow for easier logger creation, e.g. `log = Logger().configure(...)`
         return self
 
     def level(self, level: LogLevels):
@@ -85,17 +104,13 @@ class Logger:
 
     @property
     def no_log(self):
-        """ Disable logging inside a with block. """
+        """Disable logging inside a with block."""
         return self._level_mgr.with_level(max(LogLevels)+1)
 
     @property
     def log_errors(self):
-        """ Use in a with block. Any errors thrown within the block are logged with the full stacktrace. """
+        """Use in a `with` block. Any errors thrown within the block are logged with the full stacktrace."""
         return self._log_errors
-
-    def __call__(self, *tolog, level=LogLevels.INFO, with_info=True, sep=None, with_print=None):
-        """Shorthand for specific logging methods where level is specified as an argument."""
-        self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 
     def _write_to_log(self, content: RichString):
         if self._rotater is not None:
@@ -107,7 +122,27 @@ class Logger:
     def _format(s: str, format: str) -> str:
         return f"[{format}]{s}[/]"
 
-    def _log(self, *tolog, level=LogLevels.INFO, with_info=True, sep=None, with_print=None):
+    def _log(
+        self,
+        *tolog: str,
+        level=LogLevels.INFO,
+        with_info: bool = True,
+        sep: str | None = None,
+        with_print: bool | None = None,
+    ):
+        """Log given strings.
+
+        Parameters
+        ----------
+        level : LogLevels, optional
+            Level (or severity) at which to log, by default LogLevels.INFO.
+        with_info : bool, optional
+            Include timestamp and severity information, by default True.
+        sep : str | None, optional
+            String seperator. If None, use default_separator from .configure is used, by default None.
+        with_print : bool | None, optional
+            If given, force enable/disable printing, otherwise determined by the log level, by default None.
+        """
         if not self._is_configured:
             raise LoggingException("Logger has not been configured. Create a new logger with log = Logger().configure(...)")
         if self._level_mgr.level is not None and level < self._level_mgr.level:
@@ -147,6 +182,7 @@ class Logger:
                 self._collected_print.append(rs)
 
     def log_with_stacktrace(self, error: Exception, level=LogLevels.ERROR, with_print=False):
+        """Log an exception along with the full stacktrace."""
         self._log(
             f"{type(error)} was thrown with the following stacktrace:",
             tb.format_exc(),
@@ -156,13 +192,14 @@ class Logger:
         )
 
     def _input(self, prompt: str) -> str:
-        self.info("Prompt: '%s'" % prompt, with_print=False)
+        self.info(f"Prompt: \"{prompt}\"", with_print=False)
         response = input(prompt)
-        self.info("Input:  '%s'" % response, with_print=False)
+        self.info(f"Input:  \"{response}\"", with_print=False)
         return response
 
     def input(self, prompt: str | Iterable[str] = "") -> str | Generator[str]:
         """Get user input and log both prompt an input.
+
         If prompt is an iterable, a generator of user inputs will be returned.
         """
         self._log("Waiting for user input", with_print=False)
@@ -172,8 +209,10 @@ class Logger:
             return (self._input(p) for p in prompt)
 
     @classmethod
-    def parse_bool_input(cls, answer: str, *, default: Optional[bool]=None) -> bool | None:
-        """Validate user yes/no input. Returns None if input is not parsable. Example:
+    def parse_bool_input(cls, answer: str, *, default: bool | None = None) -> bool | None:
+        """Validate user yes/no input. None is returned if the input is not parsable.
+
+        Example:
         ```
         answer = log.input("Do you like this question? [y/N] ")
         likes_answer = log.bool_input(answer, default=False)
@@ -232,24 +271,34 @@ class Logger:
         return _CollectLogs(self)
 
     def section(self, *tolog, with_info=True, sep=None, with_print=None, newline=True):
+        """Log at SECTION level. See .log method for argument descriptions."""
         if newline:
             self._log("")
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.SECTION)
 
     def critical(self, *tolog, with_info=True, sep=None, with_print=None):
+        """Log at CRITICAL level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.CRITICAL)
 
     def error(self, *tolog, with_info=True, sep=None, with_print=None):
+        """Log at ERROR level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.ERROR)
 
     def warning(self, *tolog, with_info=True, sep=None, with_print=None):
+        """Log at WARNING level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.WARNING)
 
     def info(self, *tolog, with_info=True, sep=None, with_print=None):
+        """Log at INFO level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.INFO)
 
     def debug(self, *tolog, with_info=True, sep=None, with_print=None):
+        """Log at DEBUG level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.DEBUG)
+
+    def __call__(self, *tolog, level=LogLevels.INFO, with_info=True, sep=None, with_print=None):
+        """Shorthand for specific logging methods where level is specified as an argument."""
+        self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 
 
 log = Logger()
