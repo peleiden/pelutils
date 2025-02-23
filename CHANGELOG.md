@@ -1,5 +1,9 @@
 # History
 
+## 3.4.1
+
+- Fixed bug where `linecounter` could not be properly run from command line.
+
 ## 3.4.0
 
 - Made `UnitTestCollection` use `tempfile` for better management of temporary directories.
