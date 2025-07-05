@@ -1,4 +1,6 @@
 """Functions returning scipy.stats distribution objects reparameterized to Jim Pitman's "Probability"."""
+from __future__ import annotations
+
 import numpy as np
 from scipy import stats
 
@@ -24,8 +26,12 @@ def gamma(r: float, lambda_: float):
     assert r > 0 and lambda_ > 0
     return stats.gamma(a=r, loc=0, scale=1/lambda_)
 
-def chi2(n: int):
-    """Return a chi squared distribution."""
+def chi2(n: int | float):
+    """Return a chi-squared distribution with the given number of degrees of freedom.
+
+    The chi-squared distribution is generally defined only on the natural numbers, but here being defined as a special case
+    of the gamma distribution, it generalises easily to positive rational numbers, hence why floats are accepted.
+    """
     assert n > 0
     return gamma(n/2, 1/2)
 

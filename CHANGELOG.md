@@ -4,6 +4,7 @@
 
 - Added more default extensions to `linecounter`.
 - Allowed default value of `None` for list argument in `Parser`.
+- Accept floats for degrees of freedom in chi-squared distribution.
 
 ## 3.4.1
 
