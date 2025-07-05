@@ -5,6 +5,9 @@
 - Added more default extensions to `linecounter`.
 - Allowed default value of `None` for list argument in `Parser`.
 - Accept floats for degrees of freedom in chi-squared distribution.
+- Printing a `TickTock instance` now uses suitable instead of hardcoded units.
+- Deprecated `TickTock.stringify_time`.
+- Removed `TimeUnits.minute`.
 
 ## 3.4.1
 
