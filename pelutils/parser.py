@@ -10,6 +10,7 @@ from argparse import SUPPRESS, ArgumentParser, Namespace
 from ast import literal_eval
 from configparser import ConfigParser, MissingSectionHeaderError
 from copy import deepcopy
+from datetime import datetime
 from pprint import pformat
 from shutil import rmtree
 from typing import Any, Callable, TypeVar, Union
@@ -174,7 +175,7 @@ class JobDescription(Namespace):
         os.makedirs(self.location)
         self.write_documentation(encoding)
 
-    def write_documentation(self, encoding: str | None = None):
+    def write_documentation(self, encoding: str | None = None, *, append=True):
         """Write, or append if one already exists, a documentation file in the location.
 
         The file has the CLI command user for running the program as a comment as well as the config file,
@@ -182,7 +183,7 @@ class JobDescription(Namespace):
         """
         os.makedirs(self.location, exist_ok=True)
         path = os.path.join(self.location, self.document_filename)
-        with open(path, "a", encoding=encoding) as docfile:
+        with open(path, "a" if append else "w", encoding=encoding) as docfile:
             docfile.write(self._docfile_content)
 
     def __getitem__(self, key: str) -> Any:
@@ -490,14 +491,23 @@ class Parser:
 
     def _get_docfile_content(self) -> str:
         buffer = io.StringIO()
-        self._configparser.write(buffer)
+        buffer.write(f"# Running job at {datetime.now()}{os.linesep}")
         lines: list[str] = [
             "CLI command",
             " ".join(sys.argv),
             "Default values",
             *pformat(self._get_default_values(), width=120).splitlines(),
         ]
-        buffer.write(os.linesep + "# " + f"{os.linesep}# ".join(lines) + os.linesep)
+        buffer.write(f"{os.linesep}# " + f"{os.linesep}# ".join(lines) + os.linesep)
+        cline = f"# Used config file{os.linesep}"
+        buffer.write(cline)
+        position = buffer.tell()
+        self._configparser.write(buffer)
+        if buffer.tell() == position:
+            # Nothing was written to the buffer, so clear the config file section
+            buffer.seek(position-len(cline))
+            buffer.truncate()
+            buffer.write(2*os.linesep)
         content = buffer.getvalue()
         buffer.close()
         return content
