@@ -2,6 +2,7 @@
 
 ## 3.5.0
 
+- Added support and pre-built wheels for Python 3.13.
 - Added more default extensions to `linecounter`.
 - Allowed default value of `None` for list argument in `Parser`.
 - Accept floats for degrees of freedom in chi-squared distribution.
