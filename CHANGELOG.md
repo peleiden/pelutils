@@ -1,5 +1,9 @@
 # History
 
+## 3.5.0
+
+- Added more default extensions to `linecounter`.
+
 ## 3.4.1
 
 - Fixed bug where `linecounter` could not be properly run from command line.

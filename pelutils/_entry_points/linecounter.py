@@ -13,12 +13,13 @@ from pelutils.ds.plots import Figure, get_dateticks
 
 _default_extensions = ", ".join((
     ".py", ".pyw",
-    ".c", ".cpp", ".cc", ".h",
+    ".c", ".cpp", ".cc", ".h", ".hpp",
     ".tex",
     ".html", ".css", ".js", ".jsx", ".ts",
     ".java", ".kt", ".dart", ".swift",
     ".rs", ".go",
     ".r", ".m",
+    ".sh", ".zsh", ".bash",
 ))
 
 def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[np.ndarray, dict[str, np.ndarray]]:
