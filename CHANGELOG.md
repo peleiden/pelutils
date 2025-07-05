@@ -3,6 +3,7 @@
 ## 3.5.0
 
 - Added more default extensions to `linecounter`.
+- Allowed default value of `None` for list argument in `Parser`.
 
 ## 3.4.1
 
