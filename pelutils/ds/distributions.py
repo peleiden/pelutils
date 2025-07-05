@@ -62,7 +62,7 @@ def poisson(mu: float):
 
 def hypergeom(n: int, N: int, G: int):
     """Return a hypergeometric distribution."""
-    assert N > n and N >= G and N > 1 and n > 0 and G > 0
+    assert N > n > 0 and N >= G > 0 and N > 1
     return stats.hypergeom(M=N, n=G, N=n)
 
 def geom0(p: float):
