@@ -40,11 +40,11 @@ def test_gamma():
         assert np.isclose(dist.var(), r/l**2)
 
 def test_chi2():
-    ns = np.linspace(0, 10, 5)[1:]
-    for n in ns:
-        dist = chi2(n)
-        assert np.isclose(dist.mean(), n)
-        assert np.isclose(dist.var(), 2*n)
+    dfs = np.linspace(0, 10, 31)[1:]
+    for df in dfs:
+        dist = chi2(df)
+        assert np.isclose(dist.mean(), df)
+        assert np.isclose(dist.var(), 2*df)
 
 def test_rayleigh():
     dist = rayleigh()
