@@ -1,6 +1,7 @@
 from __future__ import annotations
 import itertools
 import os
+import shlex
 import shutil
 import sys
 
@@ -25,6 +26,7 @@ _sample_arguments = [
     Option("opt-int", default=4),
     Option("opt-d", abbrv="o", default=6, type=lambda x: 2 * int(x)),
     Option("opt-many", nargs=0, default=list(), type=float),
+    Option("opt-default-none", nargs=2, default=None, type=int),
     Option("hello", default="there"),
     Option("Cased-Option", default="Kebab-Pascal"),
     Flag("iam-bool", abbrv="i"),
@@ -35,6 +37,7 @@ _sample_no_default = """
 [IAMNOTDEFAULT]
 gibstr=not default
 arg-two=1 2
+opt-default-none=2 3
 """
 _sample_default_only = """
 [DEFAULT]
@@ -201,6 +204,7 @@ class TestParser(UnitTestCollection):
         assert job.opt_int == 4
         assert job.opt_d == 14
         assert job.opt_many == list()
+        assert job.opt_default_none is None
         assert job.iam_bool
         assert job.explicit_args == { "location", "gibstr", "gib_num", "arg_two", "opt_d", "iam_bool" }
 
@@ -317,6 +321,12 @@ class TestParser(UnitTestCollection):
         assert job.gibstr == "not default"
         assert job.gib_num == float("3.2")
         assert job.arg_two == ["1", "2"]
+        assert job.opt_default_none == [2, 3]
+
+        sys.argv += shlex.split("--opt-default-none 1 3 5")
+        parser = Parser(*_sample_arguments, multiple_jobs=False)
+        with pytest.raises(ValueError):
+            parser.parse_args()
 
     @restore_argv
     def test_non_optional_args(self):

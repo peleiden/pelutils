@@ -480,10 +480,11 @@ class Parser:
                 elif hasattr(argument, "nargs") and argument.nargs is not None:
                     if job[argname] is None and isinstance(argument, Argument):
                         raise ParserError(f"Argument '{argname}' has not been given in job '{job.name}'")
-                    assert isinstance(job[argname], list)
-                    assert all(isinstance(x, argument.type) for x in job[argname])
-                    if argument.nargs > 0 and len(job[argname]) != argument.nargs:
-                        raise ValueError(f"Argument '{argname}' in job '{job.name}' should have {argument.nargs} args but had {len(job[argname])}")
+                    assert isinstance(job[argname], list) or job[argname] is None
+                    if job[argname] is not None:
+                        assert all(isinstance(x, argument.type) for x in job[argname])
+                        if argument.nargs > 0 and len(job[argname]) != argument.nargs:
+                            raise ValueError(f"Argument '{argname}' expected {argument.nargs} values but received {len(job[argname])}")
 
         return job_descriptions if self._multiple_jobs else job_descriptions[0]
 
