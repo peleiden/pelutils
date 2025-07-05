@@ -19,13 +19,14 @@ class TimeUnits:
     microsecond = ("us",  1e-6)
     millisecond = ("ms",  1e-3)
     second      = ("s",   1)
-    minute      = ("min", 60)
     hour        = ("h",   3600)
 
     @classmethod
-    def units(cls) -> list[tuple[str, float]]:
-        """List all time units."""
-        return [unit for name, unit in cls.__dict__.items() if not callable(getattr(cls, name)) and not name.startswith("__")]
+    def units(cls, reverse=False) -> list[tuple[str, float]]:
+        """List all time units in order of increasing duration, unless reverse is True."""
+        units = (unit for name, unit in cls.__dict__.items() if not callable(getattr(cls, name)) and not name.startswith("__"))
+        units = sorted(units, key=lambda unit: unit[1], reverse=reverse)
+        return units
 
     @classmethod
     def next_bigger(cls, unit: tuple[str, float]) -> tuple[str, float]:
@@ -36,6 +37,14 @@ class TimeUnits:
     def next_smaller(cls, unit: tuple[str, float]) -> tuple[str, float]:
         """Get largest available time unit smaller than given."""
         return max((u for u in cls.units() if u[1] < unit[1]), key=lambda x: x[1])
+
+def _get_smallest_suitable_unit(duration_s: float) -> tuple[str, float]:
+    """Return the smallest unit for which the duration is at least the same size as the unit."""
+    units = TimeUnits.units(reverse=True)
+    for unit, unit_duration in units:
+        if duration_s >= unit_duration:
+            return unit, unit_duration
+    return units[-1]  # No unit is small enough, so return the smallest unit
 
 class Profile:  # noqa: D101
 
@@ -285,12 +294,20 @@ class TickTock:
         return ticktock
 
     @staticmethod
+    @deprecated(version="3.5.0")
     def stringify_time(dt: float, unit: tuple[str, float]=TimeUnits.millisecond) -> str:
         """Stringify a time given in seconds with a given unit."""
-        return f"{dt/unit[1]:,.3f} {unit[0]}"
+        return f"{dt/unit[1]:,.2f} {unit[0]}"
 
-    def stringify_sections(self, unit: tuple[str, float]=TimeUnits.second) -> str:
-        """Return a pretty print of the profile tree."""
+    @staticmethod
+    def _stringify_time_with_alignment(dt: float, unit: tuple[str, float]) -> str:
+        return f"{dt/unit[1]:,.2f} {unit[0]:>2}"
+
+    def stringify_sections(self, unit: tuple[str, float] | None = TimeUnits.second) -> str:
+        """Return a pretty string representation of the profile tree.
+
+        If unit is None, suitable units will be automatically detected.
+        """
         if self._profile_stack:
             raise ValueError("TickTock instance cannot be stringified while profiling is still ongoing. "\
                 "Please end all profiles first")
@@ -300,13 +317,15 @@ class TickTock:
         table.add_header(h)
         total_time = sum(p.sum() for p in self.profiles)
         for profile in self:
+            psum = profile.sum()
+            pmean = profile.mean()
             row = [
                 "  " * profile.depth + profile.name,
-                self.stringify_time(profile.sum(), unit),
-                "%.3f" % (100 * profile.sum() / (profile.parent.sum() if profile.parent else total_time))
+                self._stringify_time_with_alignment(psum, unit if unit is not None else _get_smallest_suitable_unit(psum)),
+                "%.2f" % (100 * psum / (profile.parent.sum() if profile.parent else total_time))
                     + (" <" if profile.depth else "") + "--" * (profile.depth-1),
                 f"{len(profile):,}",
-                self.stringify_time(profile.mean(), TimeUnits.next_smaller(unit))
+                self._stringify_time_with_alignment(pmean, TimeUnits.next_smaller(unit) if unit is not None else _get_smallest_suitable_unit(pmean))
             ]
             table.add_row(row, [True] + [False] * (len(row)-1))
 
@@ -342,7 +361,7 @@ class TickTock:
         return len(profile), profile.sum()
 
     def __str__(self) -> str:
-        return self.stringify_sections(TimeUnits.second)
+        return self.stringify_sections(None)
 
     @deprecated(version="3.2.0", reason="Profiler length does not have a reasonable meaning.")
     def __len__(self) -> int:

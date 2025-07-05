@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import pytest
 from pelutils import TickTock, TT, TimeUnits, Profile
-from pelutils.ticktock import TickTockException
+from pelutils.ticktock import TickTockException, _get_smallest_suitable_unit
 
 
 def test_ticktock():
@@ -112,9 +112,19 @@ def test_throw():
 
 def test_timeunits():
     assert TimeUnits.next_bigger(("nice", 69)) == TimeUnits.hour
-    assert TimeUnits.next_smaller(("nice", 69)) == TimeUnits.minute
-    assert TimeUnits.next_bigger(TimeUnits.second) == TimeUnits.minute
     assert TimeUnits.next_smaller(TimeUnits.second) == TimeUnits.millisecond
+
+def test_smallest_suitable_unit():
+    assert _get_smallest_suitable_unit(1e-10) == TimeUnits.nanosecond
+    assert _get_smallest_suitable_unit(1e-8) == TimeUnits.nanosecond
+    assert _get_smallest_suitable_unit(1e-6) == TimeUnits.microsecond
+    assert _get_smallest_suitable_unit(2e-6) == TimeUnits.microsecond
+    assert _get_smallest_suitable_unit(1e-3) == TimeUnits.millisecond
+    assert _get_smallest_suitable_unit(2e-3) == TimeUnits.millisecond
+    assert _get_smallest_suitable_unit(1) == TimeUnits.second
+    assert _get_smallest_suitable_unit(2) == TimeUnits.second
+    assert _get_smallest_suitable_unit(3600) == TimeUnits.hour
+    assert _get_smallest_suitable_unit(1e10) == TimeUnits.hour
 
 def test_reset():
     tt = TickTock()
@@ -276,6 +286,11 @@ def test_exit_in_nested():
         tt.end_profile()
     # Two outermost did not using with construct, so expect two unclosed profiles
     assert len(tt._profile_stack) == 2
+
+def test_format_time():
+    with pytest.warns(DeprecationWarning):
+        assert TickTock.stringify_time(3.046e-3, TimeUnits.millisecond) == "3.05 ms"
+        assert TickTock.stringify_time(3.046, TimeUnits.second) == "3.05 s"
 
 def test_profile(capfd: pytest.CaptureFixture):
     p = Profile("tester", 0, None)
