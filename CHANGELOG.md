@@ -9,6 +9,7 @@
 - Printing a `TickTock instance` now uses suitable instead of hardcoded units.
 - Deprecated `TickTock.stringify_time`.
 - Removed `TimeUnits.minute`.
+- Improved `write_documentation` function, including append option.
 
 ## 3.4.1
 
