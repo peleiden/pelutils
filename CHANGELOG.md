@@ -1,5 +1,10 @@
 # History
 
+## 3.6.0
+
+- Added `reset_profiles` method to `TickTock`.
+- Added `do_at_interval` for triggering events at intervals.
+
 ## 3.5.0
 
 - Added support and pre-built wheels for Python 3.13.
