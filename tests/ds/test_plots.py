@@ -176,7 +176,7 @@ class TestFigure(UnitTestCollection):
 
     @property
     def savepath(self) -> str:
-        return self.test_path("test.png")
+        return self.get_test_path("test.png")
 
     def test_save(self):
         with Figure(Path(self.savepath)):

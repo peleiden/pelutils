@@ -1,10 +1,13 @@
 # History
 
-## 3.6.0
+## 3.6.0 - Minor breaking change
 
 - Added `reset_profiles` method to `TickTock`.
 - Added `do_at_interval` for triggering events at intervals.
 - Added `disable` option to `TickTock.profile`.
+- Updated libraries for running tests and distribution wheels.
+This has no direct impact but it has forced the rename `UnitTestCollection.test_path` -> `UnitTestCollection.get_test_path` to prevent `pytest` complaining.
+- Wheels are no longer provided for x86 MAC.
 
 ## 3.5.0
 

@@ -33,7 +33,7 @@ jobs:
       - name: Set up PyPi dependencies and install package
         run: |
           pip install --upgrade setuptools wheel
-          pip install numpy
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -e .[dev]
 
       - name: Lint

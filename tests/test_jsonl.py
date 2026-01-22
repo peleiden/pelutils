@@ -9,7 +9,7 @@ class TestJsonl(UnitTestCollection):
 
     @property
     def path(self) -> str:
-        return self.test_path("test.jsonl")
+        return self.get_test_path("test.jsonl")
 
     def test_jsonl(self):
 

@@ -5,55 +5,59 @@ on:
     branches: [ master ]
   push:
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   build_wheels:
-    name: Build wheels for ${{ matrix.os }}
+    name: Build ${{ matrix.python }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-22.04, windows-latest, macos-latest ]
+        # Operating systems for which pre-built wheels are provided
+        os: [ ubuntu-24.04, windows-latest, macos-latest ]
+        # Python versions for which pre-built wheels are provided
+        # See supported versions at https://cibuildwheel.pypa.io/en/stable/#what-does-it-do
+        # Be aware that all versions need to be supported by the used version of cibuildwheel
+        # https://github.com/pypa/cibuildwheel/releases
+        python: [ 'cp39', 'cp310', 'cp311', 'cp312', 'cp313', 'cp314' ]
 
     steps:
-      - uses: actions/checkout@v4.2.2
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
 
       - name: Set up QEMU
         if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v3.2.0
+        uses: docker/setup-qemu-action@v3
         with:
-          platforms: all
-
-      - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.22.0
+          platforms: arm64
 
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
+        uses: pypa/cibuildwheel@v3.3.1
         env:
-          CIBW_SKIP: pp* *musllinux* cp36-* cp37-* cp38-* cp313-manylinux_aarch64
+          CIBW_BUILD: "${{ matrix.python }}-*"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
+          CIBW_SKIP: "*musllinux*"
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_ARCHS_LINUX: auto64 aarch64
-          CIBW_ARCHS_MACOS: auto64
-          CIBW_ARCHS_WINDOWS: auto64
+          CIBW_ARCHS_LINUX: x86_64 aarch64
+          CIBW_ARCHS_MACOS: arm64
+          CIBW_ARCHS_WINDOWS: AMD64
           CIBW_BEFORE_BUILD: git submodule update --init --recursive
-          CIBW_BEFORE_TEST: pip install -e .[dev]
-          CIBW_TEST_COMMAND_WINDOWS: ruff check {project}/pelutils && pytest {project}/tests
-          CIBW_TEST_COMMAND_MACOS: ruff check {project}/pelutils && pytest {project}/tests
-          CIBW_TEST_COMMAND_LINUX: ruff check {project}/pelutils && timeout 150s pytest {project}/tests || true
+          # Install the CPU version of torch before installing the rest of the package
+          # This prevents it from installing the full CUDA version of torch and associated dependencies (default on Linux)
+          # This massively speeds up the installation process and requires much less disk space
+          CIBW_BEFORE_TEST: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install .[dev]
+          CIBW_TEST_COMMAND: ruff check {project}/pelutils && pytest {project}/tests
 
-      # v4 is currently the newest, but there is some breaking change with it that causes the run to fail
-      # https://github.com/actions/upload-artifact/issues/478
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          name: wheels-${{ matrix.os }}-${{ matrix.python }}
           path: ./wheelhouse/*.whl
 
   make_sdist:
     name: Make source dist
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4.2.2
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -66,16 +70,21 @@ jobs:
 
   upload_all:
     needs: [ build_wheels, make_sdist ]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     # Upload to PyPI when pushing new version tag
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
     - uses: actions/download-artifact@v4
       with:
-        name: artifact
+        pattern: '*'
         path: dist
+        merge-multiple: true
 
-    - uses: pypa/gh-action-pypi-publish@v1.12.3
+    - name: List files to distribute
+      run: ls -R dist/
+      shell: bash
+
+    - uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
         password: ${{ secrets.pypi_password }}
