@@ -4,6 +4,7 @@
 
 - Added `reset_profiles` method to `TickTock`.
 - Added `do_at_interval` for triggering events at intervals.
+- Added `disable` option to `TickTock.profile`.
 
 ## 3.5.0
 
