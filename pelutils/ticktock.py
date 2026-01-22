@@ -67,6 +67,7 @@ class Profile:  # noqa: D101
         self.name = name
         self.depth = depth
         self.parent = parent
+        self._disable_in_context = False
         if self.parent is not None:
             assert depth > 0
             self.parent.children.append(self)
@@ -200,7 +201,7 @@ class TickTock:
             raise TickTockException(f"A timer for the given ID ({id}) has not been started with .tick()")
         return end - self._tick_starts[id]
 
-    def profile(self, name: str, *, hits=1) -> _ProfileContext:
+    def profile(self, name: str, *, hits=1, disable=False) -> _ProfileContext:
         """Begin a profile with given name.
 
         Optionally it is possible to register this as several hits that sum to the total time.
@@ -215,6 +216,7 @@ class TickTock:
             with TT.profile("Op"):
                 ...
         ```
+        If `disable` is True, the profile, as well as all child profiles will not be counted.
         """
         if self._thread_id != id(current_thread()):
             warnings.warn(f"This TickTock instance was created in the {self._thread_name} thread but profiling was started in "
@@ -235,6 +237,7 @@ class TickTock:
             self._id_to_profile[profile] = profile
             if not self._profile_stack:
                 self.profiles.append(profile)
+        profile._disable_in_context = disable or (self._profile_stack[-1]._disable_in_context if self._profile_stack else False)
 
         self._profile_stack.append(profile)
         self._nhits.append(hits)
@@ -254,8 +257,10 @@ class TickTock:
         if name is not None and name != self._profile_stack[-1].name:
             raise NameError(f"Expected to pop profile '{self._profile_stack[-1].name}', received '{name}'")
         nhits = self._nhits.pop()
-        self._profile_stack[-1]._n += nhits
-        self._profile_stack[-1]._total_time += dt
+        if not self._profile_stack[-1]._disable_in_context:
+            self._profile_stack[-1]._n += nhits
+            self._profile_stack[-1]._total_time += dt
+        self._profile_stack[-1]._disable_in_context = False
         self._profile_stack.pop()
         return dt
 

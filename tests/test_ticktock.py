@@ -209,6 +209,33 @@ def test_profiles_with_same_name():
     with pytest.raises(KeyError):
         tt.stats_by_profile_name("c")
 
+def test_disable():
+    tt = TickTock()
+    with tt.profile("111"):
+        with tt.profile("222", disable=True):
+            with tt.profile("333"):
+                pass
+            with tt.profile("444"):
+                pass
+            with tt.profile("555"):
+                pass
+
+    with tt.profile("111"):
+        with tt.profile("222"):
+            with tt.profile("333"):
+                pass
+            with tt.profile("444"):
+                pass
+            with tt.profile("666", disable=True):
+                pass
+
+    assert tt.stats_by_profile_name("111")[0] == 2
+    assert tt.stats_by_profile_name("222")[0] == 1
+    assert tt.stats_by_profile_name("333")[0] == 1
+    assert tt.stats_by_profile_name("444")[0] == 1
+    assert tt.stats_by_profile_name("555")[0] == 0
+    assert tt.stats_by_profile_name("666")[0] == 0
+
 def test_add_external_measurements():
     tt = TickTock()
     with tt.profile("a"):
