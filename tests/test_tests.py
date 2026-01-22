@@ -18,5 +18,5 @@ class TestUnitTestCollection(UnitTestCollection):
 
     def test_test_path(self):
         testpath = "test"
-        testpath = self.test_path(testpath)
+        testpath = self.get_test_path(testpath)
         assert testpath.startswith(self.test_dir)

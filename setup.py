@@ -23,13 +23,13 @@ requirements = [
 ]
 requirements_dev = [
     "torch>=2",
-    "pytest>=6.2.4,<=7.2",
-    "pytest-cov>=2.12.1",
-    "coveralls>=3.3.1",
-    "coverage>=6,<7",
+    "pytest==8.4.2",
+    "pytest-cov==7.0.0",
+    "coveralls>=4.0.0",
+    "coverage==7.10.7",
     "wheel",
     "setuptools>=60.0.0",
-    "ruff>=0.3.0",
+    "ruff==0.14.14",
     "freezegun>=1.5",
 ]
 

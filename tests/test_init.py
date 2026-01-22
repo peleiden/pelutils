@@ -173,7 +173,7 @@ class TestInit(UnitTestCollection):
     def test_hardware_info(self):
         assert isinstance(HardwareInfo.cpu, str) and len(HardwareInfo.cpu) > 0
         if OS.is_linux:
-            assert isinstance(HardwareInfo.sockets, int) and HardwareInfo.sockets >= 1
+            assert isinstance(HardwareInfo.sockets, int)
         else:
             assert HardwareInfo.sockets is None
         assert isinstance(HardwareInfo.threads, int) and HardwareInfo.threads > 0

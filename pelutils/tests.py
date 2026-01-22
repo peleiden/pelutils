@@ -92,9 +92,9 @@ class UnitTestCollection:
         raise except_instance
 
     @classmethod
-    def test_path(cls, path: str) -> str:
+    def get_test_path(cls, pathe: str) -> str:
         """Return a path inside the test directory.
 
         `path` would often just be a filename which can be written to and is automatically cleaned up after the test.
         """
-        return os.path.join(cls.test_dir, path)
+        return os.path.join(cls.test_dir, pathe)
