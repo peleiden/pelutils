@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import warnings
 from collections.abc import Generator, Hashable
 from copy import deepcopy
+from threading import current_thread
 from time import perf_counter
 
 from deprecated import deprecated
@@ -112,8 +114,8 @@ class Profile:  # noqa: D101
 
 class _ProfileContext:
 
-    def __init__(self, tt, profile: Profile):
-        self._tt: TickTock = tt
+    def __init__(self, tt: "TickTock", profile: Profile):  # noqa: UP037
+        self._tt = tt
         self._profile = profile
 
     def __enter__(self):
@@ -184,6 +186,9 @@ class TickTock:
         self._profile_stack: list[Profile] = list()
         self._nhits:         list[int] = list()
 
+        self._thread_name = current_thread().name
+        self._thread_id = id(current_thread())
+
     def tick(self, id: Hashable = None):
         """Start a timer. Set id to any hashable value (e.g. string or int) to time multiple things once."""
         self._tick_starts[id] = perf_counter()
@@ -211,6 +216,11 @@ class TickTock:
                 ...
         ```
         """
+        if self._thread_id != id(current_thread()):
+            warnings.warn(f"This TickTock instance was created in the {self._thread_name} thread but profiling was started in "
+                          f"{current_thread().name}. Profiling is NOT designed to deal with multiple threads. Instead, create a "
+                          "TickTock instance for each thread requiring profiling.", stacklevel=2)
+
         profile = Profile(
             name,
             len(self._profile_stack),
@@ -255,6 +265,36 @@ class TickTock:
             raise TickTockException("Cannot reset TickTock while profiling is active")
         self.__init__()
 
+    def reset_profiles(self):
+        """Similar to `reset` but only reset profiles."""
+        tick_starts = self._tick_starts
+        self.reset()
+        self._tick_starts = tick_starts
+
+    def do_at_interval(self, interval: float, id: Hashable = None, *, also_first=False) -> True:
+        """Return true if it is at least `interval` since this method was called with the same id previously.
+
+        A common pattern is to run a piece of code at fixed intervals inside a loop. In the example below, a loop is continuously doing
+        some computation which results in some telemetry. This is collected every 60 seconds.
+        ```py
+        while True:
+            <stuff which produces some telemetry>
+
+            if TT.do_at_interval(60, "telemetry"):
+                <collect telemetry>
+        ```
+        If `also_first` is True, `do_at_interval` will return True the first time it is called with a given `id`.
+        Otherwise, the interval has to elapse before True is returned the first time.
+        """
+        id = ("__interval__", id)
+        if id not in self._tick_starts:
+            self.tick(id)
+            return also_first
+        if self.tock(id) >= interval:
+            self.tick(id)
+            return True
+        return False
+
     def add_external_measurements(self, name: str | None, time: float, *, hits=1):
         """Add data to a (new) profile with given time spread over given hits.
 
@@ -291,6 +331,8 @@ class TickTock:
             raise ValueError("Some TickTocks are the same instance, which is not allowed")
         for tt in tts[1:]:
             ticktock.fuse(tt)
+        ticktock._thread_name = current_thread().name
+        ticktock._thread_id = id(current_thread())
         return ticktock
 
     @staticmethod
