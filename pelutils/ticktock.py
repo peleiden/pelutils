@@ -136,23 +136,22 @@ class TickTockException(RuntimeError):
 class TickTock:
     """Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
 
+    It is possible to import `TT` directly as a global instance for convenience, or import `TickTock` and create a new instance.
+    For most use cases, importing `TT` is recommended, but when using threads (or async), creating a ticktock instance per thread
+    is recommended.
+
+    Basic use is as follows.
     ```py
     TT.tick()
     <some task>
     seconds_used = TT.tock()
 
     for i in range(100):
-        TT.profile("Repeated code")
+        with TT.profile("Repeated code"):
         <some task>
-        TT.profile("Subtask")
-        <some subtask>
-        TT.end_profile()
-        TT.end_profile()
-    print(TT)  # Prints a table view of profiled code sections
-
-    # Alternative syntax using with statement
-    with TT.profile("The best task"):
-        <some task>
+        with TT.profile("Subtask"):
+            <some subtask>
+    print(TT)  # Print a table view of profiled code sections
 
     # When using multiprocessing, it can be useful to simulate multiple hits of the same profile
     with mp.Pool() as p, TT.profile("Processing 100 items on multiple threads", hits=100):
@@ -163,18 +162,11 @@ class TickTock:
         for _ in range(100):
             a += 1
 
-    # Examples so far use a global TickTock instance, which is convenient,
-    # but it can also be desirable to use for multiple different timers, e.g.
-    tt1 = TickTock()
-    tt2 = TickTock()
-    t1_interval = 1  # Do task 1 every second
-    t2_interval = 2  # Do task 2 every other second
-    tt1.tick()
-    tt2.tick()
+    # To use the TickTock instance as a timer to trigger events, do
     while True:
-        if tt1.tock() > t1_interval:
+        if TT.do_at_interval(60, "task1"):  # Do task 1 every 60 seconds
             <task 1>
-        if tt2.tock() > t2_interval:
+        if TT.do_at_interval(30, "task2"):  # Do task 2 every 30 seconds
             <task 2>
         time.sleep(0.01)
     ```
