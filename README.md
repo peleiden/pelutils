@@ -38,17 +38,11 @@ seconds_used = TT.tock()
 
 # Profile a for loop
 for i in range(100):
-    TT.profile("Repeated code")
+    with TT.profile("Repeated code"):
     <some task>
-    TT.profile("Subtask")
-    <some subtask>
-    TT.end_profile()
-    TT.end_profile()
-print(TT)  # Prints a table view of profiled code sections
-
-# Alternative syntax using with statement
-with TT.profile("The best task"):
-    <some task>
+    with TT.profile("Subtask"):
+        <some subtask>
+print(TT)  # Print a table view of profiled code sections
 
 # When using multiprocessing, it can be useful to simulate multiple hits of the same profile
 with mp.Pool() as p, TT.profile("Processing 100 items on multiple threads", hits=100):
@@ -59,21 +53,12 @@ with TT.profile("Adding 1 to a", hits=100):
     for _ in range(100):
         a += 1
 
-# Examples so far use a global TickTock instance, which is convenient,
-# but it can also be desirable to use for multiple different timers, e.g.
-tt1 = TickTock()
-tt2 = TickTock()
-t1_interval = 1  # Do task 1 every second
-t2_interval = 2  # Do task 2 every other second
-tt1.tick()
-tt2.tick()
+# To use the TickTock instance as a timer to trigger events, do
 while True:
-    if tt1.tock() > t1_interval:
+    if TT.do_at_interval(60, "task1"):  # Do task 1 every 60 seconds
         <task 1>
-        tt1.tick()
-    if tt2.tock() > t2_interval:
+    if TT.do_at_interval(30, "task2"):  # Do task 2 every 30 seconds
         <task 2>
-        tt2.tick()
     time.sleep(0.01)
 ```
 
