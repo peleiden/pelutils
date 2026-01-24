@@ -174,7 +174,7 @@ class TickTock:
 
     def __init__(self):
         self._tick_starts:   dict[Hashable, float] = dict()
-        self._id_to_profile: dict[int, Profile] = dict()
+        self._id_to_profile: dict[Profile, Profile] = dict()
         self.profiles:       list[Profile] = list()  # Top level profiles
         self._profile_stack: list[Profile] = list()
         self._nhits:         list[int] = list()
@@ -268,7 +268,7 @@ class TickTock:
         self.reset()
         self._tick_starts = tick_starts
 
-    def do_at_interval(self, interval: float, id: Hashable = None, *, also_first=False) -> True:
+    def do_at_interval(self, interval: float, id: Hashable = None, *, also_first=False) -> bool:
         """Return true if it is at least `interval` since this method was called with the same id previously.
 
         A common pattern is to run a piece of code at fixed intervals inside a loop. In the example below, a loop is continuously doing

@@ -51,6 +51,7 @@ class SimplePool:
         return self._pool
 
     def __exit__(self, *_):
+        assert self._pool is not None
         self._pool.close()
         self._pool.join()
         self._pool = None
