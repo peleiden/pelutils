@@ -9,7 +9,7 @@ on:
 
 jobs:
   build_wheels:
-    name: Build ${{ matrix.python }} on ${{ matrix.os }}
+    name: Build wheels for ${{ matrix.python }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

@@ -7,7 +7,8 @@
 - Added `disable` option to `TickTock.profile`.
 - Updated libraries for running tests and distribution wheels.
 This has no direct impact but it has forced the rename `UnitTestCollection.test_path` -> `UnitTestCollection.get_test_path` to prevent `pytest` complaining.
-- Wheels are no longer provided for x86 MAC.
+- Wheels are no longer provided for x86 MAC but are for Apple Silicon.
+- Wheels are now actually provided again (whoops).
 
 ## 3.5.0
 
