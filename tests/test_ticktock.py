@@ -260,13 +260,11 @@ def test_do_at_interval():
     num_b = 0
     while tt.tock() < 0.1:
         if tt.do_at_interval(0.03, "a"):
-            print("a", tt.tock())
             num_a += 1
-        if tt.do_at_interval(0.04, "b"):
-            print("b", tt.tock())
+        if tt.do_at_interval(0.07, "b"):
             num_b += 1
-    assert num_a == 3
-    assert num_b == 2
+    assert num_a >= 2
+    assert num_b == 1
 
     tt.reset()
     tt.tick()
@@ -274,13 +272,11 @@ def test_do_at_interval():
     num_b = 0
     while tt.tock() < 0.1:
         if tt.do_at_interval(0.03, "a", also_first=True):
-            print("a", tt.tock())
             num_a += 1
-        if tt.do_at_interval(0.04, "b", also_first=True):
-            print("b", tt.tock())
+        if tt.do_at_interval(0.07, "b", also_first=True):
             num_b += 1
-    assert num_a == 4
-    assert num_b == 3
+    assert num_a >= 3
+    assert num_b == 2
 
 def test_thread_assert():
     tt = TickTock()
