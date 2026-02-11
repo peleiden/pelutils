@@ -62,7 +62,7 @@ class build(build_):  # noqa: D101
 setup_args = dict(
     name             = "pelutils",
     version          = __version__,
-    description      = "Utility functions that are often useful",
+    description      = "The Swiss army knife of Python projects.",
     long_description_content_type = "text/markdown",
     long_description = README,
     license          = "MIT",
@@ -88,6 +88,18 @@ setup_args = dict(
     ],
     license_files    = [ os.path.join("pelutils", "_c", "hashmap.c", "LICENSE") ],
     python_requires  = ">=3.9",
+    classifiers      = [
+        "Intended Audience :: Developers",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
+    ],
 )
 
 if __name__ == "__main__":

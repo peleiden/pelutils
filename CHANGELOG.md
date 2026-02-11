@@ -1,5 +1,9 @@
 # History
 
+## 3.6.1 - No library changes
+
+- Added classifiers to `setup.py`
+
 ## 3.6.0 - Minor breaking change
 
 - Added `reset_profiles` method to `TickTock`.

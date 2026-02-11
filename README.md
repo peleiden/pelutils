@@ -4,6 +4,7 @@
 [![pytest](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml/badge.svg?branch=master)](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml)
 [![Coverage Status](https://coveralls.io/repos/github/peleiden/pelutils/badge.svg?branch=master)](https://coveralls.io/github/peleiden/pelutils?branch=master)
 [![PyPi](https://img.shields.io/pypi/v/pelutils.svg)](https://pypi.org/project/pelutils/)
+[![Python versions](https://img.shields.io/pypi/pyversions/pelutils)](https://img.shields.io/pypi/pyversions/pelutils)
 
 The Swiss army knife of Python projects.
 
