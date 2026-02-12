@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import TypeVar, Union
 
 import numpy as np
 
@@ -14,14 +15,14 @@ import _pelutils_c as _c
 
 import pelutils._c as _c_utils
 
-
+ArrayOrTensor = TypeVar("ArrayOrTensor", bound=Union[np.ndarray, torch.Tensor])
 def unique(
-    array: np.ndarray | torch.Tensor, *,
+    array: ArrayOrTensor, *,
     return_index=False,
     return_inverse=False,
     return_counts=False,
     axis: int=0,
-) -> np.ndarray | Iterable[np.ndarray]:
+) -> ArrayOrTensor | tuple[ArrayOrTensor, ...]:
     """Similar to np.unique, but in linear time and returns unsorted."""
     if not array.size:
         raise ValueError("Array must be non-empty")

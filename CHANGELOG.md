@@ -1,5 +1,9 @@
 # History
 
+## 3.6.2
+
+- Correct type hints in `unique`.
+
 ## 3.6.1 - No library changes
 
 - Added classifiers to `setup.py`
