@@ -98,6 +98,11 @@ class Logger:
 
         return self
 
+    @property
+    def is_configured(self) -> bool:
+        """Check if the logging instance has been configured. If not, use `.configure(...)`."""
+        return self._is_configured
+
     def level(self, level: LogLevels):
         """Log only at given level and above. Use with a with block."""
         return self._level_mgr.with_level(level)
