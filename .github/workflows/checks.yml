@@ -1,4 +1,4 @@
-name: pytest
+name: checks
 
 on:
   push:
@@ -37,7 +37,15 @@ jobs:
           pip install -e .[dev]
 
       - name: Lint
-        run: ruff check pelutils
+        run: ruff check pelutils tests
+
+      - name: Format
+        run: ruff format --check pelutils tests
+
+      - name: Type check
+        # Not checking types on tests
+        # Tests often explicitly check behaviour with wrong types, so it would cause many false positives
+        run: basedpyright pelutils
 
       - name: Run test
         run: pytest --cov=pelutils
