@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from freezegun import freeze_time
 
-from pelutils.logging._rotate import _LogFileRotater as Rotater
+from pelutils.logging._rotate import LogFileRotater as Rotater
 from pelutils.tests import UnitTestCollection
 
 start_times = (
@@ -112,7 +112,7 @@ class TestRotate(UnitTestCollection):
                     assert f"_{now.hour:02}." in fname
                 freezer.stop()
 
-                now += timedelta(3213, 28137)
+                now += timedelta(3213, 28137)  # noqa: PLW2901
                 freezer = freeze_time(now)
                 freezer.start()
                 rotater.write("")
@@ -133,7 +133,7 @@ class TestRotate(UnitTestCollection):
                 freezer.start()
                 rotater = Rotater(unit, self.logfile)
 
-                for i in range(1000):
+                for _i in range(1000):
                     if unit == "hour":
                         assert (rotater.next_time - rotater.current_time).total_seconds() == 3600
                     if unit == "day":

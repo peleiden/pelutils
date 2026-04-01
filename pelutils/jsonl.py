@@ -1,13 +1,13 @@
 """Utility methods for the .jsonl file format. .jsonl are files in which each line is a valid json string."""
 
 import os
-from collections.abc import Generator, Iterable
-from typing import TextIO
+from collections.abc import Iterable, Iterator
+from typing import Any, TextIO
 
 import rapidjson
 
 
-def load(f: TextIO) -> Generator:
+def load(f: TextIO) -> Iterator[str]:
     """Return a generator of parsed lines in a .jsonl file. Empty lines are ignored."""
     for line in f:
         stripped = line.strip()
@@ -15,7 +15,7 @@ def load(f: TextIO) -> Generator:
             yield rapidjson.loads(stripped)
 
 
-def loads(string: str) -> Generator:
+def loads(string: str) -> Iterator[str]:
     """Return a generator of parsed lines. Empty lines are ignored."""
     for line in string.splitlines():
         stripped = line.strip()
@@ -23,7 +23,7 @@ def loads(string: str) -> Generator:
             yield rapidjson.loads(stripped)
 
 
-def dump(objects: Iterable, f: TextIO, single_block=True):
+def dump(objects: Iterable[Any], f: TextIO, single_block: bool = True):  # pyright: ignore[reportExplicitAny]
     """Save an iterable to a .jsonl file.
 
     If single_block is True, objects will be joined to a single block before being written.
@@ -35,6 +35,6 @@ def dump(objects: Iterable, f: TextIO, single_block=True):
         f.writelines(rapidjson.dumps(obj) + os.linesep for obj in objects)
 
 
-def dumps(objects: Iterable) -> str:
+def dumps(objects: Iterable[Any]) -> str:  # pyright: ignore[reportExplicitAny]
     """Return a string representation of an iterable in a string."""
     return os.linesep.join(rapidjson.dumps(obj) for obj in objects)

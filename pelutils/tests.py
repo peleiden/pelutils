@@ -10,7 +10,7 @@ from typing import Callable, TypeVar
 
 from pelutils import OS
 
-_C = TypeVar("_C", bound=Callable)
+_C = TypeVar("_C", bound=Callable)  # pyright: ignore[reportMissingTypeArgument]
 
 
 def restore_argv(fun: _C) -> _C:
@@ -29,14 +29,14 @@ def restore_argv(fun: _C) -> _C:
     """  # noqa: D401
 
     @wraps(fun)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs):  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
         old_argv = sys.argv.copy()
         try:
             return fun(*args, **kwargs)
         finally:
             sys.argv = old_argv
 
-    return wrapper
+    return wrapper  # pyright: ignore[reportReturnType]
 
 
 class SimplePool:
@@ -51,10 +51,12 @@ class SimplePool:
         self._pool = None
 
     def __enter__(self):
+        """Create the multiprocessing pool."""
         self._pool = mp.Pool(self._processes)
         return self._pool
 
     def __exit__(self, *_):
+        """Close the pool."""
         assert self._pool is not None
         self._pool.close()
         self._pool.join()
@@ -91,7 +93,7 @@ class UnitTestCollection:
         rmtree(cls.test_dir, onerror=cls.ignore_absentee)
 
     @staticmethod
-    def ignore_absentee(_, __, exc_inf):  # noqa: D102
+    def ignore_absentee(_, __, exc_inf):  # noqa: D102  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
         except_instance = exc_inf[1]
         if isinstance(except_instance, FileNotFoundError):
             return

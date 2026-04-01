@@ -71,7 +71,7 @@ def poisson(mu: float):
     return stats.poisson(mu=mu)
 
 
-def hypergeom(n: int, N: int, G: int):
+def hypergeom(n: int, N: int, G: int):  # noqa: N803
     """Return a hypergeometric distribution."""
     assert N > n > 0 and N >= G > 0 and N > 1
     return stats.hypergeom(M=N, n=G, N=n)

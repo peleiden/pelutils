@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from enum import IntEnum
+from types import TracebackType
+
+import pelutils.logging as logging_lib
 
 
 class LogLevels(IntEnum):
@@ -16,7 +19,7 @@ class LogLevels(IntEnum):
     DEBUG = 0
 
 
-class _LevelManager:
+class LevelManager:
     """Used for context limiting logging levels.
 
     Example
@@ -29,9 +32,9 @@ class _LevelManager:
     """
 
     def __init__(self):
-        self.level: LogLevels | None = None
+        self.level: LogLevels | int | None = None
 
-    def with_level(self, level: LogLevels | int) -> _LevelManager:
+    def with_level(self, level: LogLevels | int) -> LevelManager:
         self.level = level
         return self
 
@@ -42,22 +45,22 @@ class _LevelManager:
         self.level = None
 
 
-class _LogErrors:
+class LogErrors:
     """Used for catching exceptions with logger and logging them before reraising them."""
 
-    def __init__(self, log):
+    def __init__(self, log: "logging_lib.Logger"):
         self._log = log
 
     def __enter__(self):
         pass
 
-    def __exit__(self, et, ev, _):
-        is_zero_exit_code = et is SystemExit and ev.code == 0
+    def __exit__(self, et: type[BaseException] | None, ev: BaseException | None, tb: TracebackType | None):
+        is_zero_exit_code = et is SystemExit and ev.code == 0  # pyright: ignore[reportAttributeAccessIssue, reportOptionalMemberAccess]
         if et and not is_zero_exit_code:
-            self._log.log_with_stacktrace(ev, level=LogLevels.CRITICAL)
+            self._log.log_with_stacktrace(ev, level=LogLevels.CRITICAL)  # pyright: ignore[reportArgumentType]
 
 
-class _CollectLogs:
+class CollectLogs:
     """Used for producing all logging output from a block at once.
 
     This is useful with threads, asynchronous code, and multiprocessing to prevent the logs getting mixed up.
@@ -75,12 +78,12 @@ class _CollectLogs:
     ```
     """
 
-    def __init__(self, logger):
+    def __init__(self, logger: "logging_lib.Logger"):
         self._log = logger
 
     def __enter__(self):
-        self._log._set_collect_mode(True)
+        self._log._set_collect_mode(True)  # pyright: ignore[reportPrivateUsage]
 
     def __exit__(self, *_):
-        self._log._log_collected()
-        self._log._set_collect_mode(False)
+        self._log._log_collected()  # pyright: ignore[reportPrivateUsage]
+        self._log._set_collect_mode(False)  # pyright: ignore[reportPrivateUsage]

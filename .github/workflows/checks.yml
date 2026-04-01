@@ -48,7 +48,7 @@ jobs:
         run: basedpyright pelutils
 
       - name: Run test
-        run: pytest --cov=pelutils
+        run: pytest tests --cov=pelutils
 
       - name: Upload coverage data to coveralls.io
         run: coveralls --service=github

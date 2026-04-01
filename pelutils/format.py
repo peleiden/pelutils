@@ -7,6 +7,7 @@ from typing import Any
 
 from rich.color import ANSI_COLOR_NAMES
 from rich.console import Console
+from typing_extensions import override
 
 _stdout_console = Console(highlight=False)
 _stderr_console = Console(highlight=False, stderr=True)
@@ -22,12 +23,12 @@ class RichString:
     _close_tag_regex_1 = re.compile(r"\\(\[\/.*\])")
     _close_tag_regex_2 = re.compile(r"(\[\/.*\])")
 
-    def __init__(self, stderr=False):
+    def __init__(self, stderr: bool = False):
         self.strings: list[str] = list()  # Normal strings
         self.riches: list[str] = list()  # Corresponding strings with rich syntax
         self.console = _stderr_console if stderr else _stdout_console
 
-    def add_string(self, s: str, rich: str = None):
+    def add_string(self, s: str, rich: str | None = None):
         """Add a new string and optionally a rich string equivalent."""
         if rich is None:
             # Escape beginning brackets to prevent accidental formatting when printing
@@ -47,6 +48,7 @@ class RichString:
         for rs in rss:
             rs.print()
 
+    @override
     def __str__(self) -> str:
         """Return non-rich string."""
         return "".join(self.strings)
@@ -56,24 +58,24 @@ class Table:
     """Table for nicely formatting tabular data."""
 
     def __init__(self):
-        self._width: int = None  # Number of elements in each row. Set when first row or header added
-        self._header: list[Any] = list()  # Header elements
-        self._rows: list[list[Any]] = list()  # All non-header rows
+        self._width: int | None = None  # Number of elements in each row - set when first row or header added
+        self._header: list[Any] = list()  # Header elements  # pyright: ignore[reportExplicitAny]
+        self._rows: list[list[Any]] = list()  # All non-header rows  # pyright: ignore[reportExplicitAny]
         self._left_aligns: list[list[bool]] = list()  # True for left align, False for right align
         self._hlines: set[int] = set()  # Row indexes that are followed by a horizontal line
 
-    def _set_and_check_width(self, row: list[Any]):
+    def _set_and_check_width(self, row: list[Any]):  # pyright: ignore[reportExplicitAny]
         if self._width is not None and len(row) != self._width:
             raise ValueError(f"Given row has {len(row)} elements, but table width is {self._width}")
         if self._width is None:
             self._width = len(row)
 
-    def add_header(self, header: list[Any]):
+    def add_header(self, header: list[Any]):  # pyright: ignore[reportExplicitAny]
         """Add a header row to the table."""
         self._set_and_check_width(header)
         self._header = header
 
-    def add_row(self, row: list[Any], left_align: Iterable[bool] | None = None):
+    def add_row(self, row: list[Any], left_align: Iterable[bool] | None = None):  # pyright: ignore[reportExplicitAny]
         """Add a row to the table.
 
         `left_align` is a boolean iterable of equal length to `row`, indicating whether each element is right or left aligned.
@@ -82,6 +84,7 @@ class Table:
         self._set_and_check_width(row)
         self._rows.append(row)
         if left_align is None:
+            assert self._width is not None
             left_align = [False] * self._width
             left_align[0] = True
         else:
@@ -115,14 +118,16 @@ class Table:
         return os.linesep.join(lines)
 
     @staticmethod
-    def _format_element(element: Any, width: int, left_align: bool) -> str:
+    def _format_element(element: Any, width: int, left_align: bool) -> str:  # pyright: ignore[reportExplicitAny]
         element = str(element)
         if left_align:
             return element + " " * (width - len(element))
         else:
             return " " * (width - len(element)) + element
 
+    @override
     def __str__(self) -> str:
+        assert self._width is not None
         all_rows = [self._header, *self._rows] if self._header else self._rows
         widths = [max(len(str(all_rows[i][j])) for i in range(len(all_rows))) for j in range(self._width)]
         hline = "+".join("-" * (width + 1 + (0 < i < self._width - 1)) for i, width in enumerate(widths))

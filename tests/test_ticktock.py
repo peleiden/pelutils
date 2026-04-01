@@ -337,7 +337,7 @@ def test_exit_in_nested():
     tt = TickTock()
     with pytest.raises(ZeroDivisionError):
         tt.profile("adfsadlæfj")
-        0 / 0
+        0 / 0  # noqa: B018
         tt.end_profile()
     # with tt.profile construct was not used, so expect an unclosed profile
     assert len(tt._profile_stack) == 1
@@ -346,7 +346,7 @@ def test_exit_in_nested():
     with pytest.raises(ZeroDivisionError):
         with tt.profile("sada"):
             tt.profile("adfsadlæfj")
-            0 / 0
+            0 / 0  # noqa: B018
             tt.end_profile()
     # with tt.profile construct was used, so expect no unclosed profiles
     assert len(tt._profile_stack) == 0
@@ -357,7 +357,7 @@ def test_exit_in_nested():
             tt.profile("asdasd")
             with tt.profile("sada"):
                 tt.profile("adfsadlæfj")
-                0 / 0
+                0 / 0  # noqa: B018
                 tt.end_profile()
             tt.end_profile()
     # with tt.profile construct was used, so expect no unclosed profiles
@@ -371,7 +371,7 @@ def test_exit_in_nested():
             tt.profile("asdasd")
             with tt.profile("sada"):
                 tt.profile("adfsadlæfj")
-                0 / 0
+                0 / 0  # noqa: B018
                 tt.end_profile()
             tt.end_profile()
         tt.end_profile()

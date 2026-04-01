@@ -15,6 +15,8 @@ from pprint import pformat
 from shutil import rmtree
 from typing import Any, Callable, TypeVar, Union
 
+from typing_extensions import override
+
 from pelutils import except_keys, get_timestamp_for_files
 
 _T = TypeVar("_T")
@@ -39,13 +41,13 @@ class ConfigError(ParserError):
     """Config file related errors."""
 
 
-class _AbstractArgument(ABC):
+class _AbstractArgument(ABC):  # noqa: B024
     """Contains description of an argument.
 
     '--' is automatically prepended to `name` when given from the command line.
     """
 
-    def __init__(self, name: str, abbrv: str | None, help: str | None, **kwargs):
+    def __init__(self, name: str, abbrv: str | None, help: str | None, **kwargs: Any):  # pyright: ignore[reportExplicitAny]
         self._validate(name, abbrv)
 
         self.name = name
@@ -72,15 +74,17 @@ class _AbstractArgument(ABC):
 
     @staticmethod
     def _validate_nargs(nargs: _NargsTypes):
-        if type(nargs) not in _NargsTypes.__args__:
-            raise TypeError(f"`nargs` type must be one of {_NargsTypes.__args__}, not {type(nargs)}")
+        if type(nargs) not in _NargsTypes.__args__:  # pyright: ignore[reportAttributeAccessIssue]
+            raise TypeError(f"`nargs` type must be one of {_NargsTypes.__args__}, not {type(nargs)}")  # pyright: ignore[reportAttributeAccessIssue]
         if isinstance(nargs, int) and nargs < 0:
             raise ValueError("When expecting a set number of arguments, the number must be at least 0")
 
+    @override
     def __str__(self) -> str:
         vars_str = ", ".join(f"{name}={value}" for name, value in vars(self).items())
         return f"{self.__class__.__name__}({vars_str})"
 
+    @override
     def __hash__(self) -> int:
         return hash(self.name)
 
@@ -88,7 +92,7 @@ class _AbstractArgument(ABC):
 class Argument(_AbstractArgument):
     """Argument that must be given a value."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         name: str,
         *,
@@ -97,7 +101,7 @@ class Argument(_AbstractArgument):
         help: str | None = None,
         metavar: str | tuple[str, ...] | None = None,
         nargs: _NargsTypes = None,
-        **kwargs,
+        **kwargs: Any,  # pyright: ignore[reportExplicitAny]
     ):
         super().__init__(name, abbrv, help=help, **kwargs)
         self._validate_nargs(nargs)
@@ -111,7 +115,7 @@ class Argument(_AbstractArgument):
 class Option(_AbstractArgument):
     """Optional argument with a default value."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         name: str,
         *,
@@ -121,7 +125,7 @@ class Option(_AbstractArgument):
         help: str | None = None,
         metavar: str | tuple[str, ...] | None = None,
         nargs: _NargsTypes = None,
-        **kwargs,
+        **kwargs: Any,  # pyright: ignore[reportExplicitAny]
     ):
         super().__init__(name, abbrv, help, **kwargs)
         self._validate_nargs(nargs)
@@ -131,9 +135,9 @@ class Option(_AbstractArgument):
             self.type = type
         elif self.default is not None:
             if nargs is not None:
-                self.default = list(self.default)
-            self.type = _type(self.default) if nargs is None else _type(self.default[0])
-            if nargs is not None and not all(isinstance(x, self.type) for x in self.default):
+                self.default = list(self.default)  # pyright: ignore[reportArgumentType]
+            self.type = _type(self.default) if nargs is None else _type(self.default[0])  # pyright: ignore[reportIndexIssue]
+            if nargs is not None and not all(isinstance(x, self.type) for x in self.default):  # pyright: ignore[reportGeneralTypeIssues]
                 raise ValueError(f"All elements in default value of {name} must be of type {self.type}")
         else:
             self.type = str
@@ -150,12 +154,13 @@ class Flag(_AbstractArgument):
         *,
         abbrv: str | None = None,
         help: str | None = None,
-        **kwargs,
+        **kwargs: Any,  # pyright: ignore[reportExplicitAny]
     ):
         super().__init__(name, abbrv, help, **kwargs)
 
     @property
-    def default(self):
+    def default(self) -> bool:
+        """The default value for a Flag is always False."""
         return False
 
 
@@ -167,14 +172,14 @@ class JobDescription(Namespace):
 
     document_filename = "used-config.ini"
 
-    def __init__(self, name: str, location: str, explicit_args: set[str], docfile_content: str, **kwargs):
+    def __init__(self, name: str, location: str, explicit_args: set[str], docfile_content: str, **kwargs: Any):  # pyright: ignore[reportExplicitAny]
         super().__init__(**kwargs)
         self.name = name
         self.location = location
         self.explicit_args = explicit_args
         self._docfile_content = docfile_content
 
-    def todict(self) -> dict[str, Any]:
+    def todict(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
         """Return a dictionary version of itself which contains solely the parsed values."""
         d = vars(self)
         d = {kw: v for kw, v in d.items() if not kw.startswith("_") and kw not in {"config", "explicit_args"}}
@@ -186,7 +191,7 @@ class JobDescription(Namespace):
         os.makedirs(self.location)
         self.write_documentation(encoding)
 
-    def write_documentation(self, encoding: str | None = None, *, append=True):
+    def write_documentation(self, encoding: str | None = None, *, append: bool = True):
         """Write, or append if one already exists, a documentation file in the location.
 
         The file has the CLI command user for running the program as a comment as well as the config file,
@@ -197,7 +202,8 @@ class JobDescription(Namespace):
         with open(path, "a" if append else "w", encoding=encoding) as docfile:
             docfile.write(self._docfile_content)
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> Any:  # pyright: ignore[reportExplicitAny]
+        """Get the argument value with the given key. -/_ disambiguities are resolved."""
         if key in self.__dict__:
             return self.__dict__[key]
         elif _fixdash(key) in self.__dict__:
@@ -205,6 +211,7 @@ class JobDescription(Namespace):
         else:
             raise KeyError(f"No such job argument '{key}'")
 
+    @override
     def __str__(self) -> str:
         return pformat(self.todict())
 
@@ -220,7 +227,7 @@ class Parser:
     _default_config_job = "DEFAULT"
 
     _location_arg = Argument("location")
-    _location_arg._name_or_flags = lambda: ("location",)
+    _location_arg._name_or_flags = lambda: ("location",)  # pyright: ignore[reportPrivateUsage]
     _name_arg = Option("name", default=None, help="Name of the job")
     _section_separator = ":"
     _encoding_separator = "::"
@@ -229,31 +236,34 @@ class Parser:
         default=None,
         abbrv="c",
         help=f"Path to config file. Encoding can be specified by giving <path>{_encoding_separator}<encoding>, "
-        f"e.g. --config path/to/config.ini{_encoding_separator}utf-8",
+        + f"e.g. --config path/to/config.ini{_encoding_separator}utf-8",
     )
 
-    _reserved_arguments: tuple[ArgumentTypes] = (_location_arg, _name_arg, _config_arg)
-    _reserved_names = {arg.name for arg in _reserved_arguments}
+    _reserved_arguments: tuple[ArgumentTypes, ...] = (_location_arg, _name_arg, _config_arg)
+    _reserved_names = {arg.name for arg in _reserved_arguments}  # noqa: RUF012
     _reserved_names.add("help")  # Reserved by argparse
-    _reserved_abbrvs = {arg.abbrv for arg in _reserved_arguments if arg.abbrv}
+    _reserved_abbrvs = {arg.abbrv for arg in _reserved_arguments if arg.abbrv}  # noqa: RUF012
 
     @property
-    def reserved_names(self):
+    def reserved_names(self) -> set[str]:
+        """Argument names which are reserved."""
         return self._reserved_names
 
     @property
-    def reserved_abbrvs(self):
+    def reserved_abbrvs(self) -> set[str]:
+        """Argument abbreviations which are reserved."""
         return self._reserved_abbrvs
 
     @property
-    def encoding_seperator(self):
+    def encoding_seperator(self) -> str:
+        """Seperator used to specify the encoding (if given) of the config file."""
         return self._encoding_separator
 
     def __init__(
         self,
         *arguments: ArgumentTypes,
         description: str | None = None,
-        multiple_jobs=False,
+        multiple_jobs: bool = False,
     ):
         # Modifications are made to the argument objects, so make a deep copy
         arguments = tuple(deepcopy(arg) for arg in arguments)
@@ -262,7 +272,7 @@ class Parser:
 
         self._argparser = ArgumentParser(description=description)
         self._configparser = ConfigParser(allow_no_value=True)
-        self._configparser.optionxform = str
+        self._configparser.optionxform = str  # pyright: ignore[reportAttributeAccessIssue]
 
         # Ensure that no conflicts exist with reserved arguments
         if any(arg.name in self._reserved_names for arg in arguments):
@@ -304,7 +314,7 @@ class Parser:
             # Input validity is then checked later
             if isinstance(argument, Argument):
                 self._argparser.add_argument(
-                    *argument._name_or_flags(),
+                    *argument._name_or_flags(),  # pyright: ignore[reportPrivateUsage]
                     type=argument.type,
                     help=argument.help,
                     metavar=argument.metavar,
@@ -313,7 +323,7 @@ class Parser:
                 )
             elif isinstance(argument, Option):
                 self._argparser.add_argument(
-                    *argument._name_or_flags(),
+                    *argument._name_or_flags(),  # pyright: ignore[reportPrivateUsage]
                     default=argument.default,
                     type=argument.type,
                     help=argument.help,
@@ -321,21 +331,22 @@ class Parser:
                     nargs="*" if argument.nargs is not None else None,
                     **argument.kwargs,
                 )
-            elif isinstance(argument, Flag):
+            else:
+                assert isinstance(argument, Flag)
                 self._argparser.add_argument(
-                    *argument._name_or_flags(),
+                    *argument._name_or_flags(),  # pyright: ignore[reportPrivateUsage]
                     action="store_true",
                     help=argument.help,
                     **argument.kwargs,
                 )
 
-    def _get_default_values(self) -> dict[ArgumentTypes, Any]:
+    def _get_default_values(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
         """Build a dictionary that maps argument names to their default values.
 
         Arguments without defaults values are not included.
         """
         return {
-            argname: arg.default
+            argname: arg.default  # pyright: ignore[reportAttributeAccessIssue]
             for argname, arg in self._arguments.items()
             if hasattr(arg, "default") and arg.name not in self._reserved_names
         }
@@ -352,14 +363,14 @@ class Parser:
         for argname in vars(args):
             arg = self._arguments[argname]
             if isinstance(arg, Flag):
-                aux_parser.add_argument(*arg._name_or_flags(), action="store_true")
+                aux_parser.add_argument(*arg._name_or_flags(), action="store_true")  # pyright: ignore[reportPrivateUsage]
             else:
-                aux_parser.add_argument(*arg._name_or_flags(), nargs="*" if arg.nargs is not None else None)
+                aux_parser.add_argument(*arg._name_or_flags(), nargs="*" if arg.nargs is not None else None)  # pyright: ignore[reportPrivateUsage]
         explicit_cli_args = aux_parser.parse_args()
 
         return set(vars(explicit_cli_args))
 
-    def _parse_config_file(self, config_path: str) -> dict[str, dict[str, Any]]:
+    def _parse_config_file(self, config_path: str) -> dict[str, dict[str, Any]]:  # noqa: PLR0912  # pyright: ignore[reportExplicitAny]
         """Parse a given configuration file (.ini format).
 
         Return a dictionary where each section as a key pointing to corresponding argument/value pairs.
@@ -391,32 +402,33 @@ class Parser:
                 continue
             config_dict[section] = dict()
             for argname, value in arguments.items():
-                argname = _fixdash(argname)
+                argname = _fixdash(argname)  # noqa: PLW2901
                 if argname not in self._arguments:
                     raise ParserError(f"Unknown argument '{argname}'")
                 if isinstance(self._arguments[argname], Flag):
                     # If flag value is given in config file, parse True/False
-                    if isinstance(value, str):
+                    if isinstance(value, str):  # pyright: ignore[reportUnnecessaryIsInstance]
                         config_dict[section][argname] = literal_eval(value)
                         # Check if valid value
                         if not isinstance(config_dict[section][argname], bool):
                             raise ValueError(f"Value {argname} in section {section} must be 'True' or 'False', not '{value}'")
                     else:
+                        assert value is None
                         config_dict[section][argname] = True
                 else:  # Arguments and options
                     # If multiple values, parse each as given type
                     # Otherwise, parse single argument as given type
                     try:
-                        if self._arguments[argname].nargs is not None:
-                            config_dict[section][argname] = [self._arguments[argname].type(x) for x in shlex.split(value)]
+                        if self._arguments[argname].nargs is not None:  # pyright: ignore[reportAttributeAccessIssue]
+                            config_dict[section][argname] = [self._arguments[argname].type(x) for x in shlex.split(value)]  # pyright: ignore[reportAttributeAccessIssue, reportCallIssue]
                         else:
-                            config_dict[section][argname] = self._arguments[argname].type(value)
+                            config_dict[section][argname] = self._arguments[argname].type(value)  # pyright: ignore[reportCallIssue, reportAttributeAccessIssue]
                     except ValueError as e:
                         raise ValueError(f"Unable to parse value '{argname}' in section '{section}': {e.args[0]}") from e
 
         return config_dict
 
-    def parse_args(self) -> JobDescription | list[JobDescription]:
+    def parse_args(self) -> JobDescription | list[JobDescription]:  # noqa: PLR0912
         """Parse command line arguments and optionally a configuration file if given.
 
         If multiple_jobs was set to True in __init__, a list of job descriptions is returned.
@@ -426,6 +438,7 @@ class Parser:
         args = self._argparser.parse_args()
         explicit_cli_args = self._parse_explicit_cli_args()
         self.location = args.location
+        assert self.location is not None
 
         if args.config is None:
             docfile_content = self._get_docfile_content()
@@ -500,14 +513,14 @@ class Parser:
                 argument = self._arguments[argname]
                 if argname not in job:
                     raise ParserError(f"Job '{job.name}' is missing value for '{arg.name}'")
-                elif hasattr(argument, "nargs") and argument.nargs is not None:
+                elif hasattr(argument, "nargs") and argument.nargs is not None:  # pyright: ignore[reportAttributeAccessIssue]
                     if job[argname] is None and isinstance(argument, Argument):
                         raise ParserError(f"Argument '{argname}' has not been given in job '{job.name}'")
                     assert isinstance(job[argname], list) or job[argname] is None
                     if job[argname] is not None:
-                        assert all(isinstance(x, argument.type) for x in job[argname])
-                        if argument.nargs > 0 and len(job[argname]) != argument.nargs:
-                            raise ValueError(f"Argument '{argname}' expected {argument.nargs} values but received {len(job[argname])}")
+                        assert all(isinstance(x, argument.type) for x in job[argname])  # pyright: ignore[reportArgumentType, reportAttributeAccessIssue]
+                        if argument.nargs > 0 and len(job[argname]) != argument.nargs:  # pyright: ignore[reportAttributeAccessIssue]
+                            raise ValueError(f"Argument '{argname}' expected {argument.nargs} values but received {len(job[argname])}")  # pyright: ignore[reportAttributeAccessIssue]
 
         return job_descriptions if self._multiple_jobs else job_descriptions[0]
 

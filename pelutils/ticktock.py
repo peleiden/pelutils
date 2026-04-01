@@ -5,8 +5,10 @@ from collections.abc import Generator, Hashable
 from copy import deepcopy
 from threading import current_thread
 from time import perf_counter
+from types import TracebackType
 
 from deprecated import deprecated
+from typing_extensions import override
 
 from pelutils.format import Table
 
@@ -24,7 +26,7 @@ class TimeUnits:
     hour = ("h", 3600)
 
     @classmethod
-    def units(cls, reverse=False) -> list[tuple[str, float]]:
+    def units(cls, reverse: bool = False) -> list[tuple[str, float]]:
         """List all time units in order of increasing duration, unless reverse is True."""
         units = (unit for name, unit in cls.__dict__.items() if not callable(getattr(cls, name)) and not name.startswith("__"))
         units = sorted(units, key=lambda unit: unit[1], reverse=reverse)
@@ -81,7 +83,7 @@ class Profile:  # noqa: D101
         version="3.1.0",
         reason="Length of individual hits are no longer saved, only aggregated statistics. This will return hits of average length.",
     )
-    def hits(self):
+    def hits(self):  # noqa: D102
         return [self.mean()] * self._n
 
     def sum(self) -> float:
@@ -94,10 +96,12 @@ class Profile:  # noqa: D101
             return 0
         return self._total_time / self._n
 
+    @override
     def __str__(self) -> str:
         return self.name
 
     def __len__(self) -> int:
+        """Return the number of times this profile has been triggered."""
         return self._n
 
     def __iter__(self) -> Generator[Profile, None, None]:
@@ -110,9 +114,11 @@ class Profile:  # noqa: D101
     def _hashable(self) -> Hashable:
         return (self.name, self.depth, self.parent)
 
+    @override
     def __hash__(self) -> int:
         return hash(self._hashable)
 
+    @override
     def __eq__(self, __value: object) -> bool:
         return isinstance(__value, Profile) and self._hashable == __value._hashable
 
@@ -125,16 +131,16 @@ class _ProfileContext:
     def __enter__(self):
         pass
 
-    def __exit__(self, et, _, __):
+    def __exit__(self, et: type[BaseException] | None, ev: BaseException | None, tb: TracebackType | None):
         if et is not None:
             # If an exception occured in deeper profiling sections, make sure to end them
             # before continuing, as a NameError otherwise will be raised due to unclosed profilings.
-            while self._tt._profile_stack and self._tt._profile_stack[-1] != self._profile:
+            while self._tt._profile_stack and self._tt._profile_stack[-1] != self._profile:  # pyright: ignore[reportPrivateUsage]
                 self._tt.end_profile()
         self._tt.end_profile(self._profile.name)
 
 
-class TickTockException(RuntimeError):
+class TickTockException(RuntimeError):  # noqa: N818
     """Raised when an exception occurs when using the TickTock class."""
 
 
@@ -198,7 +204,7 @@ class TickTock:
             raise TickTockException(f"A timer for the given ID ({id}) has not been started with .tick()")
         return end - self._tick_starts[id]
 
-    def profile(self, name: str, *, hits=1, disable=False) -> _ProfileContext:
+    def profile(self, name: str, *, hits: int = 1, disable: bool = False) -> _ProfileContext:
         """Begin a profile with given name.
 
         Optionally it is possible to register this as several hits that sum to the total time.
@@ -218,8 +224,8 @@ class TickTock:
         if self._thread_id != id(current_thread()):
             warnings.warn(
                 f"This TickTock instance was created in the {self._thread_name} thread but profiling was started in "
-                f"{current_thread().name}. Profiling is NOT designed to deal with multiple threads. Instead, create a "
-                "TickTock instance for each thread requiring profiling.",
+                + f"{current_thread().name}. Profiling is NOT designed to deal with multiple threads. Instead, create a "
+                + "TickTock instance for each thread requiring profiling.",
                 stacklevel=2,
             )
 
@@ -237,12 +243,12 @@ class TickTock:
             self._id_to_profile[profile] = profile
             if not self._profile_stack:
                 self.profiles.append(profile)
-        profile._disable_in_context = disable or (self._profile_stack[-1]._disable_in_context if self._profile_stack else False)
+        profile._disable_in_context = disable or (self._profile_stack[-1]._disable_in_context if self._profile_stack else False)  # pyright: ignore[reportPrivateUsage]
 
         self._profile_stack.append(profile)
         self._nhits.append(hits)
         pc = _ProfileContext(self, profile)
-        profile.start = perf_counter()
+        profile.start = perf_counter()  # pyright: ignore[reportAttributeAccessIssue]
         return pc
 
     def end_profile(self, name: str | None = None) -> float:
@@ -253,14 +259,14 @@ class TickTock:
         The time passed since the stopped profile was started is returned.
         """
         end = perf_counter()
-        dt = end - self._profile_stack[-1].start
+        dt = end - self._profile_stack[-1].start  # pyright: ignore[reportAttributeAccessIssue]
         if name is not None and name != self._profile_stack[-1].name:
             raise NameError(f"Expected to pop profile '{self._profile_stack[-1].name}', received '{name}'")
         nhits = self._nhits.pop()
-        if not self._profile_stack[-1]._disable_in_context:
-            self._profile_stack[-1]._n += nhits
-            self._profile_stack[-1]._total_time += dt
-        self._profile_stack[-1]._disable_in_context = False
+        if not self._profile_stack[-1]._disable_in_context:  # pyright: ignore[reportPrivateUsage]
+            self._profile_stack[-1]._n += nhits  # pyright: ignore[reportPrivateUsage]
+            self._profile_stack[-1]._total_time += dt  # pyright: ignore[reportPrivateUsage]
+        self._profile_stack[-1]._disable_in_context = False  # pyright: ignore[reportPrivateUsage]
         self._profile_stack.pop()
         return dt
 
@@ -276,7 +282,7 @@ class TickTock:
         self.reset()
         self._tick_starts = tick_starts
 
-    def do_at_interval(self, interval: float, id: Hashable = None, *, also_first=False) -> bool:
+    def do_at_interval(self, interval: float, id: Hashable = None, *, also_first: bool = False) -> bool:
         """Return true if it is at least `interval` since this method was called with the same id previously.
 
         A common pattern is to run a piece of code at fixed intervals inside a loop. In the example below, a loop is continuously doing
@@ -300,7 +306,7 @@ class TickTock:
             return True
         return False
 
-    def add_external_measurements(self, name: str | None, time: float, *, hits=1):
+    def add_external_measurements(self, name: str | None, time: float, *, hits: int = 1):
         """Add data to a (new) profile with given time spread over given hits.
 
         If `name` is a string, it will act like `.profile(name)`. If it is `None`, the current active profile will be used.
@@ -309,10 +315,10 @@ class TickTock:
             self.profile(name, hits=hits)
             profile = self._profile_stack[-1]
             self.end_profile()
-            profile._total_time += time
+            profile._total_time += time  # pyright: ignore[reportPrivateUsage]
         else:
-            self._profile_stack[-1]._n += hits
-            self._profile_stack[-1]._total_time += time
+            self._profile_stack[-1]._n += hits  # pyright: ignore[reportPrivateUsage]
+            self._profile_stack[-1]._total_time += time  # pyright: ignore[reportPrivateUsage]
 
     def fuse(self, tt: TickTock):
         """Fuse a TickTock instance into self."""
@@ -324,8 +330,8 @@ class TickTock:
 
         for key, profile in tt._id_to_profile.items():
             existing = self._id_to_profile[key]
-            existing._n += profile._n
-            existing._total_time += profile._total_time
+            existing._n += profile._n  # pyright: ignore[reportPrivateUsage]
+            existing._total_time += profile._total_time  # pyright: ignore[reportPrivateUsage]
 
     @staticmethod
     def fuse_multiple(*tts: TickTock) -> TickTock:
@@ -411,6 +417,7 @@ class TickTock:
 
         return len(profile), profile.sum()
 
+    @override
     def __str__(self) -> str:
         return self.stringify_sections(None)
 

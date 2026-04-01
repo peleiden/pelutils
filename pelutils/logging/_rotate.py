@@ -7,24 +7,25 @@ from datetime import datetime
 from pathlib import Path
 
 
-class _LogFileRotater:
-    supported_time_units = ["year", "month", "day", "hour"]
-    supported_size_units = ["GB", "MB", "kB"]
+class LogFileRotater:
+    supported_time_units = ("year", "month", "day", "hour")
+    supported_size_units = ("GB", "MB", "kB")
 
     def __init__(self, rotate_cmd: str | None, base_file: Path):
         self.rotate_cmd = rotate_cmd
         self.base_file = base_file
-        self.value = None
+        self.value: float | int | None = None
         self.unit = None
         if self.rotate_cmd is not None:
             self.rotate_cmd = self.rotate_cmd.strip()
             self.value, self.unit = self.parse_rotate_cmd(self.rotate_cmd)
-            if self.value is not None and self.value <= 0:
+            if self.value <= 0:
                 raise ValueError(f"Rotation quantity must be positive, not {self.value}")
 
         self._is_time_constrained = self.unit in self.supported_time_units
 
         if self.is_size_constrained:
+            assert self.value is not None
             if self.unit == "GB":
                 self.max_file_size = self.value * 10**9
             elif self.unit == "MB":
@@ -40,7 +41,7 @@ class _LogFileRotater:
             # Next time is the start of the next file block at which point the log file will change
             self.next_time = self.get_next_time()
 
-        if self.base_file is not None and self.base_file.is_dir():
+        if self.base_file.is_dir():
             raise FileExistsError(f"Given log file {self.base_file} already exists and is a directory")
 
     @property
@@ -68,14 +69,14 @@ class _LogFileRotater:
             raise ValueError(f'Unsupported unit "{unit}". Must be one of {", ".join(cls.supported_size_units)}')
         return value, unit
 
-    def write(self, text: str, mode="w", encoding="utf-8"):
+    def write(self, text: str, mode: str = "w", encoding: str = "utf-8"):
         if mode not in {"w", "a"}:
             raise ValueError(f'Write mode must be either write (w) or append (a), not "{mode}".')
-        text = text.encode(encoding)
-        file = self.resolve_logfile(len(text))
+        text_b = text.encode(encoding)
+        file = self.resolve_logfile(len(text_b))
         file.parent.mkdir(parents=True, exist_ok=True)
         with file.open(f"{mode}b") as f:
-            f.write(text)
+            f.write(text_b)
 
     def rotate_size_constrained_files(self):
         assert self.is_size_constrained
@@ -141,12 +142,14 @@ class _LogFileRotater:
                 self.next_time = self.get_next_time()
             # Format current time
             # Format specifiers at https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
+            fmt: str = ""
             if self.unit == "hour":
                 fmt = self.current_time.strftime("%Y%m%d_%H")
             elif self.unit in {"day", "month"}:
                 fmt = self.current_time.strftime("%Y%m%d")
             elif self.unit == "year":
                 fmt = self.current_time.strftime("%Y")
+            assert fmt != ""  # Ensure it has been set - this should not be possible, so if this triggers, there is a logic error
             base_file_base, base_file_ext = os.path.splitext(self.base_file)
             return Path(f"{base_file_base}.{fmt}{base_file_ext}")
 

@@ -24,6 +24,7 @@ from pelutils import (
     get_timestamp_for_files,
     raises,
     reverse_line_iterator,
+    set_seeds,
     split_path,
     thousands_seperators,
 )
@@ -65,9 +66,9 @@ class TestInit(UnitTestCollection):
         for num, with_dot, with_comma in cases:
             for neg in False, True:
                 if neg == -1:
-                    num = -num
-                    with_dot = "-" + with_dot
-                    with_comma = "-" + with_comma
+                    num = -num  # noqa: PLW2901
+                    with_dot = "-" + with_dot  # noqa: PLW2901
+                    with_comma = "-" + with_comma  # noqa: PLW2901
                 with pytest.warns(DeprecationWarning):
                     assert with_dot == thousands_seperators(num, ".")
                 with pytest.warns(DeprecationWarning):
@@ -77,12 +78,13 @@ class TestInit(UnitTestCollection):
             thousands_seperators(1, "a")
 
     def test_raises(self):
-        assert raises(IndexError, lambda x: x[0], [])
-        assert not raises(IndexError, lambda x: x[0], [1])
-        assert not raises(TypeError, lambda x: x[0], [])
+        with pytest.warns(DeprecationWarning):
+            assert raises(IndexError, lambda x: x[0], [])
+            assert not raises(IndexError, lambda x: x[0], [1])
+            assert not raises(TypeError, lambda x: x[0], [])
 
     def test_binary_search(self):
-        data = np.random.randint(0, 100, 100)
+        data = np.random.randint(0, 100, 100)  # noqa: NPY002
         data = np.sort(data)
         for elem in data:
             assert binary_search(elem, data) is not None
@@ -229,3 +231,8 @@ class TestInit(UnitTestCollection):
             assert a is None
             assert b is None
             move(".gittmp", ".git")
+
+
+def test_set_seeds():
+    with pytest.warns(DeprecationWarning):
+        set_seeds(69)  # Nice

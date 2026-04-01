@@ -16,11 +16,11 @@ from pelutils.tests import SimplePool, UnitTestCollection
 def _collect_test_fn(args):
     logger, do_fail = args
     with logger.collect:
-        logger("log 1 from %s" % mp.current_process()._identity)
-        logger("log 2 from %s" % mp.current_process()._identity)
+        logger(f"log 1 from {mp.current_process()._identity}")
+        logger(f"log 2 from {mp.current_process()._identity}")
         if do_fail:
             raise RuntimeError
-        logger("log 3 from %s" % mp.current_process()._identity)
+        logger(f"log 3 from {mp.current_process()._identity}")
 
 
 class TestLogger(UnitTestCollection):
@@ -48,11 +48,11 @@ class TestLogger(UnitTestCollection):
         # Remove log file, so all lines can be predictably read
         os.remove(self.logfile)
         for q, i in zip(queries, inputs):
-            monkeypatch.setattr("builtins.input", lambda _: i)
+            monkeypatch.setattr("builtins.input", lambda _: i)  # noqa: B023
             assert log.input(q) == i
         input_generator = log.input(queries)
         for i in inputs:
-            monkeypatch.setattr("builtins.input", lambda _: i)
+            monkeypatch.setattr("builtins.input", lambda _: i)  # noqa: B023
             assert next(input_generator) == i
         # Test that each query and input has been written twice to the logfile
         with open(self.logfile) as lf:
@@ -96,7 +96,7 @@ class TestLogger(UnitTestCollection):
             inputs = iter(("unparsable", "gibberish", final_answer))
             user_input = None
             while user_input is None:
-                monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+                monkeypatch.setattr("builtins.input", lambda _: next(inputs))  # noqa: B023
                 user_input = log.parse_bool_input(log.input("Is the weather nice today? "))
             assert user_input == (True if final_answer == "y" else False)
 
@@ -163,7 +163,7 @@ class TestLogger(UnitTestCollection):
         # _collect_test_fn logs out three lines
         assert len(lines) == 3 * reps
         for i, line in enumerate(lines):
-            assert "log %i" % (i % 3 + 1) in line
+            assert f"log {i % 3 + 1}" in line
 
     @pytest.mark.skipif(OS.is_windows, reason="Log collection is not supported on Windows")
     def test_collect_with_errors(self):
@@ -188,7 +188,7 @@ class TestLogger(UnitTestCollection):
             elif "log 3" in newline:
                 assert "log 2" in prevline
             else:
-                raise RuntimeError("'log i' not found in '%s'" % repr(newline))
+                raise RuntimeError(f"'log i' not found in '{newline!r}'")
 
     @pytest.mark.skipif(OS.is_windows, reason="Log collection is not supported on Windows")
     def test_collect_with_other_logger(self):
@@ -203,7 +203,7 @@ class TestLogger(UnitTestCollection):
         # _collect_test_fn logs out three lines
         assert len(lines) == 3 * reps
         for i, line in enumerate(lines):
-            assert "log %i" % (i % 3 + 1) in line
+            assert f"log {i % 3 + 1}" in line
 
     @pytest.mark.skipif(not OS.is_windows, reason="Error should only be raised on Windows")
     def test_collect_error_on_windows(self):
@@ -258,12 +258,12 @@ class TestLogger(UnitTestCollection):
 
         # First, test that errors are caught only when within log.log_errors context
         with pytest.raises(ZeroDivisionError):
-            0 / 0
+            0 / 0  # noqa: B018
         assert ZeroDivisionError.__name__ not in self.get_last_line()
 
         with pytest.raises(ZeroDivisionError):
             with log.log_errors:
-                0 / 0
+                0 / 0  # noqa: B018
         assert ZeroDivisionError.__name__ in self.get_last_line()
 
         # Then test that it also works with SystemExit when the exit code is zero

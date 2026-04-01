@@ -1,10 +1,14 @@
 # History
 
-## 3.6.3
+## 3.7.0
 
+- Made linting and formatting significantly stricter.
+- Made code checked by `basedpyright`.
+- Improved type hints.
 - Exposed `Logger.is_configured`.
 - Removed examples which were largely lackluster and not up-to-date.
 - Added `types` submodule for convenient data type definitions.
+- Deprecated `set_seeds` and `raises`.
 
 ## 3.6.2
 

@@ -5,7 +5,8 @@ import torch
 from pelutils import set_seeds
 from pelutils.ds import tensor_bytes, unique
 
-set_seeds(sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀"))
+with pytest.warns(DeprecationWarning):
+    set_seeds(sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀"))
 
 
 def test_unique():
@@ -51,7 +52,7 @@ def test_unique():
     assert np.all(counts[argsort] == npcounts)
 
     # Axis and multidimensional array
-    a = np.random.randint(0, 5, (10, 5, 5))
+    a = np.random.randint(0, 5, (10, 5, 5))  # noqa: NPY002
     a[2] = a[4]
     a[3] = a[4]
     a[4] = a[6]

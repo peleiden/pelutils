@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from pelutils import get_repo
 from pelutils.ds.plots import Figure, get_dateticks
+from pelutils.types import FloatArray, IntArray
 
 _default_extensions = ", ".join((
     ".py",
@@ -39,7 +40,7 @@ _default_extensions = ", ".join((
 ))
 
 
-def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[FloatArray, dict[str, IntArray]]:
     """Count lines of all files recursively in the current working directory.
 
     Return an array of commit epoch times and a dict mapping file extensions to line counts
@@ -59,7 +60,7 @@ def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[np.ndarra
                 raise
             for path, __ in repo.index.entries:
                 try:
-                    ext = next(e for e in exts if path.endswith(e) and os.path.isfile(path))
+                    ext = next(e for e in exts if path.endswith(e) and os.path.isfile(path))  # pyright: ignore[reportAttributeAccessIssue]
                 except StopIteration:
                     continue
                 with open(path) as f:
@@ -70,7 +71,7 @@ def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[np.ndarra
     return times, lines
 
 
-def _fuse_times(all_times: list[np.ndarray]) -> np.ndarray:
+def _fuse_times(all_times: list[FloatArray]) -> FloatArray:
     """Merge all time arrays together into a single array that is also sorted."""
     n = sum(times.size for times in all_times)
     times = np.empty(n, dtype=int)
@@ -83,27 +84,27 @@ def _fuse_times(all_times: list[np.ndarray]) -> np.ndarray:
     return times
 
 
-def _last_initial_zero(values: np.ndarray) -> int:
+def _last_initial_zero(values: IntArray) -> int:
     if values[0] != 0:
         return 0
     return np.where(values != 0)[0][0] - 1
 
 
 def linecounter(repos: list[str], output: str, extensions: str, date_format: str, no_repo_name: bool):
-    extensions = [x.strip() for x in extensions.split(",")]
-    extensions = [x if x.startswith(".") else "." + x for x in extensions]
+    file_extensions = [x.strip() for x in extensions.split(",")]
+    file_extensions = [x if x.startswith(".") else "." + x for x in file_extensions]
     wd = os.getcwd()
     repo_names, all_times, all_counts = list(), list(), list()
-    for repo in repos:
-        repo_path, __ = get_repo(repo)
+    for possible_repo_path in repos:
+        repo_path, __ = get_repo(possible_repo_path)
         if repo_path is None:
             raise ValueError(f"{repo_path} is not a git repository")
         os.chdir(repo_path)
 
+        repo = git.Repo()
+        branch = repo.active_branch
         try:
-            repo = git.Repo()
-            branch = repo.active_branch
-            times, lines = _count(repo, branch, extensions)
+            times, lines = _count(repo, branch, file_extensions)
         finally:
             # Reset repo
             repo.git.checkout(branch)
@@ -114,6 +115,7 @@ def linecounter(repos: list[str], output: str, extensions: str, date_format: str
         os.chdir(wd)
 
     with Figure(output):
+        repo_name: str | None = None
         for _i, (repo_name, times, counts) in enumerate(zip(repo_names, all_times, all_counts)):
             for ext, line_counts in counts.items():
                 if not line_counts.any():
