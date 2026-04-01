@@ -2,7 +2,8 @@ from copy import deepcopy
 from threading import Thread
 
 import pytest
-from pelutils import TickTock, TT, TimeUnits, Profile
+
+from pelutils import TT, Profile, TickTock, TimeUnits
 from pelutils.ticktock import TickTockException, _get_smallest_suitable_unit
 
 

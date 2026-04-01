@@ -32,8 +32,7 @@ def dump(objects: Iterable, f: TextIO, single_block=True):
     if single_block:
         f.write(os.linesep.join(rapidjson.dumps(obj) for obj in objects) + os.linesep)
     else:
-        for obj in objects:
-            f.write(rapidjson.dumps(obj) + os.linesep)
+        f.writelines(rapidjson.dumps(obj) + os.linesep for obj in objects)
 
 
 def dumps(objects: Iterable) -> str:

@@ -289,15 +289,14 @@ class Parser:
                 _used_abbrvs.add(argument.abbrv)
             elif argument.abbrv:
                 raise ParserError(f"Abbreviation '{argument.abbrv}' was used multiple times")
-            else:
-                # Autogenerate abbreviation
-                # First argname[0] is tried. If it exists, the other casing is used if it does not exist
-                if argname[0] not in _used_abbrvs:
-                    argument.abbrv = argname[0]
-                    _used_abbrvs.add(argument.abbrv)
-                elif argname[0].swapcase() not in _used_abbrvs:
-                    argument.abbrv = argname[0].swapcase()
-                    _used_abbrvs.add(argument.abbrv)
+            # Autogenerate abbreviation
+            # First argname[0] is tried. If it exists, the other casing is used if it does not exist
+            elif argname[0] not in _used_abbrvs:
+                argument.abbrv = argname[0]
+                _used_abbrvs.add(argument.abbrv)
+            elif argname[0].swapcase() not in _used_abbrvs:
+                argument.abbrv = argname[0].swapcase()
+                _used_abbrvs.add(argument.abbrv)
 
         # Finally, add all arguments to argparser
         for argument in self._arguments.values():

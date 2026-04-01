@@ -63,7 +63,7 @@ def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[np.ndarra
                 except StopIteration:
                     continue
                 with open(path) as f:
-                    lines[ext][i] += len([line for line in f.readlines() if line.strip()])
+                    lines[ext][i] += len([line for line in f if line.strip()])
     finally:
         repo.git.checkout(branch)
 

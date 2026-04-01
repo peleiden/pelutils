@@ -118,7 +118,7 @@ class Profile:  # noqa: D101
 
 
 class _ProfileContext:
-    def __init__(self, tt: "TickTock", profile: Profile):  # noqa: UP037
+    def __init__(self, tt: "TickTock", profile: Profile):
         self._tt = tt
         self._profile = profile
 

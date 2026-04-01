@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import itertools
 import os
 import shlex
@@ -8,9 +9,8 @@ import sys
 import pytest
 
 from pelutils import except_keys
-from pelutils.tests import restore_argv, UnitTestCollection
-from pelutils.parser import Argument, Option, Flag, Parser, JobDescription, _fixdash, ParserError, ConfigError
-
+from pelutils.parser import Argument, ConfigError, Flag, JobDescription, Option, Parser, ParserError, _fixdash
+from pelutils.tests import UnitTestCollection, restore_argv
 
 _testdir = "parser_test"
 _argv_template = ["main.py", os.path.join(UnitTestCollection.test_dir, _testdir)]

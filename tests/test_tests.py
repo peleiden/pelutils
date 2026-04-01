@@ -1,7 +1,7 @@
 import sys
 from copy import deepcopy
 
-from pelutils.tests import restore_argv, UnitTestCollection
+from pelutils.tests import UnitTestCollection, restore_argv
 
 
 def test_restore_argv():

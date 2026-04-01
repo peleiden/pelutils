@@ -4,20 +4,20 @@ import numpy as np
 import pytest
 
 from pelutils.ds.distributions import (
-    norm,
-    lognorm,
+    bernoulli,
+    beta,
+    binomial,
+    chi2,
     expon,
     gamma,
-    chi2,
-    rayleigh,
-    beta,
-    bernoulli,
-    binomial,
-    poisson,
-    hypergeom,
     geom0,
     geom1,
+    hypergeom,
+    lognorm,
     nbinom,
+    norm,
+    poisson,
+    rayleigh,
 )
 
 

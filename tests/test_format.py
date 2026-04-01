@@ -2,6 +2,7 @@ import os
 from string import ascii_letters
 
 import pytest
+
 from pelutils import Table
 
 

@@ -1,10 +1,9 @@
 import numpy as np
 import pytest
-
 import torch
 
 from pelutils import set_seeds
-from pelutils.ds import unique, tensor_bytes
+from pelutils.ds import tensor_bytes, unique
 
 set_seeds(sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀"))
 
