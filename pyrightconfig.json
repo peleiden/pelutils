@@ -1,4 +1,5 @@
 {
+    "ignore": ["tests"],
     "exclude": ["**/__pycache__", ".venv"],
     "reportMissingTypeStubs": false,
     "reportPrivateImportUsage": false,

@@ -15,7 +15,12 @@ from pelutils.tests import UnitTestCollection, restore_argv
 _testdir = "parser_test"
 _argv_template = ["main.py", os.path.join(UnitTestCollection.test_dir, _testdir)]
 _sample_argv = f"{_argv_template[0]} {_argv_template[1]} -g 4 --gib-num 3.2 -o 7 -i -a b c".split()
-_sample_argv_conf = lambda config_path: (f"{_argv_template[0]} {_argv_template[1]} -c %s --gib-num 3.2" % config_path).split()
+
+
+def _sample_argv_conf(config_path: str) -> list[str]:
+    return (f"{_argv_template[0]} {_argv_template[1]} -c %s --gib-num 3.2" % config_path).split()
+
+
 _sample_arguments = [
     Argument("gibstr"),
     Argument("gib-num", type=float),
@@ -102,7 +107,7 @@ class TestParser(UnitTestCollection):
             Flag("-show-memes")
         for char in (" ", "\t", "\n"):
             with pytest.raises(ValueError):
-                Argument("hello%sthere" % char)
+                Argument(f"hello{char}there")
         with pytest.raises(TypeError):
             Argument("default", default=4)
         with pytest.raises(TypeError):
@@ -129,7 +134,7 @@ class TestParser(UnitTestCollection):
         with pytest.raises(KeyError):
             j["ab"]
         with pytest.raises(AttributeError):
-            j.ab
+            j.ab  # noqa: B018
 
         job_dict = j.todict()
         for kw, v in job_dict.items():
@@ -234,7 +239,7 @@ class TestParser(UnitTestCollection):
 
     @restore_argv
     def test_no_conf_multiple_jobs(self):
-        sys.argv = _sample_argv + ["--name", "good-name"]
+        sys.argv = [*_sample_argv, "--name", "good-name"]
         parser = Parser(*_sample_arguments, multiple_jobs=True)
         jobs = parser.parse_args()
         assert len(jobs) == 1
@@ -275,7 +280,7 @@ class TestParser(UnitTestCollection):
         assert jobs[1].iam_bool
 
         # We allow setting default section name from CLI
-        sys.argv = _sample_argv_conf(self._default_file) + ["--name", "funky-name"]
+        sys.argv = [*_sample_argv_conf(self._default_file), "--name", "funky-name"]
         parser = Parser(*_sample_arguments, multiple_jobs=True)
         jobs = parser.parse_args()
         assert len(jobs) == 1
@@ -351,7 +356,7 @@ class TestParser(UnitTestCollection):
     @restore_argv
     def test_nargs(self):
         # Test an expected case
-        sys.argv = _argv_template + ["--bar", "1", "2"]
+        sys.argv = [*_argv_template, "--bar", "1", "2"]
         parser = Parser(
             Argument("bar", nargs=2, type=int), Option("foo", nargs=3, default=["a", "b", "c"]), Option("fizz", nargs=1, default=(1,))
         )
@@ -372,7 +377,7 @@ class TestParser(UnitTestCollection):
             parser.parse_args()
 
         # Test if wrong number of arguments
-        sys.argv = _argv_template + ["--bar", "1", "2"]
+        sys.argv = [*_argv_template, "--bar", "1", "2"]
         parser = Parser(Argument("bar", nargs=3))
         with pytest.raises(ValueError):
             parser.parse_args()
@@ -381,7 +386,7 @@ class TestParser(UnitTestCollection):
             parser.parse_args()
 
         # Make sure stuff also works if config file is wrong
-        sys.argv = _argv_template + ["-c", self._sample_single_nargs_file]
+        sys.argv = [*_argv_template, "-c", self._sample_single_nargs_file]
         parser = Parser(Argument("foo", nargs=3))
         with pytest.raises(ValueError):
             parser.parse_args()
@@ -394,15 +399,15 @@ class TestParser(UnitTestCollection):
     @restore_argv
     def test_no_unknown_args(self):
         # Test with command line argument
-        sys.argv = _argv_template + ["--bar", "1", "--foo", "1"]
+        sys.argv = [*_argv_template, "--bar", "1", "--foo", "1"]
         parser = Parser(Argument("bar"))
         with pytest.raises(SystemExit) as pytest_wrapped_e:
             parser.parse_args()
-        assert pytest_wrapped_e.type == SystemExit
+        assert pytest_wrapped_e.type is SystemExit
         assert pytest_wrapped_e.value.code == 2
 
         # Test with config argument
-        sys.argv = _argv_template + ["-c", self._sample_single_nargs_file]
+        sys.argv = [*_argv_template, "-c", self._sample_single_nargs_file]
         parser = Parser(Option("bar", type=int, default=[1, 2]))
         with pytest.raises(ParserError):
             parser.parse_args()

@@ -9,8 +9,11 @@ from typing import Optional
 from pelutils import OS, UnsupportedOS, get_repo, get_timestamp
 from pelutils.format import RichString
 
-from ._rotate import _LogFileRotater
-from ._utils import LogLevels, _CollectLogs, _LevelManager, _LogErrors
+from ._rotate import LogFileRotater as _LogFileRotater  # Rename to prevent reexport
+from ._utils import CollectLogs as _CollectLogs
+from ._utils import LevelManager as _LevelManager
+from ._utils import LogErrors as _LogErrors
+from ._utils import LogLevels
 
 # https://rich.readthedocs.io/en/stable/appendix/colors.html
 TIMESTAMP_COLOR = "#72b9e0"
@@ -24,7 +27,7 @@ LEVEL_FORMAT = {
 }
 
 
-class LoggingException(RuntimeError):
+class LoggingException(RuntimeError):  # noqa: N818
     """Raised on logging-related errors."""
 
 
@@ -35,7 +38,7 @@ class Logger:
     collecting logs for multiprocessing (see _Logger.collect), and colourful prints.
     """
 
-    _selected_logger: str
+    _selected_logger: str  # pyright: ignore[reportUninitializedInstanceVariable]
     _maxlen = max(len(level.name) for level in LogLevels)
     _spacing = 4 * " "
 
@@ -67,7 +70,7 @@ class Logger:
         Parameters
         ----------
         fpath : str | Path | None
-            Path to logfile. Missing directories are created. If None, no file is created, and the logger works more like an advaned `print`.
+            Path to logfile. Missing directories are created. If None, no file is created, and the logger is more like an advanced `print`.
         default_seperator : str, optional
             Default seperator when logging multiple strings in a single call, by default \n.
         append : bool, optional
@@ -87,7 +90,7 @@ class Logger:
 
         # Create logfile
         if fpath is not None:
-            self._rotater = _LogFileRotater(rotation, Path(fpath))
+            self._rotater = _LogFileRotater(rotation, Path(fpath))  # pyright: ignore[reportUninitializedInstanceVariable]
             self._rotater.base_file.parent.mkdir(parents=True, exist_ok=True)
             # Create file if it doesn't exist
             with self._rotater.resolve_logfile(0).open("a" if append else "w", encoding="utf-8"):
@@ -95,8 +98,8 @@ class Logger:
         else:
             self._rotater = None
 
-        self._default_sep = default_seperator
-        self._print_level = print_level if print_level is not None else max(LogLevels) + 1
+        self._default_sep = default_seperator  # pyright: ignore[reportUninitializedInstanceVariable]
+        self._print_level = print_level if print_level is not None else max(LogLevels) + 1  # pyright: ignore[reportUninitializedInstanceVariable]
         self._is_configured = True
 
         return self
@@ -120,11 +123,11 @@ class Logger:
         """Use in a `with` block. Any errors thrown within the block are logged with the full stacktrace."""
         return self._log_errors
 
-    def _write_to_log(self, content: RichString):
+    def _write_to_log(self, content: str | RichString):
         if self._rotater is not None:
-            content = f"{content}\n".encode()
-            with self._rotater.resolve_logfile(len(content)).open("ab") as f:
-                f.write(content)
+            content_b = f"{content}\n".encode()
+            with self._rotater.resolve_logfile(len(content_b)).open("ab") as f:
+                f.write(content_b)
 
     @staticmethod
     def _format(s: str, format: str) -> str:
@@ -133,7 +136,7 @@ class Logger:
     def _log(
         self,
         *tolog: str,
-        level=LogLevels.INFO,
+        level: LogLevels = LogLevels.INFO,
         with_info: bool = True,
         sep: str | None = None,
         with_print: bool | None = None,
@@ -158,13 +161,13 @@ class Logger:
         sep = sep or self._default_sep
         with_print = level >= self._print_level if with_print is None else with_print
         time = get_timestamp()
-        tolog = sep.join([str(x) for x in tolog])
+        str_tolog = sep.join([str(x) for x in tolog])
         time_spaces = len(time) * " "
         level_format = level.name + (self._maxlen - len(level.name)) * " "
         space = self._spacing + self._maxlen * " " + self._spacing + " "
-        logs = tolog.split("\n")
+        logs = str_tolog.split("\n")
         rs = RichString()
-        if with_info and tolog:
+        if with_info and len(str_tolog) > 0:
             rs.add_string(
                 f"{time}{self._spacing}{level_format}{self._spacing} ",
                 self._format(time, TIMESTAMP_COLOR) + self._spacing + self._format(level_format, LEVEL_FORMAT[level]) + self._spacing + " ",
@@ -184,7 +187,7 @@ class Logger:
             if with_print:
                 self._collected_print.append(rs)
 
-    def log_with_stacktrace(self, error: Exception, level=LogLevels.ERROR, with_print=False):
+    def log_with_stacktrace(self, error: Exception, level: LogLevels = LogLevels.ERROR, with_print: bool = False):
         """Log an exception along with the full stacktrace."""
         self._log(
             f"{type(error)} was thrown with the following stacktrace:",
@@ -235,7 +238,7 @@ class Logger:
         if cls._no.startswith(answer.lower()):
             return False
 
-    def log_repo(self, level=LogLevels.DEBUG):
+    def log_repo(self, level: LogLevels = LogLevels.DEBUG):
         """Niceness method for logging the git repo that the code is run in."""
         repo, commit = get_repo()
         if repo is not None:
@@ -264,7 +267,7 @@ class Logger:
             RichString.multiprint(self._collected_print)
 
     @property
-    def collect(self):
+    def collect(self) -> _CollectLogs:
         """Use with a with block to perform all logs within the block at once."""
         if OS.is_windows:
             # Having multiple threads or processes write to the same file is not
@@ -273,33 +276,35 @@ class Logger:
             raise UnsupportedOS("Log collecting is not supported on windows")
         return _CollectLogs(self)
 
-    def section(self, *tolog, with_info=True, sep=None, with_print=None, newline=True):
+    def section(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None, newline: bool = True):
         """Log at SECTION level. See .log method for argument descriptions."""
         if newline:
             self._log("")
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.SECTION)
 
-    def critical(self, *tolog, with_info=True, sep=None, with_print=None):
+    def critical(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):
         """Log at CRITICAL level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.CRITICAL)
 
-    def error(self, *tolog, with_info=True, sep=None, with_print=None):
+    def error(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):
         """Log at ERROR level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.ERROR)
 
-    def warning(self, *tolog, with_info=True, sep=None, with_print=None):
+    def warning(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):
         """Log at WARNING level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.WARNING)
 
-    def info(self, *tolog, with_info=True, sep=None, with_print=None):
+    def info(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):
         """Log at INFO level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.INFO)
 
-    def debug(self, *tolog, with_info=True, sep=None, with_print=None):
+    def debug(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):
         """Log at DEBUG level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.DEBUG)
 
-    def __call__(self, *tolog, level=LogLevels.INFO, with_info=True, sep=None, with_print=None):
+    def __call__(
+        self, *tolog: str, level: LogLevels = LogLevels.INFO, with_info: bool = True, sep: str | None = None, with_print: bool | None = None
+    ):
         """Shorthand for specific logging methods where level is specified as an argument."""
         self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 

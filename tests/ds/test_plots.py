@@ -66,7 +66,7 @@ def test_histogram():
 
 class TestMovingAverage:
     def test_moving_avg(self):
-        data = np.random.randn(100)
+        data = np.random.randn(100)  # noqa: NPY002
         num_neighs = np.arange(1, 10)
 
         # First, test with only y given
@@ -94,7 +94,7 @@ class TestMovingAverage:
                 prev_dist_to_zero = dist_to_zero
 
     def test_exp_moving_avg(self):
-        data = np.random.randn(100)
+        data = np.random.randn(100)  # noqa: NPY002
         # alpha is 1, so data should be unchanged
         x, y = exp_moving_avg(data, alpha=1)
         assert len(x) == len(y) == len(data)
@@ -126,7 +126,7 @@ class TestMovingAverage:
 
         # Test that it also works when supplying x
         x = np.linspace(-np.pi, np.pi)
-        data = np.sin(x) + np.random.randn(len(x))
+        data = np.sin(x) + np.random.randn(len(x))  # noqa: NPY002
         x_smooth, y_smooth = exp_moving_avg(x, data)
         assert len(x) == len(data) == len(x_smooth) == len(y_smooth)
         assert (x == x_smooth).all()
@@ -135,7 +135,7 @@ class TestMovingAverage:
         test_samples = np.arange(100, 500, step=65)
         test_inner_neighbors = np.arange(1, 10)
         test_outer_neighbors = np.arange(1, 10)
-        data = np.random.randn(200)
+        data = np.random.randn(200)  # noqa: NPY002
 
         for s, i, o in product(test_samples, test_inner_neighbors, test_outer_neighbors):
             x, y = double_moving_avg(data, inner_neighbors=i, outer_neighbors=o, samples=s)
@@ -144,7 +144,7 @@ class TestMovingAverage:
 
         # Test that it also works when supplying x
         x = np.linspace(-np.pi, np.pi)
-        data = np.sin(x) + np.random.randn(len(x))
+        data = np.sin(x) + np.random.randn(len(x))  # noqa: NPY002
         samples = 300
         x_smooth, y_smooth = double_moving_avg(x, data, samples=300)
         assert len(x_smooth) == len(y_smooth) == samples
@@ -162,7 +162,7 @@ class TestMovingAverage:
 
 class TestBinning:
     bins = 25
-    uniform_data = np.random.uniform(1, 200, 500)
+    uniform_data = np.random.uniform(1, 200, 500)  # noqa: NPY002
 
     def test_linear_binning(self):
         binning = linear_binning(self.uniform_data, self.bins)
@@ -209,7 +209,7 @@ class TestFigure(UnitTestCollection):
 
         with pytest.raises(ZeroDivisionError):
             with Figure(self.savepath):
-                0 / 0
+                0 / 0  # noqa: B018
             assert not os.path.exists(self.savepath)
 
     def test_restore_rc_params(self):

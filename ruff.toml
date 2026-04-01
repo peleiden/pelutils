@@ -26,7 +26,6 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
-    "tests",
     "examples",
 ]
 include = ["*.py"]
@@ -81,3 +80,4 @@ convention = "numpy"
 
 [lint.per-file-ignores]
 "__init__.py" = ["E402", "F401"]  # Unused imports
+"tests/**/*.py" = ["D"]

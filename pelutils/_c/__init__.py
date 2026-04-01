@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
+
+from pelutils.types import AnyArray
 
 try:
     import torch
@@ -16,9 +20,12 @@ except ModuleNotFoundError:
 ArrayArgs = tuple[int, int, int, int]
 
 
-def get_array_c_args(arr: np.ndarray | torch.Tensor) -> ArrayArgs:
-    if _has_torch and isinstance(arr, torch.Tensor):
+def get_array_c_args(arr: AnyArray | torch.Tensor) -> ArrayArgs:
+    if _has_torch and isinstance(arr, torch.Tensor):  # pyright: ignore[reportPossiblyUnboundVariable]
         arr = arr.numpy()
+    # Tell the type checker that arr for sure is AnyArray
+    # Not applied directly to arr.numpy() above as torch is possibly unbound, making the poor checker confused
+    arr = cast(AnyArray, arr)
 
     dims = np.array(arr.shape, dtype=np.uint)
     ndim = len(dims)

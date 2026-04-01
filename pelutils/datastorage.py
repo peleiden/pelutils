@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import pickle
 from pathlib import Path
-from typing import Type, TypeVar
+from typing import TypeVar
 
 import rapidjson
 
@@ -41,7 +41,7 @@ class DataStorage:
     ```
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # noqa: ARG002  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
         """This method is overwritten in any class decorated with @dataclass.
 
         Therefore, if this method is called, it is an error.
@@ -111,7 +111,7 @@ class DataStorage:
         return paths
 
     @classmethod
-    def load(cls: Type[_T], loc: str | Path, save_name: str | None = None) -> _T:
+    def load(cls: type[_T], loc: str | Path, save_name: str | None = None) -> _T:
         """Instantiate the DataStorage-inherited class by loading all files saved by `save` of that same class.
 
         Parameters

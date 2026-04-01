@@ -1,22 +1,29 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import Any
 
 import numpy as np
 from scipy import stats
 
+from pelutils.ds.distributions import norm
 
-def z(alpha=0.05, two_sided=True, distribution=stats.norm()) -> float:  # noqa: B008
-    """Get z value for a given significance level."""
+
+def z(alpha: float = 0.05, two_sided: bool = True, distribution: Any | None = None) -> float:  # pyright: ignore[reportExplicitAny]
+    """Get z value for a given significance level. The distribution defaults to N(0, 1) but can be any continuous scipy distribution."""
     if not 0 <= alpha <= 1:
         raise ValueError(f"alpha must be between 0 and 1, not {alpha}")
+    if distribution is None:
+        distribution = norm(0, 1)
     if two_sided:
         return distribution.ppf(1 - alpha / 2).item()
     else:
         return distribution.ppf(1 - alpha).item()
 
 
-def corr_ci(x: Iterable, y: Iterable, *, alpha=0.05, return_string=False) -> tuple[float, float, float, float] | str:
+def corr_ci(
+    x: Iterable[float | int], y: Iterable[float | int], *, alpha: float = 0.05, return_string: bool = False
+) -> tuple[float, float, float, float] | str:
     """Convenience function for getting a pearson correlation and confidence interval of it.
 
     It uses the method often called Fisher's z transformation: https://en.wikipedia.org/wiki/Fisher_transformation,
@@ -51,7 +58,7 @@ def corr_ci(x: Iterable, y: Iterable, *, alpha=0.05, return_string=False) -> tup
     y = np.array(y)
 
     r, p = stats.pearsonr(x, y)
-    r_z = np.arctanh(r)
+    r_z = np.arctanh(r)  # pyright: ignore[reportCallIssue, reportArgumentType]
     se = 1 / np.sqrt(x.size - 3)
 
     z = stats.norm.ppf(1 - alpha / 2)
@@ -60,4 +67,4 @@ def corr_ci(x: Iterable, y: Iterable, *, alpha=0.05, return_string=False) -> tup
 
     if return_string:
         return f"Correlation {r:.3f} in [{lo:.3f}, {hi:.3f}], with p={p:.3f}"
-    return r, lo, hi, p
+    return r, lo, hi, p  # pyright: ignore[reportReturnType]

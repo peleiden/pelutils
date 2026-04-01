@@ -5,7 +5,7 @@ from pelutils.tests import UnitTestCollection
 
 
 class TestJsonl(UnitTestCollection):
-    data = [{l: v} for l, v in zip(("a", "b", "c"), (1, 2, 3))]
+    data = [{letter: value} for letter, value in zip(("a", "b", "c"), (1, 2, 3))]  # noqa: RUF012
 
     @property
     def path(self) -> str:
@@ -29,11 +29,11 @@ class TestJsonl(UnitTestCollection):
 
         # Test stringification methods
         str_repr = jsonl.dumps(self.data)
-        assert str_repr == '{"a":1}%s{"b":2}%s{"c":3}' % (os.linesep, os.linesep)
+        assert str_repr == f'{{"a":1}}{os.linesep}{{"b":2}}{os.linesep}{{"c":3}}'
         assert list(jsonl.loads(str_repr)) == self.data
 
     def test_append(self):
-        data = [{l: v} for l, v in zip(("a", "b", "c"), (1, 2, 3))]
+        data = [{letter: value} for letter, value in zip(("a", "b", "c"), (1, 2, 3))]
 
         with open(self.path, "w") as f:
             jsonl.dump(data, f)

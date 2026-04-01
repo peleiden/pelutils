@@ -41,19 +41,19 @@ def test_lognorm():
 
 def test_expon():
     lambdas = np.linspace(0, 10, 5)[1:]
-    for l in lambdas:
-        dist = expon(l)
-        assert np.isclose(dist.mean(), 1 / l)
-        assert np.isclose(dist.var(), 1 / l**2)
+    for lambda_ in lambdas:
+        dist = expon(lambda_)
+        assert np.isclose(dist.mean(), 1 / lambda_)
+        assert np.isclose(dist.var(), 1 / lambda_**2)
 
 
 def test_gamma():
     rs = np.linspace(0, 10, 5)[1:]
     lambdas = np.linspace(0, 10)[1:]
-    for r, l in product(rs, lambdas):
-        dist = gamma(r, l)
-        assert np.isclose(dist.mean(), r / l)
-        assert np.isclose(dist.var(), r / l**2)
+    for r, lambda_ in product(rs, lambdas):
+        dist = gamma(r, lambda_)
+        assert np.isclose(dist.mean(), r / lambda_)
+        assert np.isclose(dist.var(), r / lambda_**2)
 
 
 def test_chi2():
@@ -107,9 +107,9 @@ def test_poisson():
 @pytest.mark.filterwarnings("ignore:invalid value", "ignore:divide by zero")
 def test_hypergeom():
     ns = np.arange(0, 10)
-    Ns = np.arange(0, 10)
-    Gs = np.arange(0, 10)
-    for n, N, G in product(ns, Ns, Gs):
+    Ns = np.arange(0, 10)  # noqa: N806
+    Gs = np.arange(0, 10)  # noqa: N806
+    for n, N, G in product(ns, Ns, Gs):  # noqa: N806
         if n >= N or G > N or n == 0 or N <= 1 or G == 0:
             with pytest.raises(AssertionError):
                 dist = hypergeom(n, N, G)

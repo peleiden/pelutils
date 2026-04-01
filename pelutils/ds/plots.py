@@ -2,21 +2,24 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Any, Callable, List, Union
+from types import TracebackType
+from typing import Any, Callable, Union
 
 import matplotlib.colors as mcolour
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 
-_Array = Union[List[Union[float, int]], np.ndarray]
+from pelutils.types import AnyArray, FloatArray
+
+_Array = Union[list[Union[float, int]], AnyArray]
 
 # 8 colours
-base_colours: tuple[str] = tuple(mcolour.BASE_COLORS)
+base_colours: tuple[str, ...] = tuple(mcolour.BASE_COLORS)
 # 10 colours
-tab_colours: tuple[str] = tuple(mcolour.TABLEAU_COLORS)
+tab_colours: tuple[str, ...] = tuple(mcolour.TABLEAU_COLORS)
 # 15 unique matplotlib colours
-colours: tuple[str] = tab_colours[:-2] + base_colours[:-1]
+colours: tuple[str, ...] = tab_colours[:-2] + base_colours[:-1]
 
 
 def moving_avg(
@@ -24,7 +27,7 @@ def moving_avg(
     y: _Array | None = None,
     *,
     neighbors: int = 3,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[AnyArray, FloatArray]:
     """Calculate the moving average assuming even spacing.
 
     If one array of size n is given, it is assumed to run from 0 to n-1 on the x axis.
@@ -51,7 +54,7 @@ def exp_moving_avg(
     *,
     alpha: float = 0.2,
     reverse: bool = False,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[AnyArray, FloatArray]:
     """Calculate the exponential moving average.
 
     alpha is a smoothing factor between 0 and 1. The lower the value, the smoother the curve.
@@ -84,7 +87,7 @@ def double_moving_avg(
     inner_neighbors: int = 1,
     outer_neighbors: int = 12,
     samples: int = 300,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[AnyArray, FloatArray]:
     """Moving average function that produces smoother curves than normal moving average.
 
     This function handles unevenly spaced data better and produces smoothed values for the entire span.
@@ -129,17 +132,17 @@ def double_moving_avg(
 
 
 # Utility functions for histograms
-def linear_binning(x: _Array, bins: int) -> np.ndarray:
+def linear_binning(x: _Array, bins: int) -> FloatArray:
     """Calculate linear binning for an array."""
     return np.linspace(min(x), max(x), bins)
 
 
-def log_binning(x: _Array, bins: int) -> np.ndarray:
+def log_binning(x: _Array, bins: int) -> FloatArray:
     """Calculate logarithmic binning for an array, meaning more bins close to zero."""
     return np.geomspace(min(x), max(x), bins)
 
 
-def normal_binning(x: _Array, bins: int) -> np.ndarray:
+def normal_binning(x: _Array, bins: int) -> FloatArray:
     """Calculate bins that work well for normal-ish distributed data, meaning more bins closer to the mean of x."""
     dist = stats.norm(np.mean(x), 3 * np.std(x))
     p = min(dist.cdf(min(x)), 1 - dist.cdf(max(x)))
@@ -148,15 +151,15 @@ def normal_binning(x: _Array, bins: int) -> np.ndarray:
 
 
 def histogram(
-    data: np.ndarray | list[float],
-    binning_fn: Callable[[_Array, int], _Array] = linear_binning,
+    data: AnyArray,
+    binning_fn: Callable[[_Array, int], FloatArray] = linear_binning,
     bins: int = 25,
     density: bool = True,
     ignore_zeros: bool = False,  # Be careful about this one, but it can be practical with log scales
 ):
     """Create bins for plotting a line histogram. Simplest usage is plt.plot(*histogram(data))."""
-    bins = np.array(binning_fn(data, bins + 1))
-    y, edges = np.histogram(data, bins=bins, density=density)
+    found_bins = np.array(binning_fn(data, bins + 1))
+    y, edges = np.histogram(data, bins=found_bins, density=density)
     x = (edges[1:] + edges[:-1]) / 2
     if ignore_zeros:
         keep = y > 0
@@ -164,7 +167,7 @@ def histogram(
     return x, y
 
 
-def get_dateticks(x: _Array, num=6, date_format="%b %d") -> tuple[np.ndarray, list[str]]:
+def get_dateticks(x: _Array, num: int = 6, date_format: str = "%b %d") -> tuple[FloatArray, list[str]]:
     """Produce date labels for the x axis given an array of epoch times in seconds.
 
     Example
@@ -175,7 +178,7 @@ def get_dateticks(x: _Array, num=6, date_format="%b %d") -> tuple[np.ndarray, li
     plt.xticks(*get_dateticks(x))
     ```
     """
-    if not isinstance(num, int) or num < 2:
+    if not isinstance(num, int) or num < 2:  # pyright: ignore[reportUnnecessaryIsInstance]
         raise ValueError(f"num must int of value 2 or greater, not {num}")
     x = np.array(x)
     xticks = np.linspace(x.min(), x.max(), num)
@@ -198,7 +201,7 @@ class Figure:
     ```
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         savepath: str | Path,
         *,
@@ -214,7 +217,7 @@ class Figure:
         legend_fontsize: float = 0.85,  # Fraction of fontsize
         legend_framealpha: float = 0.8,
         legend_edgecolor: tuple[float, float, float, float] = (0, 0, 0, 1),
-        other_rc_params: dict[str, Any] = None,
+        other_rc_params: dict[str, Any] | None = None,  # pyright: ignore[reportExplicitAny]
     ):
         if other_rc_params is None:
             other_rc_params = dict()
@@ -237,13 +240,15 @@ class Figure:
         }
 
     def __enter__(self):
+        """Create a figure."""
         if self._style:
             plt.style.use(self._style)
 
-        self._rc_context = plt.rc_context(self._rc_params)
+        self._rc_context = plt.rc_context(self._rc_params)  # pyright: ignore[reportUninitializedInstanceVariable]
         self._rc_context.__enter__()
 
-    def __exit__(self, et, ev, tb):
+    def __exit__(self, et: type[BaseException] | None, ev: BaseException | None, tb: TracebackType | None):
+        """Close and save figure, and reset _rc_context."""
         if self._tight_layout:
             plt.tight_layout()
         if not et:

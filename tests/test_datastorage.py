@@ -36,7 +36,7 @@ class TMissingDecorator(DataStorage):
 
 
 class TestDatahandler(UnitTestCollection):
-    data = {"a": np.array([1]), "b": torch.Tensor([1]), "c": "lala", "d": {(1, 2): 1}}
+    data = {"a": np.array([1]), "b": torch.Tensor([1]), "c": "lala", "d": {(1, 2): 1}}  # noqa: RUF012
 
     def test_saveload(self):
         # Use dict data that is not json serializable
