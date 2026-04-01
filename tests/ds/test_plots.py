@@ -1,5 +1,4 @@
 import os
-import time
 from datetime import datetime, timedelta
 from itertools import product
 from math import ceil
@@ -9,21 +8,21 @@ import matplotlib as mpl
 import numpy as np
 import pytest
 
-from pelutils.tests import UnitTestCollection
 from pelutils.ds.plots import (
-    linear_binning,
-    log_binning,
-    normal_binning,
-    colours,
-    base_colours,
-    tab_colours,
-    moving_avg,
-    exp_moving_avg,
-    double_moving_avg,
     Figure,
+    base_colours,
+    colours,
+    double_moving_avg,
+    exp_moving_avg,
     get_dateticks,
     histogram,
+    linear_binning,
+    log_binning,
+    moving_avg,
+    normal_binning,
+    tab_colours,
 )
+from pelutils.tests import UnitTestCollection
 
 
 def test_colours():

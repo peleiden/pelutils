@@ -3,8 +3,8 @@ from __future__ import annotations
 import ctypes
 import os
 import platform
-from string import ascii_letters
 from shutil import move
+from string import ascii_letters
 
 import numpy as np
 import pytest
@@ -12,20 +12,20 @@ import torch
 
 import pelutils
 from pelutils import (
-    EnvVars,
-    UnsupportedOS,
-    reverse_line_iterator,
-    except_keys,
-    split_path,
-    binary_search,
-    raises,
-    thousands_seperators,
     OS,
+    EnvVars,
+    HardwareInfo,
+    UnsupportedOS,
     array_ptr,
+    binary_search,
+    except_keys,
+    get_repo,
     get_timestamp,
     get_timestamp_for_files,
-    HardwareInfo,
-    get_repo,
+    raises,
+    reverse_line_iterator,
+    split_path,
+    thousands_seperators,
 )
 from pelutils.tests import UnitTestCollection
 
@@ -95,17 +95,16 @@ class TestInit(UnitTestCollection):
         paths = list()
         paths.append(os.path.join(cls.test_dir, "simple.txt"))
         with open(paths[-1], "w") as f:
-            f.write(f"abc\nbbc\n")
+            f.write("abc\nbbc\n")
         paths.append(os.path.join(cls.test_dir, "no_end_newline.txt"))
         with open(paths[-1], "w") as f:
-            f.write(f"abc\nbbc")
+            f.write("abc\nbbc")
         paths.append(os.path.join(cls.test_dir, "start_newline.txt"))
         with open(paths[-1], "w") as f:
-            f.write(f"\na\nb\n")
+            f.write("\na\nb\n")
         paths.append(os.path.join(cls.test_dir, "long_lines.txt"))
         with open(paths[-1], "w") as f:
-            for _ in range(100):
-                f.write(ascii_letters * 1000 + "\n")
+            f.writelines(ascii_letters * 1000 + "\n" for _ in range(100))
         paths.append(os.path.join(cls.test_dir, "long_lines_with_newline_fancyness.txt"))
         with open(paths[-1], "w") as f:
             for i in range(100):
@@ -147,8 +146,7 @@ class TestInit(UnitTestCollection):
         path = os.path.join(self.test_dir, "truncate.txt")
         lines = 1000
         with open(path, "w") as f:
-            for n in range(lines):
-                f.write(ascii_letters * n + "\n")
+            f.writelines(ascii_letters * n + "\n" for n in range(lines))
         assert os.path.getsize(path) == len(ascii_letters) * ((lines) ** 2 - lines) / 2 + lines
 
         prev_size = os.path.getsize(path)

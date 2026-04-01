@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from scipy.stats import norm
 
-from pelutils.ds.stats import z, corr_ci
+from pelutils.ds.stats import corr_ci, z
 
 
 def test_z():

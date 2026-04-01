@@ -302,7 +302,7 @@ class HardwareInfo:
 
 # To allow imports directly from utils
 # Placed down here to prevent issues with circular imports
-from .__version__ import __version__  # noqa: F401
+from .__version__ import __version__
 from .logging import *  # noqa: F403
 
 log: Logger  # Make sure type hinting works when importing global instances  # noqa: F405

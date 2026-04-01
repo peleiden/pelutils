@@ -5,12 +5,12 @@ from itertools import chain, permutations, product
 from pathlib import Path
 from string import ascii_lowercase
 
-import pelutils
 import pytest
-from pelutils import UnsupportedOS, OS
 
-from pelutils.logging import LogLevels, Logger, log, LoggingException
-from pelutils.tests import UnitTestCollection, SimplePool
+import pelutils
+from pelutils import OS, UnsupportedOS
+from pelutils.logging import Logger, LoggingException, LogLevels, log
+from pelutils.tests import SimplePool, UnitTestCollection
 
 
 def _collect_test_fn(args):
@@ -67,7 +67,8 @@ class TestLogger(UnitTestCollection):
 
     def test_bool_input(self):
         """Tests bool input parsing under the eight different cases:
-        Nothing/yes-ish/no-ish/gibberish under different possible default values."""
+        Nothing/yes-ish/no-ish/gibberish under different possible default values.
+        """
         for default in False, True, None:
             # Test no input given
             assert log.parse_bool_input("", default=default) is default
@@ -131,7 +132,8 @@ class TestLogger(UnitTestCollection):
 
     def test_log_commit(self, capfd: pytest.CaptureFixture):
         """Tests are assumed to be run from within the
-        pelutils git repository root or above. If not, this test will fail."""
+        pelutils git repository root or above. If not, this test will fail.
+        """
         log.log_repo()
         stdout, _ = capfd.readouterr()
         if ".git" in os.listdir():

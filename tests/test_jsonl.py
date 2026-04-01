@@ -1,5 +1,6 @@
 import os
-import pelutils.jsonl as jsonl
+
+from pelutils import jsonl
 from pelutils.tests import UnitTestCollection
 
 

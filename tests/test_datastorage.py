@@ -1,13 +1,14 @@
 from __future__ import annotations
-from dataclasses import dataclass
+
 import os
+from dataclasses import dataclass
 
 import numpy as np
 import pytest
 import rapidjson
 import torch
 
-from pelutils import UnitTestCollection, DataStorage
+from pelutils import DataStorage, UnitTestCollection
 
 
 @dataclass
