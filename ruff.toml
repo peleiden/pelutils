@@ -29,38 +29,55 @@ exclude = [
     "tests",
     "examples",
 ]
+include = ["*.py"]
 
-line-length = 150
+line-length = 140
 indent-width = 4
 
-# Assume Python 3.9, as that is minimum supported version
+# Assume Python 3.9 as that is minimum supported version
 target-version = "py39"
+
+preview = true
 
 [lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`) codes by default.
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 # McCabe complexity (`C901`) by default.
 select = [
+    "ARG",
+    "B",
+    "BLE",
+    "D",
     "E",  # pycodestyle errors
+    "ERA",
     "F",  # Pyflakes
-    "B",  # flake8-bugbear
     "I",  # isort
-    "D",  # pydocstyle
+    "N",
+    "NPY",
+    "PD",
+    "PL",
+    "Q",
+    "FURB",
+    "RUF",
     "UP",  # pyupgrade
+    "W",
 ]
 ignore = [
-    "B024",  # No abstract methods
-    "D100",  # Missing docstring in public module
-    "D104",  # Missing docstring in public package
-    "D105",  # Docstring in magic method
-    "E402",  # Import not at top of file
-    "UP006",  # Using type instead of typing.Type (VS Code doesn't quite know how to handle type)
-    "UP035",
+    "D100",
+    "D104",
+    "N812",
+    "PD011",
+    "PLE1205",
+    "PLR2004",
+    "Q003",
+    "UP037",
 ]
+fixable = ["ALL"]
+explicit-preview-rules = true
+extend-select = ["E111", "E112", "E113", "E114", "E115", "E116", "E117", "E201", "E202", "E203", "E204", "E211", "E221", "E222", "E223", "E224", "E225", "E226", "E227", "E228", "E231", "E241", "E242", "E251", "E252", "E261", "E262", "E265", "E266", "E271", "E272", "E273", "E274", "E275", "E301", "E302", "E303", "E304", "E305", "E306", "E502"]
 
 [lint.pydocstyle]
 convention = "numpy"
-ignore-decorators = ["overload", "property"]
 
 [lint.per-file-ignores]
-"__init__.py" = ["F401"]  # Unused imports
+"__init__.py" = ["E402", "F401"]  # Unused imports

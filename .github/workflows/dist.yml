@@ -46,7 +46,8 @@ jobs:
           # This prevents it from installing the full CUDA version of torch and associated dependencies (default on Linux)
           # This massively speeds up the installation process and requires much less disk space
           CIBW_BEFORE_TEST: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install .[dev]
-          CIBW_TEST_COMMAND: ruff check {project}/pelutils && pytest {project}/tests
+          # Tests are much more platform dependant than linting and type checking, so only unit tests are carried out per-platform
+          CIBW_TEST_COMMAND: pytest {project}/tests
 
       - uses: actions/upload-artifact@v4
         with:

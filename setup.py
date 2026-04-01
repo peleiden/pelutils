@@ -29,7 +29,8 @@ requirements_dev = [
     "coverage==7.10.7",
     "wheel",
     "setuptools>=60.0.0",
-    "ruff==0.14.14",
+    "ruff==0.15.8",
+    "basedpyright==1.39.0",
     "freezegun>=1.5",
 ]
 
