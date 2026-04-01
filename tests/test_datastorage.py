@@ -18,21 +18,24 @@ class T(DataStorage):
     d: dict[tuple[int], int]
     g = "not part of data"
 
+
 @dataclass
 class TCompatible(T):
     e: str = "loadable from T"
+
 
 @dataclass
 class TExtra(T):
     e: np.ndarray
     f: float
 
+
 class TMissingDecorator(DataStorage):
     a: int
 
-class TestDatahandler(UnitTestCollection):
 
-    data = {"a": np.array([1]), "b": torch.Tensor([1]), "c": "lala", "d": {(1,2): 1}}
+class TestDatahandler(UnitTestCollection):
+    data = {"a": np.array([1]), "b": torch.Tensor([1]), "c": "lala", "d": {(1, 2): 1}}
 
     def test_saveload(self):
         # Use dict data that is not json serializable

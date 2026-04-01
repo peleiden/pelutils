@@ -4,8 +4,7 @@ from pelutils.tests import UnitTestCollection
 
 
 class TestJsonl(UnitTestCollection):
-
-    data = [{ l: v } for l, v in zip(("a", "b", "c"), (1, 2, 3))]
+    data = [{l: v} for l, v in zip(("a", "b", "c"), (1, 2, 3))]
 
     @property
     def path(self) -> str:
@@ -33,7 +32,7 @@ class TestJsonl(UnitTestCollection):
         assert list(jsonl.loads(str_repr)) == self.data
 
     def test_append(self):
-        data = [{ l: v } for l, v in zip(("a", "b", "c"), (1, 2, 3))]
+        data = [{l: v} for l, v in zip(("a", "b", "c"), (1, 2, 3))]
 
         with open(self.path, "w") as f:
             jsonl.dump(data, f)

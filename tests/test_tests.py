@@ -10,12 +10,13 @@ def test_restore_argv():
     @restore_argv
     def mock_test():
         sys.argv = ["hello", "there"]
+
     assert sys.argv == initial_argv
     mock_test()
     assert sys.argv == initial_argv
 
-class TestUnitTestCollection(UnitTestCollection):
 
+class TestUnitTestCollection(UnitTestCollection):
     def test_test_path(self):
         testpath = "test"
         testpath = self.get_test_path(testpath)

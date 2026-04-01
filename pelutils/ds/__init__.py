@@ -7,6 +7,7 @@ import numpy as np
 
 try:
     import torch
+
     _has_torch = True
 except ModuleNotFoundError:
     _has_torch = False
@@ -16,12 +17,15 @@ import _pelutils_c as _c
 import pelutils._c as _c_utils
 
 ArrayOrTensor = TypeVar("ArrayOrTensor", bound=Union[np.ndarray, torch.Tensor])
+
+
 def unique(
-    array: ArrayOrTensor, *,
+    array: ArrayOrTensor,
+    *,
     return_index=False,
     return_inverse=False,
     return_counts=False,
-    axis: int=0,
+    axis: int = 0,
 ) -> ArrayOrTensor | tuple[ArrayOrTensor, ...]:
     """Similar to np.unique, but in linear time and returns unsorted."""
     if not array.size:
@@ -39,9 +43,9 @@ def unique(
     if not array.flags["C_CONTIGUOUS"]:
         array = np.ascontiguousarray(array)
 
-    index   = np.empty(len(array), dtype=np.int64)
+    index = np.empty(len(array), dtype=np.int64)
     inverse = np.empty(len(array), dtype=np.int64) if return_inverse else None
-    counts  = np.empty(len(array), dtype=np.int64) if return_counts  else None
+    counts = np.empty(len(array), dtype=np.int64) if return_counts else None
 
     c = _c.unique(
         *_c_utils.get_array_c_args(array),
@@ -69,6 +73,7 @@ def unique(
         ret = [torch.from_numpy(x) for x in ret]
 
     return tuple(ret) if len(ret) > 1 else ret[0]
+
 
 def tensor_bytes(x: np.ndarray | torch.Tensor) -> int:
     """Calculate the size of a numpy array or torch tensor in bytes."""

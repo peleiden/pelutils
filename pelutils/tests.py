@@ -12,6 +12,7 @@ from pelutils import OS
 
 _C = TypeVar("_C", bound=Callable)
 
+
 def restore_argv(fun: _C) -> _C:
     """Decorator function to restore sys.argv after function exit.
 
@@ -26,6 +27,7 @@ def restore_argv(fun: _C) -> _C:
     # sys.argv still has value x here
     ```
     """  # noqa: D401
+
     @wraps(fun)
     def wrapper(*args, **kwargs):
         old_argv = sys.argv.copy()
@@ -33,7 +35,9 @@ def restore_argv(fun: _C) -> _C:
             return fun(*args, **kwargs)
         finally:
             sys.argv = old_argv
+
     return wrapper
+
 
 class SimplePool:
     """Drop-in replacement for mp.Pool for when using it within a pytest context.
@@ -55,6 +59,7 @@ class SimplePool:
         self._pool.close()
         self._pool.join()
         self._pool = None
+
 
 class UnitTestCollection:
     """

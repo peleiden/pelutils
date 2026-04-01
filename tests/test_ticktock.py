@@ -7,10 +7,11 @@ from pelutils.ticktock import TickTockException, _get_smallest_suitable_unit
 
 
 def test_ticktock():
-    """ Test base functionality. """
+    """Test base functionality."""
     tt = TickTock()
     tt.tick()
     assert isinstance(tt.tock(), float)
+
 
 def test_ticktock_id():
     tt = TickTock()
@@ -45,8 +46,9 @@ def test_ticktock_id():
     tt.reset()
     assert len(tt._tick_starts) == 0
 
+
 def test_profiling():
-    """ Test profiling """
+    """Test profiling"""
     tt = TickTock()
     tt.profile("p")
     tt.end_profile()
@@ -64,8 +66,9 @@ def test_profiling():
     tt.end_profile()
     tt.end_profile()
 
+
 def test_context_profiling():
-    """ Test profiling with context """
+    """Test profiling with context"""
     tt = TickTock()
 
     with tt.profile("Hello there"):
@@ -77,6 +80,7 @@ def test_context_profiling():
     with pytest.raises(NameError):
         with tt.profile("Hello there"):
             tt.profile("General Kenobi!")
+
 
 def test_fuse():
     tt1 = TickTock()
@@ -103,17 +107,21 @@ def test_fuse():
         assert p1._n == 2 * p2._n
         assert p1._total_time == 2 * p2._total_time
 
+
 def test_global_tt():
     assert isinstance(TT, TickTock)
+
 
 def test_throw():
     tt = TickTock()
     with tt.profile("Hello there"), pytest.raises(ValueError):
         str(tt)
 
+
 def test_timeunits():
     assert TimeUnits.next_bigger(("nice", 69)) == TimeUnits.hour
     assert TimeUnits.next_smaller(TimeUnits.second) == TimeUnits.millisecond
+
 
 def test_smallest_suitable_unit():
     assert _get_smallest_suitable_unit(1e-10) == TimeUnits.nanosecond
@@ -126,6 +134,7 @@ def test_smallest_suitable_unit():
     assert _get_smallest_suitable_unit(2) == TimeUnits.second
     assert _get_smallest_suitable_unit(3600) == TimeUnits.hour
     assert _get_smallest_suitable_unit(1e10) == TimeUnits.hour
+
 
 def test_reset():
     tt = TickTock()
@@ -156,6 +165,7 @@ def test_reset():
     tt.tock("abc2")
     with pytest.raises(TickTockException):
         tt.tock("abc3")
+
 
 def test_profiles_with_same_name():
 
@@ -209,6 +219,7 @@ def test_profiles_with_same_name():
     with pytest.raises(KeyError):
         tt.stats_by_profile_name("c")
 
+
 def test_disable():
     tt = TickTock()
     with tt.profile("111"):
@@ -236,6 +247,7 @@ def test_disable():
     assert tt.stats_by_profile_name("555")[0] == 0
     assert tt.stats_by_profile_name("666")[0] == 0
 
+
 def test_add_external_measurements():
     tt = TickTock()
     with tt.profile("a"):
@@ -252,6 +264,7 @@ def test_add_external_measurements():
         elif profile.name == "b":
             with pytest.warns(DeprecationWarning):
                 assert len(profile.hits) == 7
+
 
 def test_do_at_interval():
     tt = TickTock()
@@ -278,10 +291,12 @@ def test_do_at_interval():
     assert num_a >= 3
     assert num_b == 2
 
+
 def test_thread_assert():
     tt = TickTock()
 
     tt = None
+
     def set_tt():
         nonlocal tt
         tt = TickTock()
@@ -290,6 +305,7 @@ def test_thread_assert():
 
     with pytest.warns(), tt.profile("abc"):
         pass
+
 
 def test_print(capfd: pytest.CaptureFixture):
     tt = TickTock()
@@ -314,6 +330,7 @@ def test_print(capfd: pytest.CaptureFixture):
             conditions[3] = True
 
     assert all(conditions)
+
 
 def test_exit_in_nested():
     tt = TickTock()
@@ -361,10 +378,12 @@ def test_exit_in_nested():
     # Two outermost did not using with construct, so expect two unclosed profiles
     assert len(tt._profile_stack) == 2
 
+
 def test_format_time():
     with pytest.warns(DeprecationWarning):
         assert TickTock.stringify_time(3.046e-3, TimeUnits.millisecond) == "3.05 ms"
         assert TickTock.stringify_time(3.046, TimeUnits.second) == "3.05 s"
+
 
 def test_profile(capfd: pytest.CaptureFixture):
     p = Profile("tester", 0, None)
@@ -374,6 +393,7 @@ def test_profile(capfd: pytest.CaptureFixture):
     print(p)
     stdout, _ = capfd.readouterr()
     assert stdout.strip() == "tester"
+
 
 def test_active():
     tt = TickTock()

@@ -11,13 +11,26 @@ import pytest
 import torch
 
 import pelutils
-from pelutils import EnvVars, UnsupportedOS, reverse_line_iterator, except_keys,\
-    split_path, binary_search, raises, thousands_seperators, OS, array_ptr,\
-    get_timestamp, get_timestamp_for_files, HardwareInfo, get_repo
+from pelutils import (
+    EnvVars,
+    UnsupportedOS,
+    reverse_line_iterator,
+    except_keys,
+    split_path,
+    binary_search,
+    raises,
+    thousands_seperators,
+    OS,
+    array_ptr,
+    get_timestamp,
+    get_timestamp_for_files,
+    HardwareInfo,
+    get_repo,
+)
 from pelutils.tests import UnitTestCollection
 
-class TestInit(UnitTestCollection):
 
+class TestInit(UnitTestCollection):
     def test_envvars(self):
         os.environ["var1"] = "v1"
         assert os.environ["var1"] == "v1"
@@ -92,12 +105,12 @@ class TestInit(UnitTestCollection):
         paths.append(os.path.join(cls.test_dir, "long_lines.txt"))
         with open(paths[-1], "w") as f:
             for _ in range(100):
-                f.write(ascii_letters*1000 + "\n")
+                f.write(ascii_letters * 1000 + "\n")
         paths.append(os.path.join(cls.test_dir, "long_lines_with_newline_fancyness.txt"))
         with open(paths[-1], "w") as f:
             for i in range(100):
                 f.write("\n")
-                f.write(ascii_letters*1000 + ("\n" if i < 99 else ""))
+                f.write(ascii_letters * 1000 + ("\n" if i < 99 else ""))
         return paths
 
     def test_is_windows(self):
@@ -135,8 +148,8 @@ class TestInit(UnitTestCollection):
         lines = 1000
         with open(path, "w") as f:
             for n in range(lines):
-                f.write(ascii_letters*n + "\n")
-        assert os.path.getsize(path) == len(ascii_letters) * ((lines)**2 - lines) / 2 + lines
+                f.write(ascii_letters * n + "\n")
+        assert os.path.getsize(path) == len(ascii_letters) * ((lines) ** 2 - lines) / 2 + lines
 
         prev_size = os.path.getsize(path)
         with open(path, "r+") as f:
@@ -149,7 +162,7 @@ class TestInit(UnitTestCollection):
                 prev_size = size
 
     def test_except_keys(self):
-        d = { "a": 3, "b": 5 }
+        d = {"a": 3, "b": 5}
         d2 = except_keys(d, ["b", "c"])
         assert "a" in d and "b" in d
         assert "a" in d2 and "b" not in d2
@@ -195,7 +208,7 @@ class TestInit(UnitTestCollection):
             # This is also a very shitty test
             with pytest.warns(DeprecationWarning):
                 assert thousands_seperators(HardwareInfo.threads) in string
-        assert str(round(HardwareInfo.memory / 2 ** 30, 2)) in string
+        assert str(round(HardwareInfo.memory / 2**30, 2)) in string
         if HardwareInfo.gpus:
             for gpu in HardwareInfo.gpus:
                 assert gpu in string

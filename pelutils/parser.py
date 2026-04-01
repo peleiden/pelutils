@@ -25,15 +25,19 @@ _type = type  # Save `type` under different name to prevent name collisions
 # https://docs.python.org/3/library/argparse.html#nargs
 _NargsTypes = Union[int, None]
 
+
 def _fixdash(argname: str) -> str:
     """Replace dashes in argument names with underscores."""
     return argname.replace("-", "_")
 
+
 class ParserError(Exception):
     """Raised when unable to parse arguments."""
 
+
 class ConfigError(ParserError):
     """Config file related errors."""
+
 
 class _AbstractArgument(ABC):
     """Contains description of an argument.
@@ -44,9 +48,9 @@ class _AbstractArgument(ABC):
     def __init__(self, name: str, abbrv: str | None, help: str | None, **kwargs):
         self._validate(name, abbrv)
 
-        self.name   = name
-        self.abbrv  = abbrv
-        self.help   = help
+        self.name = name
+        self.abbrv = abbrv
+        self.help = help
         self.kwargs = kwargs
 
     @staticmethod
@@ -80,17 +84,19 @@ class _AbstractArgument(ABC):
     def __hash__(self) -> int:
         return hash(self.name)
 
+
 class Argument(_AbstractArgument):
     """Argument that must be given a value."""
 
     def __init__(
         self,
-        name:    str, *,
-        type:    Callable[[str], _T]          = str,
-        abbrv:   str | None                   = None,
-        help:    str | None                   = None,
+        name: str,
+        *,
+        type: Callable[[str], _T] = str,
+        abbrv: str | None = None,
+        help: str | None = None,
         metavar: str | tuple[str, ...] | None = None,
-        nargs:   _NargsTypes                  = None,
+        nargs: _NargsTypes = None,
         **kwargs,
     ):
         super().__init__(name, abbrv, help=help, **kwargs)
@@ -101,18 +107,20 @@ class Argument(_AbstractArgument):
         self.metavar = metavar
         self.nargs = nargs
 
+
 class Option(_AbstractArgument):
     """Optional argument with a default value."""
 
     def __init__(
         self,
-        name:    str, *,
-        default: _T | None                    = None,
-        type:    Callable[[str], _T] | None   = None,
-        abbrv:   str | None                   = None,
-        help:    str | None                   = None,
+        name: str,
+        *,
+        default: _T | None = None,
+        type: Callable[[str], _T] | None = None,
+        abbrv: str | None = None,
+        help: str | None = None,
         metavar: str | tuple[str, ...] | None = None,
-        nargs:   _NargsTypes                  = None,
+        nargs: _NargsTypes = None,
         **kwargs,
     ):
         super().__init__(name, abbrv, help, **kwargs)
@@ -132,14 +140,16 @@ class Option(_AbstractArgument):
         self.metavar = metavar
         self.nargs = nargs
 
+
 class Flag(_AbstractArgument):
     """Boolean flag. Defaults to `False` when not given and `True` when given."""
 
     def __init__(
         self,
-        name:  str, *,
+        name: str,
+        *,
         abbrv: str | None = None,
-        help:  str | None = None,
+        help: str | None = None,
         **kwargs,
     ):
         super().__init__(name, abbrv, help, **kwargs)
@@ -147,6 +157,7 @@ class Flag(_AbstractArgument):
     @property
     def default(self):
         return False
+
 
 class JobDescription(Namespace):
     """Namespace containing the values of all defined parameters parsed from the command line and config file if given.
@@ -166,7 +177,7 @@ class JobDescription(Namespace):
     def todict(self) -> dict[str, Any]:
         """Return a dictionary version of itself which contains solely the parsed values."""
         d = vars(self)
-        d = { kw: v for kw, v in d.items() if not kw.startswith("_") and kw not in { "config", "explicit_args" } }
+        d = {kw: v for kw, v in d.items() if not kw.startswith("_") and kw not in {"config", "explicit_args"}}
         return d
 
     def prepare_directory(self, encoding: str | None = None):
@@ -197,7 +208,9 @@ class JobDescription(Namespace):
     def __str__(self) -> str:
         return pformat(self.todict())
 
+
 ArgumentTypes = Union[Argument, Option, Flag]
+
 
 class Parser:
     """Extension of built-in argparse.ArgumentParser which also supports reading from config files."""
@@ -216,20 +229,22 @@ class Parser:
         default=None,
         abbrv="c",
         help=f"Path to config file. Encoding can be specified by giving <path>{_encoding_separator}<encoding>, "
-             f"e.g. --config path/to/config.ini{_encoding_separator}utf-8",
+        f"e.g. --config path/to/config.ini{_encoding_separator}utf-8",
     )
 
     _reserved_arguments: tuple[ArgumentTypes] = (_location_arg, _name_arg, _config_arg)
-    _reserved_names = { arg.name for arg in _reserved_arguments }
+    _reserved_names = {arg.name for arg in _reserved_arguments}
     _reserved_names.add("help")  # Reserved by argparse
-    _reserved_abbrvs = { arg.abbrv for arg in _reserved_arguments if arg.abbrv }
+    _reserved_abbrvs = {arg.abbrv for arg in _reserved_arguments if arg.abbrv}
 
     @property
     def reserved_names(self):
         return self._reserved_names
+
     @property
     def reserved_abbrvs(self):
         return self._reserved_abbrvs
+
     @property
     def encoding_seperator(self):
         return self._encoding_separator
@@ -256,16 +271,17 @@ class Parser:
             raise ParserError(f"An argument conflicted with one of the reserved abbreviations: {self._reserved_abbrvs}")
 
         # Map argument names to arguments with dashes replaced by underscores
-        self._arguments = { _fixdash(arg.name): arg for arg in self._reserved_arguments + arguments }
+        self._arguments = {_fixdash(arg.name): arg for arg in self._reserved_arguments + arguments}
         if len(self._arguments) != len(self._reserved_arguments) + len(arguments):
-            raise ParserError("Conflicting arguments found. Notice that '-' and '_' are counted the same,"
-                "so e.g. 'a-b' and 'a_b' would cause a conflict")
+            raise ParserError(
+                "Conflicting arguments found. Notice that '-' and '_' are counted the same,so e.g. 'a-b' and 'a_b' would cause a conflict"
+            )
 
         self._location_arg.help = "Directory containing all job directories" if self._multiple_jobs else "Job directory"
 
         # Build abbrevations for arguments
         # Those with explicit abbreviations are handled first to prevent being overwritten
-        _used_abbrvs = { "h" }  # Reserved by argparse
+        _used_abbrvs = {"h"}  # Reserved by argparse
         _args_with_abbrvs_first = sorted(self._arguments, key=lambda arg: self._arguments[arg].abbrv is None)
         for argname in _args_with_abbrvs_first:
             argument = self._arguments[argname]
@@ -319,10 +335,11 @@ class Parser:
 
         Arguments without defaults values are not included.
         """
-        return { argname: arg.default
-            for argname, arg
-            in self._arguments.items()
-            if hasattr(arg, "default") and arg.name not in self._reserved_names }
+        return {
+            argname: arg.default
+            for argname, arg in self._arguments.items()
+            if hasattr(arg, "default") and arg.name not in self._reserved_names
+        }
 
     def _parse_explicit_cli_args(self) -> set[str]:
         """Return a set of arguments explicitly given from the command line.
@@ -360,8 +377,9 @@ class Parser:
             if not self._configparser.read(config_path, encoding=encoding):
                 raise FileNotFoundError(f"Configuration file not found at {config_path}")
         except MissingSectionHeaderError as e:
-            raise ConfigError("The provided config file contains no section headers. "
-                              "This is best resolved by adding `[DEFAULT]` at the very top.") from e
+            raise ConfigError(
+                "The provided config file contains no section headers. This is best resolved by adding `[DEFAULT]` at the very top."
+            ) from e
 
         for section in sections:
             if section not in self._configparser:
@@ -422,13 +440,15 @@ class Parser:
                 if isinstance(arg, Argument) and arg_dict[argname] is None:
                     raise ParserError(f"Missing value for '{arg.name}'")
 
-            job_descriptions.append(JobDescription(
-                name            = name,
-                location        = location,
-                explicit_args   = explicit_cli_args,
-                docfile_content = docfile_content,
-                **except_keys(arg_dict, ("location", "name")),
-            ))
+            job_descriptions.append(
+                JobDescription(
+                    name=name,
+                    location=location,
+                    explicit_args=explicit_cli_args,
+                    docfile_content=docfile_content,
+                    **except_keys(arg_dict, ("location", "name")),
+                )
+            )
         else:
             config_dict = self._parse_config_file(args.config)
             # Update documentation file docname
@@ -459,18 +479,21 @@ class Parser:
                         ("name", "config"),
                     ),
                     **config_args,
-                    **{ argname: value
-                        for argname, value
-                        in except_keys(vars(args), ("name", "location")).items()
-                        if argname in explicit_cli_args },
+                    **{
+                        argname: value
+                        for argname, value in except_keys(vars(args), ("name", "location")).items()
+                        if argname in explicit_cli_args
+                    },
                 }
-                job_descriptions.append(JobDescription(
-                    name=name,
-                    location=location,
-                    explicit_args={*config_args.keys(), *explicit_cli_args},
-                    docfile_content=docfile_content,
-                    **value_dict,
-                ))
+                job_descriptions.append(
+                    JobDescription(
+                        name=name,
+                        location=location,
+                        explicit_args={*config_args.keys(), *explicit_cli_args},
+                        docfile_content=docfile_content,
+                        **value_dict,
+                    )
+                )
 
         # Check if any arguments are missing or are invalid
         for job in job_descriptions:
@@ -505,9 +528,9 @@ class Parser:
         self._configparser.write(buffer)
         if buffer.tell() == position:
             # Nothing was written to the buffer, so clear the config file section
-            buffer.seek(position-len(cline))
+            buffer.seek(position - len(cline))
             buffer.truncate()
-            buffer.write(2*os.linesep)
+            buffer.write(2 * os.linesep)
         content = buffer.getvalue()
         buffer.close()
         return content

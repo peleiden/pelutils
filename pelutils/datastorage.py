@@ -9,6 +9,7 @@ import rapidjson
 
 _T = TypeVar("_T", bound="DataStorage")
 
+
 class DataStorage:
     """The DataStorage class is an augmentation of the dataclass that incluces save and load functionality.
 

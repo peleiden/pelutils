@@ -1,4 +1,5 @@
 """Supporting elements to the logger, such as levels, colours, collection of logs, etc."""
+
 from __future__ import annotations
 
 from enum import IntEnum
@@ -7,12 +8,13 @@ from enum import IntEnum
 class LogLevels(IntEnum):
     """Logging levels by priority."""
 
-    SECTION  = 5
+    SECTION = 5
     CRITICAL = 4
-    ERROR    = 3
-    WARNING  = 2
-    INFO     = 1
-    DEBUG    = 0
+    ERROR = 3
+    WARNING = 2
+    INFO = 1
+    DEBUG = 0
+
 
 class _LevelManager:
     """Used for context limiting logging levels.
@@ -39,6 +41,7 @@ class _LevelManager:
     def __exit__(self, *_):
         self.level = None
 
+
 class _LogErrors:
     """Used for catching exceptions with logger and logging them before reraising them."""
 
@@ -52,6 +55,7 @@ class _LogErrors:
         is_zero_exit_code = et is SystemExit and ev.code == 0
         if et and not is_zero_exit_code:
             self._log.log_with_stacktrace(ev, level=LogLevels.CRITICAL)
+
 
 class _CollectLogs:
     """Used for producing all logging output from a block at once.

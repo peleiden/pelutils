@@ -18,6 +18,7 @@ def test_z():
     assert np.isclose(norm().cdf(t), 0.95)
     assert np.isclose(norm().cdf(-t), 0.05)
 
+
 @pytest.mark.filterwarnings("ignore:divide by zero")
 @pytest.mark.filterwarnings("ignore:invalid value")
 def test_corr_ci():
@@ -36,7 +37,7 @@ def test_corr_ci():
     assert np.isnan(cci[1]) and np.isnan(cci[2])
 
     xiter = iter([0, 1])
-    yiter = iter([0, -1/2])
+    yiter = iter([0, -1 / 2])
     cci = corr_ci(xiter, yiter)
     assert cci[0] == -1 and cci[3] == 1
     assert np.isnan(cci[1]) and np.isnan(cci[2])

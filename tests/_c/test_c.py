@@ -22,6 +22,6 @@ def test_get_c_array_args():
         s = np_arr.dtype.itemsize
         for i, d in enumerate(shape[::-1]):
             i = len(shape) - i - 1
-            assert d == ctypes.c_uint64.from_address(dims_p+i*itemsize).value
-            assert s == ctypes.c_uint64.from_address(strides_p+i*itemsize).value
+            assert d == ctypes.c_uint64.from_address(dims_p + i * itemsize).value
+            assert s == ctypes.c_uint64.from_address(strides_p + i * itemsize).value
             s *= d

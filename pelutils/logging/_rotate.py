@@ -8,7 +8,6 @@ from pathlib import Path
 
 
 class _LogFileRotater:
-
     supported_time_units = ["year", "month", "day", "hour"]
     supported_size_units = ["GB", "MB", "kB"]
 
@@ -27,13 +26,13 @@ class _LogFileRotater:
 
         if self.is_size_constrained:
             if self.unit == "GB":
-                self.max_file_size = self.value * 10 ** 9
+                self.max_file_size = self.value * 10**9
             elif self.unit == "MB":
-                self.max_file_size = self.value * 10 ** 6
+                self.max_file_size = self.value * 10**6
             elif self.unit == "kB":
-                self.max_file_size = self.value * 10 ** 3
+                self.max_file_size = self.value * 10**3
             else:
-                raise ValueError(f"Invalid size unit \"{self.unit}\", must be one of {self.supported_size_units}")
+                raise ValueError(f'Invalid size unit "{self.unit}", must be one of {self.supported_size_units}')
 
         if self.is_time_constrained:
             # Current time is the start of the current time block
@@ -60,16 +59,18 @@ class _LogFileRotater:
             return 1, rotate_cmd
         match = re.search(pattern, rotate_cmd)
         if match is None:
-            raise ValueError(f"Given rotate command \"{rotate_cmd}\" is invalid. It must be an integer followed by a supported unit, e.g. H (hours).")
+            raise ValueError(
+                f'Given rotate command "{rotate_cmd}" is invalid. It must be an integer followed by a supported unit, e.g. H (hours).'
+            )
         value = int(match.group(1))
         unit = match.group(2)
         if unit not in cls.supported_size_units:
-            raise ValueError(f"Unsupported unit \"{unit}\". Must be one of {', '.join(cls.supported_size_units)}")
+            raise ValueError(f'Unsupported unit "{unit}". Must be one of {", ".join(cls.supported_size_units)}')
         return value, unit
 
     def write(self, text: str, mode="w", encoding="utf-8"):
         if mode not in {"w", "a"}:
-            raise ValueError(f"Write mode must be either write (w) or append (a), not \"{mode}\".")
+            raise ValueError(f'Write mode must be either write (w) or append (a), not "{mode}".')
         text = text.encode(encoding)
         file = self.resolve_logfile(len(text))
         file.parent.mkdir(parents=True, exist_ok=True)
@@ -101,7 +102,7 @@ class _LogFileRotater:
             return datetime(now.year, now.month, now.day)
         elif self.unit == "hour":
             return datetime(now.year, now.month, now.day, now.hour)
-        raise ValueError(f"Invalid time unit \"{self.unit}\", must be one of {self.supported_time_units}")
+        raise ValueError(f'Invalid time unit "{self.unit}", must be one of {self.supported_time_units}')
 
     def get_next_time(self) -> datetime:
         next_hour = self.current_time.hour + (self.unit == "hour")

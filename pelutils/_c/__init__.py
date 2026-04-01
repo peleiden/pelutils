@@ -1,10 +1,12 @@
 """Utilities for pelutils C api, including a helpful way of passing numpy arrays and torch tensors to C."""
+
 from __future__ import annotations
 
 import numpy as np
 
 try:
     import torch
+
     _has_torch = True
 except ModuleNotFoundError:
     _has_torch = False
@@ -12,6 +14,7 @@ except ModuleNotFoundError:
 
 # Data pointer, num dims, dimensions pointer, strides pointer
 ArrayArgs = tuple[int, int, int, int]
+
 
 def get_array_c_args(arr: np.ndarray | torch.Tensor) -> ArrayArgs:
     if _has_torch and isinstance(arr, torch.Tensor):

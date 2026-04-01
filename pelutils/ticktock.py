@@ -17,11 +17,11 @@ class TimeUnits:
     Each element is a tuple of the unit suffix and its length in seconds.
     """
 
-    nanosecond  = ("ns",  1e-9)
-    microsecond = ("us",  1e-6)
-    millisecond = ("ms",  1e-3)
-    second      = ("s",   1)
-    hour        = ("h",   3600)
+    nanosecond = ("ns", 1e-9)
+    microsecond = ("us", 1e-6)
+    millisecond = ("ms", 1e-3)
+    second = ("s", 1)
+    hour = ("h", 3600)
 
     @classmethod
     def units(cls, reverse=False) -> list[tuple[str, float]]:
@@ -40,6 +40,7 @@ class TimeUnits:
         """Get largest available time unit smaller than given."""
         return max((u for u in cls.units() if u[1] < unit[1]), key=lambda x: x[1])
 
+
 def _get_smallest_suitable_unit(duration_s: float) -> tuple[str, float]:
     """Return the smallest unit for which the duration is at least the same size as the unit."""
     units = TimeUnits.units(reverse=True)
@@ -48,8 +49,8 @@ def _get_smallest_suitable_unit(duration_s: float) -> tuple[str, float]:
             return unit, unit_duration
     return units[-1]  # No unit is small enough, so return the smallest unit
 
-class Profile:  # noqa: D101
 
+class Profile:  # noqa: D101
     def __init__(self, name: str, depth: int, parent: Profile | None):
         """Data for a profiled code section.
 
@@ -76,8 +77,10 @@ class Profile:  # noqa: D101
         self.children = list()
 
     @property
-    @deprecated(version="3.1.0",
-        reason="Length of individual hits are no longer saved, only aggregated statistics. This will return hits of average length.")
+    @deprecated(
+        version="3.1.0",
+        reason="Length of individual hits are no longer saved, only aggregated statistics. This will return hits of average length.",
+    )
     def hits(self):
         return [self.mean()] * self._n
 
@@ -113,8 +116,8 @@ class Profile:  # noqa: D101
     def __eq__(self, __value: object) -> bool:
         return isinstance(__value, Profile) and self._hashable == __value._hashable
 
-class _ProfileContext:
 
+class _ProfileContext:
     def __init__(self, tt: "TickTock", profile: Profile):  # noqa: UP037
         self._tt = tt
         self._profile = profile
@@ -130,8 +133,10 @@ class _ProfileContext:
                 self._tt.end_profile()
         self._tt.end_profile(self._profile.name)
 
+
 class TickTockException(RuntimeError):
     """Raised when an exception occurs when using the TickTock class."""
+
 
 class TickTock:
     """Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
@@ -173,11 +178,11 @@ class TickTock:
     """
 
     def __init__(self):
-        self._tick_starts:   dict[Hashable, float] = dict()
+        self._tick_starts: dict[Hashable, float] = dict()
         self._id_to_profile: dict[Profile, Profile] = dict()
-        self.profiles:       list[Profile] = list()  # Top level profiles
+        self.profiles: list[Profile] = list()  # Top level profiles
         self._profile_stack: list[Profile] = list()
-        self._nhits:         list[int] = list()
+        self._nhits: list[int] = list()
 
         self._thread_name = current_thread().name
         self._thread_id = id(current_thread())
@@ -211,9 +216,12 @@ class TickTock:
         If `disable` is True, the profile, as well as all child profiles will not be counted.
         """
         if self._thread_id != id(current_thread()):
-            warnings.warn(f"This TickTock instance was created in the {self._thread_name} thread but profiling was started in "
-                          f"{current_thread().name}. Profiling is NOT designed to deal with multiple threads. Instead, create a "
-                          "TickTock instance for each thread requiring profiling.", stacklevel=2)
+            warnings.warn(
+                f"This TickTock instance was created in the {self._thread_name} thread but profiling was started in "
+                f"{current_thread().name}. Profiling is NOT designed to deal with multiple threads. Instead, create a "
+                "TickTock instance for each thread requiring profiling.",
+                stacklevel=2,
+            )
 
         profile = Profile(
             name,
@@ -334,13 +342,13 @@ class TickTock:
 
     @staticmethod
     @deprecated(version="3.5.0")
-    def stringify_time(dt: float, unit: tuple[str, float]=TimeUnits.millisecond) -> str:
+    def stringify_time(dt: float, unit: tuple[str, float] = TimeUnits.millisecond) -> str:
         """Stringify a time given in seconds with a given unit."""
-        return f"{dt/unit[1]:,.2f} {unit[0]}"
+        return f"{dt / unit[1]:,.2f} {unit[0]}"
 
     @staticmethod
     def _stringify_time_with_alignment(dt: float, unit: tuple[str, float]) -> str:
-        return f"{dt/unit[1]:,.2f} {unit[0]:>2}"
+        return f"{dt / unit[1]:,.2f} {unit[0]:>2}"
 
     def stringify_sections(self, unit: tuple[str, float] | None = TimeUnits.second) -> str:
         """Return a pretty string representation of the profile tree.
@@ -348,8 +356,7 @@ class TickTock:
         If unit is None, suitable units will be automatically detected.
         """
         if self._profile_stack:
-            raise ValueError("TickTock instance cannot be stringified while profiling is still ongoing. "\
-                "Please end all profiles first")
+            raise ValueError("TickTock instance cannot be stringified while profiling is still ongoing. Please end all profiles first")
 
         table = Table()
         h = ["Profile", "Total time", "Percentage", "Hits", "Average"]
@@ -362,15 +369,20 @@ class TickTock:
                 "  " * profile.depth + profile.name,
                 self._stringify_time_with_alignment(psum, unit if unit is not None else _get_smallest_suitable_unit(psum)),
                 "%.2f" % (100 * psum / (profile.parent.sum() if profile.parent else total_time))
-                    + (" <" if profile.depth else "") + "--" * (profile.depth-1),
+                + (" <" if profile.depth else "")
+                + "--" * (profile.depth - 1),
                 f"{len(profile):,}",
-                self._stringify_time_with_alignment(pmean, TimeUnits.next_smaller(unit) if unit is not None else _get_smallest_suitable_unit(pmean))
+                self._stringify_time_with_alignment(
+                    pmean, TimeUnits.next_smaller(unit) if unit is not None else _get_smallest_suitable_unit(pmean)
+                ),
             ]
-            table.add_row(row, [True] + [False] * (len(row)-1))
+            table.add_row(row, [True] + [False] * (len(row) - 1))
 
         return str(table)
 
-    @deprecated(version="3.1.0", reason="Individual hits are no longer recorded, only aggregated statistics. Use stats_by_profile_name instead.")
+    @deprecated(
+        version="3.1.0", reason="Individual hits are no longer recorded, only aggregated statistics. Use stats_by_profile_name instead."
+    )
     def measurements_by_profile_name(self, name: str) -> list[float]:
         """Return the time measurement distribution for a profile with a given name.
 

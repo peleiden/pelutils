@@ -10,7 +10,7 @@ sys.path.append("pelutils")
 from __version__ import __version__
 
 requirements = [
-    "numpy>=1.21.0",
+    "numpy>=2.0",
     "gitpython>=3.1.0",
     "rich>=10.0.0",
     "python-rapidjson>=1.5",
@@ -41,11 +41,12 @@ c_files = list()
 for root, __, files in os.walk("pelutils/_c"):
     c_files += [os.path.join(root, f) for f in files if f.endswith(".c")]
 
+
 class CExtension(Extension):
     """See this thread for details: https://stackoverflow.com/a/34830639/13196863."""
 
-class build(build_):  # noqa: D101
 
+class build(build_):  # noqa: D101
     def build_extension(self, ext):  # noqa: D102
         self._ctypes = isinstance(ext, CExtension)
         return super().build_extension(ext)
@@ -57,39 +58,42 @@ class build(build_):  # noqa: D101
 
     def get_ext_filename(self, ext_name):  # noqa: D102
         if self._ctypes:
-            return ext_name + '.so'
+            return ext_name + ".so"
         return super().get_ext_filename(ext_name)
 
+
 setup_args = dict(
-    name             = "pelutils",
-    version          = __version__,
-    description      = "The Swiss army knife of Python projects.",
-    long_description_content_type = "text/markdown",
-    long_description = README,
-    license          = "MIT",
-    packages         = find_packages(),
-    author           = "Asger Laurits Schultz, Søren Winkel Holm",
-    author_email     = "asger.s@protonmail.com, swholm@protonmail.com",
-    keywords         = [ "utility", "logger", "parser", "profiling", "plotting" ],
-    url              = "https://github.com/peleiden/pelutils",
-    download_url     = "https://pypi.org/project/pelutils/",
-    install_requires = [ requirements ],
-    extras_require   = { "dev": requirements_dev },
-    entry_points     = { "console_scripts": [
-        "linecounter = pelutils._entry_points.linecounter:run",
-        "pelexamples = examples.cli:run",
-    ] },
-    cmdclass         = { "build": build },
-    ext_modules      = [
+    name="pelutils",
+    version=__version__,
+    description="The Swiss army knife of Python projects.",
+    long_description_content_type="text/markdown",
+    long_description=README,
+    license="MIT",
+    packages=find_packages(),
+    author="Asger Laurits Schultz, Søren Winkel Holm",
+    author_email="asger.s@protonmail.com, swholm@protonmail.com",
+    keywords=["utility", "logger", "parser", "profiling", "plotting"],
+    url="https://github.com/peleiden/pelutils",
+    download_url="https://pypi.org/project/pelutils/",
+    install_requires=[requirements],
+    extras_require={"dev": requirements_dev},
+    entry_points={
+        "console_scripts": [
+            "linecounter = pelutils._entry_points.linecounter:run",
+            "pelexamples = examples.cli:run",
+        ]
+    },
+    cmdclass={"build": build},
+    ext_modules=[
         CExtension(
-            name               = "_pelutils_c",
-            sources            = c_files,
-            extra_compile_args = ["-DMS_WIN64"],
+            name="_pelutils_c",
+            sources=c_files,
+            extra_compile_args=["-DMS_WIN64"],
         )
     ],
-    license_files    = [ os.path.join("pelutils", "_c", "hashmap.c", "LICENSE") ],
-    python_requires  = ">=3.9",
-    classifiers      = [
+    license_files=[os.path.join("pelutils", "_c", "hashmap.c", "LICENSE")],
+    python_requires=">=3.9",
+    classifiers=[
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
         "Programming Language :: Python",

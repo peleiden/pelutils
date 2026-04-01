@@ -15,6 +15,7 @@ def z(alpha=0.05, two_sided=True, distribution=stats.norm()) -> float:  # noqa: 
     else:
         return distribution.ppf(1 - alpha).item()
 
+
 def corr_ci(x: Iterable, y: Iterable, *, alpha=0.05, return_string=False) -> tuple[float, float, float, float] | str:
     """Convenience function for getting a pearson correlation and confidence interval of it.
 
@@ -50,12 +51,12 @@ def corr_ci(x: Iterable, y: Iterable, *, alpha=0.05, return_string=False) -> tup
     y = np.array(y)
 
     r, p = stats.pearsonr(x, y)
-    r_z  = np.arctanh(r)
-    se   = 1 / np.sqrt(x.size - 3)
+    r_z = np.arctanh(r)
+    se = 1 / np.sqrt(x.size - 3)
 
-    z          = stats.norm.ppf(1 - alpha/2)
+    z = stats.norm.ppf(1 - alpha / 2)
     lo_z, hi_z = r_z + np.array((-1, 1)) * z * se
-    lo, hi     = np.tanh((lo_z, hi_z))
+    lo, hi = np.tanh((lo_z, hi_z))
 
     if return_string:
         return f"Correlation {r:.3f} in [{lo:.3f}, {hi:.3f}], with p={p:.3f}"

@@ -20,7 +20,7 @@ def test_table():
 
     t = Table()
     for i in range(3):
-        t.add_row([i, str(i+1), i+2])
+        t.add_row([i, str(i + 1), i + 2])
         with pytest.raises(ValueError):
             t.add_row([i, i, i], [1, 0])
 
@@ -32,6 +32,7 @@ def test_table():
     t.add_hline()
     t.add_row([3, 4, 5])
     assert str(t).count("+") == 4
+
 
 def test_tex():
     t = Table()

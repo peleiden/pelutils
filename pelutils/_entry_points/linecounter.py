@@ -12,15 +12,32 @@ from pelutils import get_repo
 from pelutils.ds.plots import Figure, get_dateticks
 
 _default_extensions = ", ".join((
-    ".py", ".pyw",
-    ".c", ".cpp", ".cc", ".h", ".hpp",
+    ".py",
+    ".pyw",
+    ".c",
+    ".cpp",
+    ".cc",
+    ".h",
+    ".hpp",
     ".tex",
-    ".html", ".css", ".js", ".jsx", ".ts",
-    ".java", ".kt", ".dart", ".swift",
-    ".rs", ".go",
-    ".r", ".m",
-    ".sh", ".zsh", ".bash",
+    ".html",
+    ".css",
+    ".js",
+    ".jsx",
+    ".ts",
+    ".java",
+    ".kt",
+    ".dart",
+    ".swift",
+    ".rs",
+    ".go",
+    ".r",
+    ".m",
+    ".sh",
+    ".zsh",
+    ".bash",
 ))
+
 
 def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """Count lines of all files recursively in the current working directory.
@@ -29,7 +46,7 @@ def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[np.ndarra
     """
     commits = list(reversed(list(repo.iter_commits())))  # List of commit from oldest to newest
     times = np.array([c.committed_date for c in commits])
-    lines = { ext: np.zeros_like(times) for ext in exts }
+    lines = {ext: np.zeros_like(times) for ext in exts}
     try:
         for i, commit in enumerate(tqdm(commits)):
             try:
@@ -52,6 +69,7 @@ def _count(repo: git.Repo, branch: git.Head, exts: list[str]) -> tuple[np.ndarra
 
     return times, lines
 
+
 def _fuse_times(all_times: list[np.ndarray]) -> np.ndarray:
     """Merge all time arrays together into a single array that is also sorted."""
     n = sum(times.size for times in all_times)
@@ -64,10 +82,12 @@ def _fuse_times(all_times: list[np.ndarray]) -> np.ndarray:
         idcs[min_time] += 1
     return times
 
+
 def _last_initial_zero(values: np.ndarray) -> int:
     if values[0] != 0:
         return 0
-    return np.where(values!=0)[0][0] - 1
+    return np.where(values != 0)[0][0] - 1
+
 
 def linecounter(repos: list[str], output: str, extensions: str, date_format: str, no_repo_name: bool):
     extensions = [x.strip() for x in extensions.split(",")]
@@ -100,7 +120,7 @@ def linecounter(repos: list[str], output: str, extensions: str, date_format: str
                     continue
                 non_zero = line_counts != 0
                 non_zero[_last_initial_zero(line_counts)] = 1
-                lab = ext+(f" ({repo_name})" if len(repo_names) > 1 and not no_repo_name else "")
+                lab = ext + (f" ({repo_name})" if len(repo_names) > 1 and not no_repo_name else "")
                 plt.plot(times[non_zero], line_counts[non_zero], marker=".", ms=8, lw=2, label=lab)
 
         fused_times = _fuse_times(all_times)
@@ -112,6 +132,7 @@ def linecounter(repos: list[str], output: str, extensions: str, date_format: str
         plt.legend(loc=2)
         plt.grid()
 
+
 def run():
     parser = ArgumentParser()
     parser.add_argument("repos", nargs="+")
@@ -122,6 +143,7 @@ def run():
     args = parser.parse_args()
 
     linecounter(args.repos, args.output, args.extensions, args.date_format, args.no_repo_name)
+
 
 if __name__ == "__main__":
     run()
