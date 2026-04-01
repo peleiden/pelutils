@@ -4,6 +4,7 @@
 
 - Exposed `Logger.is_configured`.
 - Removed examples which were largely lackluster and not up-to-date.
+- Added `types` submodule for convenient data type definitions.
 
 ## 3.6.2
 
