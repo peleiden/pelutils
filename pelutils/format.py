@@ -11,6 +11,7 @@ from rich.console import Console
 _stdout_console = Console(highlight=False)
 _stderr_console = Console(highlight=False, stderr=True)
 
+
 class RichString:
     """Class used for combining normal strings and rich strings.
 
@@ -23,10 +24,10 @@ class RichString:
 
     def __init__(self, stderr=False):
         self.strings: list[str] = list()  # Normal strings
-        self.riches:  list[str] = list()  # Corresponding strings with rich syntax
+        self.riches: list[str] = list()  # Corresponding strings with rich syntax
         self.console = _stderr_console if stderr else _stdout_console
 
-    def add_string(self, s: str, rich: str=None):
+    def add_string(self, s: str, rich: str = None):
         """Add a new string and optionally a rich string equivalent."""
         if rich is None:
             # Escape beginning brackets to prevent accidental formatting when printing
@@ -55,11 +56,11 @@ class Table:
     """Table for nicely formatting tabular data."""
 
     def __init__(self):
-        self._width:       int = None  # Number of elements in each row. Set when first row or header added
-        self._header:      list[Any] = list()  # Header elements
-        self._rows:        list[list[Any]] = list()   # All non-header rows
+        self._width: int = None  # Number of elements in each row. Set when first row or header added
+        self._header: list[Any] = list()  # Header elements
+        self._rows: list[list[Any]] = list()  # All non-header rows
         self._left_aligns: list[list[bool]] = list()  # True for left align, False for right align
-        self._hlines:      set[int] = set()  # Row indexes that are followed by a horizontal line
+        self._hlines: set[int] = set()  # Row indexes that are followed by a horizontal line
 
     def _set_and_check_width(self, row: list[Any]):
         if self._width is not None and len(row) != self._width:
@@ -93,7 +94,7 @@ class Table:
 
     def add_hline(self):
         """Add a horizontal line."""
-        self._hlines.add(len(self._rows)-1)
+        self._hlines.add(len(self._rows) - 1)
 
     def tex(self) -> str:
         """Produce LaTeX code for the table to included in a tabular environment.
@@ -124,19 +125,13 @@ class Table:
     def __str__(self) -> str:
         all_rows = [self._header, *self._rows] if self._header else self._rows
         widths = [max(len(str(all_rows[i][j])) for i in range(len(all_rows))) for j in range(self._width)]
-        hline = "+".join(
-            "-" * (width + 1 + (0 < i < self._width-1)) for i, width in enumerate(widths)
-        )
+        hline = "+".join("-" * (width + 1 + (0 < i < self._width - 1)) for i, width in enumerate(widths))
         strs = list()
         if self._header:
-            strs.append(" | ".join(
-                self._format_element(elem, width, True) for elem, width in zip(self._header, widths)
-            ))
+            strs.append(" | ".join(self._format_element(elem, width, True) for elem, width in zip(self._header, widths)))
             strs.append(hline)
         for i, (row, left_align) in enumerate(zip(self._rows, self._left_aligns)):
-            strs.append(" | ".join(
-                self._format_element(elem, width, la) for elem, width, la in zip(row, widths, left_align)
-            ))
+            strs.append(" | ".join(self._format_element(elem, width, la) for elem, width, la in zip(row, widths, left_align)))
             if i in self._hlines:
                 strs.append(hline)
 

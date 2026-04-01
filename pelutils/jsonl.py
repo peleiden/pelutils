@@ -1,4 +1,5 @@
 """Utility methods for the .jsonl file format. .jsonl are files in which each line is a valid json string."""
+
 import os
 from collections.abc import Generator, Iterable
 from typing import TextIO
@@ -13,12 +14,14 @@ def load(f: TextIO) -> Generator:
         if stripped:
             yield rapidjson.loads(stripped)
 
+
 def loads(string: str) -> Generator:
     """Return a generator of parsed lines. Empty lines are ignored."""
     for line in string.splitlines():
         stripped = line.strip()
         if stripped:
             yield rapidjson.loads(stripped)
+
 
 def dump(objects: Iterable, f: TextIO, single_block=True):
     """Save an iterable to a .jsonl file.
@@ -31,6 +34,7 @@ def dump(objects: Iterable, f: TextIO, single_block=True):
     else:
         for obj in objects:
             f.write(rapidjson.dumps(obj) + os.linesep)
+
 
 def dumps(objects: Iterable) -> str:
     """Return a string representation of an iterable in a string."""

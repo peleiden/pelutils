@@ -10,16 +10,27 @@ import numpy as np
 import pytest
 
 from pelutils.tests import UnitTestCollection
-from pelutils.ds.plots import linear_binning, log_binning, normal_binning, \
-    colours, base_colours, tab_colours, \
-    moving_avg, exp_moving_avg, double_moving_avg, \
-    Figure, get_dateticks, histogram
+from pelutils.ds.plots import (
+    linear_binning,
+    log_binning,
+    normal_binning,
+    colours,
+    base_colours,
+    tab_colours,
+    moving_avg,
+    exp_moving_avg,
+    double_moving_avg,
+    Figure,
+    get_dateticks,
+    histogram,
+)
 
 
 def test_colours():
-    assert len(base_colours) == len(set(base_colours)) ==  8
-    assert len(tab_colours)  == len(set(tab_colours))  == 10
-    assert len(colours)      == len(set(colours))      == 15
+    assert len(base_colours) == len(set(base_colours)) == 8
+    assert len(tab_colours) == len(set(tab_colours)) == 10
+    assert len(colours) == len(set(colours)) == 15
+
 
 def test_get_dateticks():
     start_time = datetime.now()
@@ -42,6 +53,7 @@ def test_get_dateticks():
             assert labels[0] == start_time.strftime("%b %d")
             assert labels[-1] == end_time.strftime("%b %d")
 
+
 def test_histogram():
     obs = [1, 2, 2, 1, 2]
     x, y = histogram(obs)
@@ -52,8 +64,8 @@ def test_histogram():
     x, y = histogram(obs, ignore_zeros=True)
     assert (y > 0).all()
 
-class TestMovingAverage:
 
+class TestMovingAverage:
     def test_moving_avg(self):
         data = np.random.randn(100)
         num_neighs = np.arange(1, 10)
@@ -74,11 +86,11 @@ class TestMovingAverage:
         # Test that it converges as expected
         for n in num_neighs:
             data = np.linspace(-10, 10, 1000)
-            dist_to_zero = np.linalg.norm(data-np.zeros_like(data))
+            dist_to_zero = np.linalg.norm(data - np.zeros_like(data))
             prev_dist_to_zero = dist_to_zero
             while len(data) > 2 * n:
                 _, data = moving_avg(data, neighbors=n)
-                dist_to_zero = np.linalg.norm(data-np.zeros_like(data))
+                dist_to_zero = np.linalg.norm(data - np.zeros_like(data))
                 assert 0 <= dist_to_zero < prev_dist_to_zero
                 prev_dist_to_zero = dist_to_zero
 
@@ -104,13 +116,13 @@ class TestMovingAverage:
         # except for the first point, which is the same
         data = np.linspace(-10, 10)
         x, y = exp_moving_avg(data)
-        assert np.all(y[1:]<data[1:])
+        assert np.all(y[1:] < data[1:])
         assert np.isclose(data[0], y[0])
 
         # Corresponding test for reversed
         data = np.linspace(-10, 10)
         x, y = exp_moving_avg(data, reverse=True)
-        assert np.all(y[:-1]>data[:-1])
+        assert np.all(y[:-1] > data[:-1])
         assert np.isclose(data[-1], y[-1])
 
         # Test that it also works when supplying x
@@ -148,8 +160,8 @@ class TestMovingAverage:
         double_moving_avg([1, 2, 3])
         double_moving_avg([1, 2, 3], [1, 2, 3])
 
-class TestBinning:
 
+class TestBinning:
     bins = 25
     uniform_data = np.random.uniform(1, 200, 500)
 
@@ -169,11 +181,11 @@ class TestBinning:
     def test_normal_binning(self):
         binning = normal_binning(self.uniform_data, self.bins)
         for i in range(ceil(self.bins / 2)):
-            assert np.isclose(binning[i+1]-binning[i], binning[self.bins-i-1]-binning[self.bins-i-2])
+            assert np.isclose(binning[i + 1] - binning[i], binning[self.bins - i - 1] - binning[self.bins - i - 2])
         assert (np.diff(binning, n=3) > 0).all()
 
-class TestFigure(UnitTestCollection):
 
+class TestFigure(UnitTestCollection):
     @property
     def savepath(self) -> str:
         return self.get_test_path("test.png")
@@ -210,7 +222,7 @@ class TestFigure(UnitTestCollection):
         with Figure(
             self.savepath,
             fontsize=new_fontsize,
-            other_rc_params={ "ytick.right": new_ytick_right },
+            other_rc_params={"ytick.right": new_ytick_right},
         ):
             assert mpl.rcParams["font.size"] == new_fontsize
             assert mpl.rcParams["ytick.right"] == new_ytick_right

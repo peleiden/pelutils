@@ -15,16 +15,18 @@ from ._utils import LogLevels, _CollectLogs, _LevelManager, _LogErrors
 # https://rich.readthedocs.io/en/stable/appendix/colors.html
 TIMESTAMP_COLOR = "#72b9e0"
 LEVEL_FORMAT = {
-    LogLevels.SECTION:  "bright_yellow",
+    LogLevels.SECTION: "bright_yellow",
     LogLevels.CRITICAL: "red1",
-    LogLevels.ERROR:    "red3",
-    LogLevels.WARNING:  "gold3",
-    LogLevels.INFO:     "chartreuse3",
-    LogLevels.DEBUG:    "deep_sky_blue1",
+    LogLevels.ERROR: "red3",
+    LogLevels.WARNING: "gold3",
+    LogLevels.INFO: "chartreuse3",
+    LogLevels.DEBUG: "deep_sky_blue1",
 }
+
 
 class LoggingException(RuntimeError):
     """Raised on logging-related errors."""
+
 
 class Logger:
     """A simple logger which creates a log file and pushes strings both to stdout and the log file. See .configure for usage details.
@@ -51,8 +53,9 @@ class Logger:
 
     def configure(
         self,
-        fpath: str | Path | None, *,
-        default_seperator: str  = "\n",
+        fpath: str | Path | None,
+        *,
+        default_seperator: str = "\n",
         append: bool = False,
         print_level: LogLevels | None = LogLevels.INFO,
         rotation: str | None = None,
@@ -110,7 +113,7 @@ class Logger:
     @property
     def no_log(self):
         """Disable logging inside a with block."""
-        return self._level_mgr.with_level(max(LogLevels)+1)
+        return self._level_mgr.with_level(max(LogLevels) + 1)
 
     @property
     def log_errors(self):
@@ -164,19 +167,14 @@ class Logger:
         if with_info and tolog:
             rs.add_string(
                 f"{time}{self._spacing}{level_format}{self._spacing} ",
-                self._format(time, TIMESTAMP_COLOR) + \
-                    self._spacing + \
-                    self._format(level_format, LEVEL_FORMAT[level]) + \
-                    self._spacing + " ",
+                self._format(time, TIMESTAMP_COLOR) + self._spacing + self._format(level_format, LEVEL_FORMAT[level]) + self._spacing + " ",
             )
             rs.add_string(logs[0].rstrip())
         else:
             rs.add_string(f"{time_spaces}{space}{logs[0]}".rstrip())
         for i in range(1, len(logs)):
             s = f"\n{time_spaces}{space}{logs[i]}".rstrip()
-            rs.add_string(
-                s if s.strip() else "\n"
-            )
+            rs.add_string(s if s.strip() else "\n")
         if not self._collect:
             self._write_to_log(rs)
             if with_print:
@@ -197,9 +195,9 @@ class Logger:
         )
 
     def _input(self, prompt: str) -> str:
-        self.info(f"Prompt: \"{prompt}\"", with_print=False)
+        self.info(f'Prompt: "{prompt}"', with_print=False)
         response = input(prompt)
-        self.info(f"Input:  \"{response}\"", with_print=False)
+        self.info(f'Input:  "{response}"', with_print=False)
         return response
 
     def input(self, prompt: str | Iterable[str] = "") -> str | Generator[str]:
@@ -267,7 +265,7 @@ class Logger:
 
     @property
     def collect(self):
-        """ Use with a with block to perform all logs within the block at once. """
+        """Use with a with block to perform all logs within the block at once."""
         if OS.is_windows:
             # Having multiple threads or processes write to the same file is not
             # safe on Windows unlike on Linux or Mac, in the way that log.collect

@@ -22,8 +22,8 @@ def _collect_test_fn(args):
             raise RuntimeError
         logger("log 3 from %s" % mp.current_process()._identity)
 
-class TestLogger(UnitTestCollection):
 
+class TestLogger(UnitTestCollection):
     def setup_class(self):
         super().setup_class()
         self.logfile = Path(self.test_dir) / "test_logging.log"
@@ -66,8 +66,8 @@ class TestLogger(UnitTestCollection):
                 assert i in next(lf)
 
     def test_bool_input(self):
-        """ Tests bool input parsing under the eight different cases:
-        Nothing/yes-ish/no-ish/gibberish under different possible default values. """
+        """Tests bool input parsing under the eight different cases:
+        Nothing/yes-ish/no-ish/gibberish under different possible default values."""
         for default in False, True, None:
             # Test no input given
             assert log.parse_bool_input("", default=default) is default
@@ -87,10 +87,10 @@ class TestLogger(UnitTestCollection):
 
             # Test that gibberish is always unparsable
             for letter1, letter2 in product(ascii_lowercase[:5], ascii_lowercase[:5]):
-                assert log.parse_bool_input(letter1+letter2, default=default) is None
+                assert log.parse_bool_input(letter1 + letter2, default=default) is None
 
     def test_parse_user_bool_input(self, monkeypatch: pytest.MonkeyPatch):
-        """ Tests input and bool parsing in combination. """
+        """Tests input and bool parsing in combination."""
         for final_answer in "ny":
             inputs = iter(("unparsable", "gibberish", final_answer))
             user_input = None
@@ -130,8 +130,8 @@ class TestLogger(UnitTestCollection):
             assert level.name in stdout
 
     def test_log_commit(self, capfd: pytest.CaptureFixture):
-        """ Tests are assumed to be run from within the
-        pelutils git repository root or above. If not, this test will fail. """
+        """Tests are assumed to be run from within the
+        pelutils git repository root or above. If not, this test will fail."""
         log.log_repo()
         stdout, _ = capfd.readouterr()
         if ".git" in os.listdir():
@@ -155,13 +155,13 @@ class TestLogger(UnitTestCollection):
         os.remove(self.logfile)
         # Test that logs do not get messed up
         with SimplePool(mp.cpu_count()) as p:
-            p.map(_collect_test_fn, reps*[(log, False)])
+            p.map(_collect_test_fn, reps * [(log, False)])
         with open(self.logfile) as lf:
             lines = lf.readlines()
         # _collect_test_fn logs out three lines
         assert len(lines) == 3 * reps
         for i, line in enumerate(lines):
-            assert "log %i" % (i%3+1) in line
+            assert "log %i" % (i % 3 + 1) in line
 
     @pytest.mark.skipif(OS.is_windows, reason="Log collection is not supported on Windows")
     def test_collect_with_errors(self):
@@ -170,8 +170,8 @@ class TestLogger(UnitTestCollection):
         os.remove(self.logfile)
         # Test that logs do not get messed up
         with SimplePool(mp.cpu_count()) as p:
-            args = reps*[(log, False)]
-            args[reps//2] = (log, True)
+            args = reps * [(log, False)]
+            args[reps // 2] = (log, True)
             with pytest.raises(RuntimeError):
                 p.map(_collect_test_fn, args)
         with open(self.logfile) as lf:
@@ -195,29 +195,25 @@ class TestLogger(UnitTestCollection):
         log = Logger().configure(logfile, print_level=None)
         # Test that logs do not get messed up
         with SimplePool() as p:
-            p.map(_collect_test_fn, reps*[(log, False)])
+            p.map(_collect_test_fn, reps * [(log, False)])
         with open(logfile) as lf:
             lines = lf.readlines()
         # _collect_test_fn logs out three lines
         assert len(lines) == 3 * reps
         for i, line in enumerate(lines):
-            assert "log %i" % (i%3+1) in line
+            assert "log %i" % (i % 3 + 1) in line
 
     @pytest.mark.skipif(not OS.is_windows, reason="Error should only be raised on Windows")
     def test_collect_error_on_windows(self):
         reps = 100
         with pytest.raises(UnsupportedOS), SimplePool() as p:
-            p.map(_collect_test_fn, reps*[(log, False)])
+            p.map(_collect_test_fn, reps * [(log, False)])
 
     def test_multiple_loggers(self, capfd: pytest.CaptureFixture):
         os.remove(self.logfile)
         logfile2 = os.path.join(self.test_dir, "test_logging2.log")
         log2 = Logger().configure(logfile2, print_level=None)
-        logs = [
-            ("logger",),
-            ("logger", "bogger"),
-            ("logger", "bogger", "hogger")
-        ]
+        logs = [("logger",), ("logger", "bogger"), ("logger", "bogger", "hogger")]
         for tolog in logs:
             log(*tolog)
             stdout, _ = capfd.readouterr()
@@ -324,7 +320,9 @@ class TestLogger(UnitTestCollection):
             logged_lines += lines[-2:]
 
         for i in range(3):
-            assert printed_lines[i].index(string) == \
-                   printed_lines[i+1].index(string) == \
-                   logged_lines[i].index(string) == \
-                   logged_lines[i+1].index(string)
+            assert (
+                printed_lines[i].index(string)
+                == printed_lines[i + 1].index(string)
+                == logged_lines[i].index(string)
+                == logged_lines[i + 1].index(string)
+            )

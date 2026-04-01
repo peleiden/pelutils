@@ -20,8 +20,8 @@ start_times = (
     datetime(2035, 12, 20, 23, 59, 59),
 )
 
-class TestRotate(UnitTestCollection):
 
+class TestRotate(UnitTestCollection):
     def reset(self):
         shutil.rmtree(self.test_dir, ignore_errors=True)
         os.makedirs(self.test_dir)
@@ -75,7 +75,7 @@ class TestRotate(UnitTestCollection):
         self.reset()
         n = 1500
         rotater = Rotater("5 kB", self.logfile)
-        rotater.write("0"*n)
+        rotater.write("0" * n)
         assert rotater.base_file.is_file()
         written = rotater.base_file.read_text()
         assert len(written) == n
@@ -90,9 +90,9 @@ class TestRotate(UnitTestCollection):
             rotater.write(s, "a")
             written = rotater.base_file.read_text()
             assert s in written
-            assert os.path.getsize(rotater.base_file) <= 5 * 10 ** 3
+            assert os.path.getsize(rotater.base_file) <= 5 * 10**3
         for file in sorted(rotater.base_file.parent.glob("log.*.log")):
-            assert os.path.getsize(file) == n * ((5 * 10 ** 3) // n)
+            assert os.path.getsize(file) == n * ((5 * 10**3) // n)
         assert os.path.getsize(rotater.base_file) == 1500
 
     def test_time_rotate(self):
@@ -135,12 +135,12 @@ class TestRotate(UnitTestCollection):
 
                 for i in range(1000):
                     if unit == "hour":
-                        assert (rotater.next_time-rotater.current_time).total_seconds() == 3600
+                        assert (rotater.next_time - rotater.current_time).total_seconds() == 3600
                     if unit == "day":
                         assert rotater.current_time.hour == 0
                         assert rotater.next_time.hour == 0
-                        assert (rotater.next_time-rotater.current_time).days == 1
-                        assert (rotater.next_time-rotater.current_time).seconds == 0
+                        assert (rotater.next_time - rotater.current_time).days == 1
+                        assert (rotater.next_time - rotater.current_time).seconds == 0
                     if unit == "month":
                         assert rotater.current_time.hour == 0
                         assert rotater.next_time.hour == 0

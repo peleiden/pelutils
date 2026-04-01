@@ -60,13 +60,14 @@ def test_unique():
         u, index, inverse, counts = unique(a, return_index=True, return_inverse=True, return_counts=True, axis=axis)
         npu, npcounts = np.unique(a, return_counts=True, axis=axis)
         assert u.shape == npu.shape
-        assert np.all(a[(*[slice(None)]*axis, index)] == u)
-        assert np.all(a == u[(*[slice(None)]*axis, inverse)])
+        assert np.all(a[(*[slice(None)] * axis, index)] == u)
+        assert np.all(a == u[(*[slice(None)] * axis, inverse)])
         assert np.all(np.sort(counts) == np.sort(npcounts))
 
     # Check error handling
     with pytest.raises(ValueError):
         unique(np.array([]))
+
 
 def _test_tensor_size(shape: list[int]):
     dtypes = (
@@ -98,6 +99,7 @@ def _test_tensor_size(shape: list[int]):
 
     with pytest.raises(TypeError):
         tensor_bytes([1, 2, 3])
+
 
 def test_tensor_size():
     sizes = np.arange(5)

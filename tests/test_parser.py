@@ -9,16 +9,13 @@ import pytest
 
 from pelutils import except_keys
 from pelutils.tests import restore_argv, UnitTestCollection
-from pelutils.parser import Argument, Option, Flag, Parser, JobDescription, \
-    _fixdash, ParserError, ConfigError
+from pelutils.parser import Argument, Option, Flag, Parser, JobDescription, _fixdash, ParserError, ConfigError
 
 
 _testdir = "parser_test"
 _argv_template = ["main.py", os.path.join(UnitTestCollection.test_dir, _testdir)]
 _sample_argv = f"{_argv_template[0]} {_argv_template[1]} -g 4 --gib-num 3.2 -o 7 -i -a b c".split()
-_sample_argv_conf = lambda config_path: (
-    f"{_argv_template[0]} {_argv_template[1]} -c %s --gib-num 3.2" % config_path
-).split()
+_sample_argv_conf = lambda config_path: (f"{_argv_template[0]} {_argv_template[1]} -c %s --gib-num 3.2" % config_path).split()
 _sample_arguments = [
     Argument("gibstr"),
     Argument("gib-num", type=float),
@@ -47,12 +44,17 @@ Cased-Option=Pascal-Kebab
 iam-bool
 Cased-Flag
 """
-_sample_single_section = _sample_default_only + """
+_sample_single_section = (
+    _sample_default_only
+    + """
 [BUTWHATABOUTSECONDJOB]
 iam-bool=False
 gib-num=5
 """
-_sample_multiple_section = _sample_single_section + """
+)
+_sample_multiple_section = (
+    _sample_single_section
+    + """
 [THETHIRDJOB]
 gibstr=but they were all of them deceived, for another job was made
 opt-d=8
@@ -61,6 +63,7 @@ iam-bool=True
 arg-two=1 3
 opt-many=1 4.5 -3
 """
+)
 _sample_single_nargs = """
 [DEFAULT]
 foo=3 4
@@ -68,7 +71,6 @@ foo=3 4
 
 
 class TestParser(UnitTestCollection):
-
     def setup_class(self):
         super().setup_class()
         self._no_default_file = self.get_test_path("no-default.ini")
@@ -113,12 +115,12 @@ class TestParser(UnitTestCollection):
 
     def test_job_description(self):
         j = JobDescription(
-            name = "groot",
-            location = "i_am_groot",
-            explicit_args = set(),
-            docfile_content = "",
-            a = 2,
-            a_b = 4,
+            name="groot",
+            location="i_am_groot",
+            explicit_args=set(),
+            docfile_content="",
+            a=2,
+            a_b=4,
         )
         assert j.name == j["name"]
         assert j.a == j["a"]
@@ -155,7 +157,7 @@ class TestParser(UnitTestCollection):
 
     @restore_argv
     def test_name_and_abbrv_handling(self):
-        """ Test that name abbreviation ordering and collisions are handled properly """
+        """Test that name abbreviation ordering and collisions are handled properly"""
         with pytest.raises(ParserError):
             Parser(Argument("arg1", abbrv="a"), Argument("arg2", abbrv="a"))
         with pytest.raises(ParserError):
@@ -173,10 +175,7 @@ class TestParser(UnitTestCollection):
         for ordering in itertools.permutations(range(len(sample_args))):
             p = Parser(*(sample_args[i] for i in ordering))
             args = p._argparser.parse_args()
-            for i, (argname, value) in enumerate(
-                except_keys(vars(args), [_fixdash(x) for x in Parser._reserved_names])
-                    .items()
-            ):
+            for i, (argname, value) in enumerate(except_keys(vars(args), [_fixdash(x) for x in Parser._reserved_names]).items()):
                 arg = sample_args[ordering[i]]
                 assert _fixdash(arg.name) == argname
                 assert arg.default == value
@@ -186,8 +185,8 @@ class TestParser(UnitTestCollection):
             Parser(Argument("a-b"), Flag("a_b"))
 
     def test_parser_properties(self):
-        assert Parser().reserved_names == { "location", "config", "name", "help" }
-        assert Parser().reserved_abbrvs == { "c" }
+        assert Parser().reserved_names == {"location", "config", "name", "help"}
+        assert Parser().reserved_abbrvs == {"c"}
         assert Parser().encoding_seperator == Parser._encoding_separator
 
     @restore_argv
@@ -206,7 +205,7 @@ class TestParser(UnitTestCollection):
         assert job.opt_many == list()
         assert job.opt_default_none is None
         assert job.iam_bool
-        assert job.explicit_args == { "location", "gibstr", "gib_num", "arg_two", "opt_d", "iam_bool" }
+        assert job.explicit_args == {"location", "gibstr", "gib_num", "arg_two", "opt_d", "iam_bool"}
 
     @restore_argv
     def test_conf_single_job(self):
@@ -354,9 +353,7 @@ class TestParser(UnitTestCollection):
         # Test an expected case
         sys.argv = _argv_template + ["--bar", "1", "2"]
         parser = Parser(
-            Argument("bar", nargs=2, type=int),
-            Option("foo", nargs=3, default=["a", "b", "c"]),
-            Option("fizz", nargs=1, default=(1,))
+            Argument("bar", nargs=2, type=int), Option("foo", nargs=3, default=["a", "b", "c"]), Option("fizz", nargs=1, default=(1,))
         )
         assert parser._arguments["fizz"].type is int
 
@@ -376,22 +373,16 @@ class TestParser(UnitTestCollection):
 
         # Test if wrong number of arguments
         sys.argv = _argv_template + ["--bar", "1", "2"]
-        parser = Parser(
-            Argument("bar", nargs=3)
-        )
+        parser = Parser(Argument("bar", nargs=3))
         with pytest.raises(ValueError):
             parser.parse_args()
-        parser = Parser(
-            Option("bar", nargs=3, default=[1, 2, 3])
-        )
+        parser = Parser(Option("bar", nargs=3, default=[1, 2, 3]))
         with pytest.raises(ValueError):
             parser.parse_args()
 
         # Make sure stuff also works if config file is wrong
         sys.argv = _argv_template + ["-c", self._sample_single_nargs_file]
-        parser = Parser(
-            Argument("foo", nargs=3)
-        )
+        parser = Parser(Argument("foo", nargs=3))
         with pytest.raises(ValueError):
             parser.parse_args()
 
