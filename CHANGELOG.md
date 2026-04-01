@@ -3,6 +3,7 @@
 ## 3.6.3
 
 - Exposed `Logger.is_configured`.
+- Removed examples which were largely lackluster and not up-to-date.
 
 ## 3.6.2
 
