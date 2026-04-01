@@ -27,10 +27,12 @@ class TestLogger(UnitTestCollection):
     def setup_class(self):
         super().setup_class()
         self.logfile = Path(self.test_dir) / "test_logging.log"
+        assert not log.is_configured
         log.configure(
             self.logfile,
             print_level=LogLevels.DEBUG,
         )
+        assert log.is_configured
 
     def get_last_line(self) -> str:
         with open(self.logfile) as fh:

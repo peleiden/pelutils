@@ -1,5 +1,9 @@
 # History
 
+## 3.6.3
+
+- Exposed `Logger.is_configured`.
+
 ## 3.6.2
 
 - Correct type hints in `unique`.
