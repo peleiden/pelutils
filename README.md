@@ -1,10 +1,12 @@
 # pelutils
 
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![pytest](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml/badge.svg?branch=master)](https://github.com/peleiden/pelutils/actions/workflows/pytest.yml)
+[![basedpyright](https://img.shields.io/endpoint?url=https://docs.basedpyright.com/latest/badge.json)](https://docs.basedpyright.com)
+[![checks](https://github.com/peleiden/pelutils/actions/workflows/checks.yml/badge.svg?branch=master)](https://github.com/peleiden/pelutils/actions/workflows/checks.yml)
 [![Coverage Status](https://coveralls.io/repos/github/peleiden/pelutils/badge.svg?branch=master)](https://coveralls.io/github/peleiden/pelutils?branch=master)
 [![PyPi](https://img.shields.io/pypi/v/pelutils.svg)](https://pypi.org/project/pelutils/)
 [![Python versions](https://img.shields.io/pypi/pyversions/pelutils)](https://img.shields.io/pypi/pyversions/pelutils)
+[![image](https://img.shields.io/pypi/l/pelutils.svg)](https://github.com/peleiden/pelutils/blob/master/LICENSE.txt)
 
 The Swiss army knife of Python projects.
 
@@ -201,6 +203,21 @@ with mp.Pool() as p:
 # It is also possible to create multiple loggers by importing the Logger class, e.g.
 log2 = Logger()
 log2.configure("path/to/save/log2.log")
+```
+
+# Types
+
+A few different numpy types are defined for the convenience of not having to remember what data types your arrays are - and also to satisfy your nasty type checkers.
+```py
+from pelutils.types import AnyArray, FloatArray, IntArray
+
+
+def function_which_takes_np_types(
+    any_array: AnyArray,  # np.ndarray with arbitrary data type
+    float_array: FloatArray,  # np.ndarray with any floating point data type (e.g. float, np.float16, and np.float64)
+    int_array: IntArray,  # np.ndarray with any integer data type (e.g. int, np.uint8, and np.int32)
+):
+    ...
 ```
 
 # Data Science
