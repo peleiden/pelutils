@@ -12,7 +12,6 @@ class TestJsonl(UnitTestCollection):
         return self.get_test_path("test.jsonl")
 
     def test_jsonl(self):
-
         # Test single block
         with open(self.path, "w") as f:
             jsonl.dump(iter(self.data), f, single_block=True)

@@ -6,12 +6,15 @@ from pathlib import Path
 from typing import TypeVar
 
 import rapidjson
+from deprecated import deprecated
 
 _T = TypeVar("_T", bound="DataStorage")
 
 
 class DataStorage:
-    """The DataStorage class is an augmentation of the dataclass that incluces save and load functionality.
+    """DEPRECATED: Use DataStorage2 instead.
+
+    The DataStorage class is an augmentation of the dataclass that incluces save and load functionality.
 
     DataStorage classes must inherit from DataStorage and be annotated with `@dataclass`. Data will be saved
     to two files: A json files for json-serializable data and a pickle file for everything else. These files
@@ -58,6 +61,7 @@ class DataStorage:
         """Return the name of the pickle file to where non json serializable data will be saved."""
         return (save_name or cls.__name__) + ".pkl"
 
+    @deprecated(version="3.8.0", reason="Use DataStorage2 instead")
     def save(self, loc: str | Path, save_name: str | None = None, *, indent: int | None = 4) -> list[str]:
         """Save all the fields of the instatiated data classes as either json, pickle or designated serialization function.
 
@@ -111,6 +115,7 @@ class DataStorage:
         return paths
 
     @classmethod
+    @deprecated(version="3.8.0", reason="Use DataStorage2 instead")
     def load(cls: type[_T], loc: str | Path, save_name: str | None = None) -> _T:
         """Instantiate the DataStorage-inherited class by loading all files saved by `save` of that same class.
 

@@ -10,7 +10,6 @@ with pytest.warns(DeprecationWarning):
 
 
 def test_unique():
-
     # Simple case: Ordered numbers from 0 to 99
     n = 100
     a = np.arange(n, dtype=np.uint32)

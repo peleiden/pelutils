@@ -1,5 +1,11 @@
 # History
 
+## 3.8.0
+
+- Deprecated `DataStorage`.
+- Added the much superior `DataStorage2`.
+- Added `pretty_json`.
+
 ## 3.7.0
 
 - Made linting and formatting significantly stricter.

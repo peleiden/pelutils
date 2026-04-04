@@ -126,7 +126,6 @@ class TestRotate(UnitTestCollection):
                 freezer.stop()
 
     def test_next_time(self):
-
         for unit in Rotater.supported_time_units:
             for now in start_times:
                 freezer = freeze_time(now)

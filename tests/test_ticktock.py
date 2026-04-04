@@ -169,7 +169,6 @@ def test_reset():
 
 
 def test_profiles_with_same_name():
-
     tt = TickTock()
 
     with tt.profile("a"):
