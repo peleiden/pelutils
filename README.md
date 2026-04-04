@@ -11,14 +11,14 @@
 The Swiss army knife of Python projects.
 
 - A simple and powerful logger with colourful printing, stacktraces, and log file rotation.
-- Parsing for combining config files and command-line arguments - especially useful developing algorithms with many parameters.
-- A timer inspired by Matlab's `tic` and `toc`.
-- Simple, near-zero cost performance profiler.
-- An extension to the built-in `dataclass` for saving and loading data.
+- Argument parser which supports both command line arguments and config files and has baked-in auto-documentation.
+- A simple timer inspired by Matlab's `tic` and `toc`.
+- Easy-to-use, near-zero cost performance profiler.
+- An extension to `pydantic.BaseModel` with support for saving any data structure to, and loading from, a human-readable JSON file.
 - Table formatting with built-in LaTeX support.
 - Miscellaneous standalone functions - see `pelutils/__init__.py`.
 - Data-science submodule with extra utilities for statistics, plotting with `matplotlib`, and machine learning using `PyTorch`.
-- `unique` function in the style of `numpy.unique` which runs in linear time, making it significantly.
+- `unique` function in the style of `numpy.unique` which runs in linear time, making it significantly faster for large arrays.
 
 `pelutils` supports Python 3.9+.
 
@@ -95,8 +95,6 @@ based = BasedClass(
     array=np.arange(5, dtype=np.float16),
     baseder=BasederClass(based_string="Hello there")
 )
-# Save it to a file
-based.save(".")
 # Save it to a file
 based.save("directory/to/save/in")
 
@@ -355,7 +353,9 @@ Examples of all the plotting utilities are shown in the `examples` directory.
 
 Precompiled wheels are provided for most common platforms.
 Notably, they are not provided for 32-bit systems.
-If no wheel is provided, `pip` should attempt a source install.
+If no wheel is provided, `pip` should attempt a source install - this requires `<Python.h>` to be available.
+On Ubuntu, this can be installed with `sudo apt install python3-dev`, and on Fedora, it is installed with `sudo dnf install python3-devel`.
+
 If all else fails, it is possible to install from source by pointing `pip` to Github directly:
 ```
 pip install git+https://github.com/peleiden/pelutils.git@release#egg=pelutils
