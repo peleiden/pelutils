@@ -20,6 +20,7 @@ requirements = [
     "scipy>=1.6",
     "tqdm>=4.55",
     "deprecated>=1.2",
+    "pydantic>=2",
 ]
 requirements_dev = [
     "torch>=2",
@@ -32,6 +33,7 @@ requirements_dev = [
     "ruff==0.15.8",
     "basedpyright==1.39.0",
     "freezegun>=1.5",
+    "pandas>=2.3",
 ]
 
 with open("README.md") as readme_file:

@@ -10,7 +10,6 @@ from pelutils import OS
 
 @pytest.mark.skipif(OS.is_windows, reason="This test does spooky shit that scares Windows")
 def test_get_c_array_args():
-
     for dtype in int, float, np.float16, np.int32:
         shape = (2, 4, 3)
         np_arr = np.empty(shape, dtype=dtype)
