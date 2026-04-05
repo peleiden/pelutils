@@ -48,7 +48,9 @@ class CExtension(Extension):
     """See this thread for details: https://stackoverflow.com/a/34830639/13196863."""
 
 
-class build(build_):  # noqa: D101
+class build(build_):
+    """Extension of normal build class which handles C extensions."""
+
     def build_extension(self, ext):  # noqa: D102
         self._ctypes = isinstance(ext, CExtension)
         return super().build_extension(ext)
@@ -71,7 +73,8 @@ setup_args = dict(
     long_description_content_type="text/markdown",
     long_description=README,
     license="MIT",
-    packages=find_packages(),
+    packages=find_packages(exclude=("tests", "tests.*")),
+    package_data={"pelutils": ["py.typed"]},
     author="Asger Laurits Schultz, Søren Winkel Holm",
     author_email="asger.s@protonmail.com, swholm@protonmail.com",
     keywords=["utility", "logger", "parser", "profiling", "plotting"],

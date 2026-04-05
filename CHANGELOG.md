@@ -1,5 +1,11 @@
 # History
 
+## 3.8.1
+
+- Update README with better examples.
+- Do not include unit tests in distribution.
+- Add `py.typed`.
+
 ## 3.8.0
 
 - Deprecated `DataStorage`.
