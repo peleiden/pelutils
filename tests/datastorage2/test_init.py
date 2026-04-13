@@ -1,3 +1,5 @@
+from datetime import date
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -26,6 +28,7 @@ class Collection(DataStorage2):
 class WhackStorage(DataStorage2):
     """Whack struct with lots of nested non-native data types."""
 
+    date: date
     np_arr: FloatArray
     tensor: torch.Tensor
     df: pd.DataFrame
@@ -33,6 +36,7 @@ class WhackStorage(DataStorage2):
 
 
 data = WhackStorage(
+    date=date(2026, 1, 1),
     np_arr=np.arange(5, dtype=np.float16),
     tensor=torch.ones(5),
     df=pd.DataFrame({"col1": [1, 2, 3], "col": np.arange(3)}),
@@ -53,11 +57,13 @@ data = WhackStorage(
 class TestDataStorage2(UnitTestCollection):
     def test_save_load(self):
         # Test save and load with custom file name
-        data.save(self.test_dir, filename="bollocks")
+        save_path = data.save(self.test_dir, filename="bollocks")
+        assert '"date": "2026-01-01"' in save_path.read_text()  # Ensure that dates get serialised to strings
         WhackStorage.load(self.test_dir, filename="bollocks")
         # Set save and load with default file name
         data.save(self.test_dir)
         loaded = WhackStorage.load(self.test_dir)
+        assert data.date == loaded.date
         assert (data.np_arr == loaded.np_arr).all()
         assert data.np_arr.dtype == loaded.np_arr.dtype
         assert (data.tensor == loaded.tensor).all()

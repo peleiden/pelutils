@@ -6,13 +6,13 @@ from typing import TypeVar
 
 from pydantic import BaseModel, ConfigDict
 
-from pelutils.datastorage2._pretty_json import _make_json_unsafe, _pretty_json  # pyright: ignore[reportPrivateUsage]
+from pelutils.datastorage2._pretty_json import _make_json_unsafe, _pickle_encode, _pretty_json  # pyright: ignore[reportPrivateUsage]
 
 _T = TypeVar("_T", bound="DataStorage2")
 
 
 class DataStorage2(BaseModel):
-    """Better version of DataStorage based on pydantic.
+    """Better version of DataStorage based on pydantic. It makes any class fully JSON serialisable.
 
     Usage is very similar to DataStorage, but it has a few key advantages:
     - Allows saving and loading of nested objects.
@@ -38,12 +38,14 @@ class DataStorage2(BaseModel):
         If save_name is None, the path is <directory>/<class name>.json, otherwise it is <directory>/<save_name>.json.
         """
         savepath = self._resolve_save_file(directory, filename)
-        self_dict = self.model_dump()
+        self_dict = self.model_dump(mode="json", fallback=_pickle_encode)
         savepath.write_text(
             _pretty_json(
                 self_dict,
                 max_line_length=max_line_length,
                 indent=indent,
+                # Safe should not be needed here, as the fallback function in model_dump should ensure no issues
+                # However, it is kept for good measure in case there unforeseen edge cases
                 safe=True,
             ),
             encoding=encoding,

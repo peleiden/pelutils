@@ -1,5 +1,9 @@
 # History
 
+## 3.8.2
+
+- Serialise more types to human-readable strings with `DataStorage2`.
+
 ## 3.8.1
 
 - Update README with better examples.
