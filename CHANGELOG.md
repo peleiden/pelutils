@@ -3,6 +3,7 @@
 ## 3.8.2
 
 - Serialise more types to human-readable strings with `DataStorage2`.
+- Correct type hints in `Logger`.
 
 ## 3.8.1
 

@@ -4,7 +4,7 @@ import os
 import traceback as tb
 from collections.abc import Generator, Iterable
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from pelutils import OS, UnsupportedOS, get_repo, get_timestamp
 from pelutils.format import RichString
@@ -135,7 +135,7 @@ class Logger:
 
     def _log(
         self,
-        *tolog: str,
+        *tolog: Any,  # pyright: ignore[reportExplicitAny]
         level: LogLevels = LogLevels.INFO,
         with_info: bool = True,
         sep: str | None = None,
@@ -276,34 +276,39 @@ class Logger:
             raise UnsupportedOS("Log collecting is not supported on windows")
         return _CollectLogs(self)
 
-    def section(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None, newline: bool = True):
+    def section(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None, newline: bool = True):  # pyright: ignore[reportExplicitAny]
         """Log at SECTION level. See .log method for argument descriptions."""
         if newline:
             self._log("")
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.SECTION)
 
-    def critical(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):
+    def critical(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):  # pyright: ignore[reportExplicitAny]
         """Log at CRITICAL level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.CRITICAL)
 
-    def error(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):
+    def error(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):  # pyright: ignore[reportExplicitAny]
         """Log at ERROR level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.ERROR)
 
-    def warning(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):
+    def warning(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):  # pyright: ignore[reportExplicitAny]
         """Log at WARNING level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.WARNING)
 
-    def info(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):
+    def info(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):  # pyright: ignore[reportExplicitAny]
         """Log at INFO level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.INFO)
 
-    def debug(self, *tolog: str, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):
+    def debug(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):  # pyright: ignore[reportExplicitAny]
         """Log at DEBUG level. See .log method for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.DEBUG)
 
     def __call__(
-        self, *tolog: str, level: LogLevels = LogLevels.INFO, with_info: bool = True, sep: str | None = None, with_print: bool | None = None
+        self,
+        *tolog: Any,  # pyright: ignore[reportExplicitAny]
+        level: LogLevels = LogLevels.INFO,
+        with_info: bool = True,
+        sep: str | None = None,
+        with_print: bool | None = None,
     ):
         """Shorthand for specific logging methods where level is specified as an argument."""
         self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
