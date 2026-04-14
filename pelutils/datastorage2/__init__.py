@@ -35,9 +35,10 @@ class DataStorage2(BaseModel):
     ) -> Path:
         """Save the instance to a json file in the directory. The path to the file is returned.
 
-        If save_name is None, the path is <directory>/<class name>.json, otherwise it is <directory>/<save_name>.json.
+        If save_name is None, the path is <directory>/<class name>.json, otherwise it is <directory>/<filename>.json.
         """
         savepath = self._resolve_save_file(directory, filename)
+        savepath.parent.mkdir(parents=True, exist_ok=True)
         self_dict = self.model_dump(mode="json", fallback=_pickle_encode)
         savepath.write_text(
             _pretty_json(
