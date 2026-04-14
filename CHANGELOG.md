@@ -1,5 +1,9 @@
 # History
 
+## 3.8.3
+
+- `DataStorage2.save(...)` now automatically creates subfolders as needed.
+
 ## 3.8.2
 
 - Serialise more types to human-readable strings with `DataStorage2`.
