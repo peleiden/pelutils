@@ -65,15 +65,17 @@ while True:
 
 ## Data Serialisation
 
-The `DataStorage2` class is an extension of `pydantic.BaseModel` that incluces save and load functionality.
-It supports any data type, storing all data to a pretty JSON file. A class should simply inherit from
-`DataStorage2`. The stored JSON will be a dictionary-like structure with the whole nested structure.
-Any nested `BaseModel` is automatically converted to a dictionary. If a data type is reached which is not
-JSON serialisable (e.g. normal classes, pandas DataFramas, numpy arrays), they are encoded with `pickle`
-and `base64`. Inside the JSON file, a record is kept of the original type.
+The `DataStorage2` class is an extension of `pydantic.BaseModel` which adds convenient `safe` and `load` methods for trivial saving to and loading from JSON files.
+It can serialise *any* attribute on the model to JSON by pickling types which `pydantic` cannot natively serialise.
+To get use it, simply inherit from `DataStorage2`, like you would inherit from `BaseModel`.
 
-Very long lists utilise the full allowed line length before splitting, preventing the common JSON issue of
-having either very long lines (no indents) or excessively many lines with a single element on each.
+The produced JSON files take advantage of `pelutils.pretty_json(...)` to ensure good and human-readable formatting, almost no matter the data types.
+Very long lists utilise the full allowed line length before splitting.
+This prevents the common JSON issue of having either very long lines (no indents) or excessively many lines with a single, small element on each.
+
+It is possible to get only the serialised JSON objects as dicts instead of saving them directly to a file with the `DataStorage2.model_safe_dump()` method.
+This is practical if you want to nest the objects into another dict or list.
+`DataStorage2.model_safe_load(...)` does the inverse operation by creating a class instance from a JSON-serialised dict.
 
 Because the class inherits from `pydantic.BaseModel`, type checking is built directly into it.
 
@@ -129,7 +131,6 @@ This will produce `directory/to/save/in/BasedClass.json` with the following cont
   "baseder": {"based_string": "Hello there"}
 }
 ```
-The class is built on top of the also provided `pretty_json` which does the exact same as the built-in `json.dumps` but with prettier formatting of the JSON string.
 
 ## Config and Command-line Argument Parsing
 

@@ -1,5 +1,9 @@
 # History
 
+## 3.8.4
+
+- Add `DataStorage2.model_safe_dump` and `DataStorage2.model_safe_load`.
+
 ## 3.8.3
 
 - `DataStorage2.save(...)` now automatically creates subfolders as needed.

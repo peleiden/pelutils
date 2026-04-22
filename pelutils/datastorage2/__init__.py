@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from pydantic import BaseModel, ConfigDict
 
@@ -24,6 +24,19 @@ class DataStorage2(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+    def model_safe_dump(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
+        """Dump the model as a dictionary where pickled objects have been converted to b64 strings.
+
+        This is very similar to `self.model_dump(mode="json")` but it handles non-JSON-serialisable types.
+        """
+        return self.model_dump(mode="json", fallback=_pickle_encode)
+
+    @classmethod
+    def model_safe_load(cls: type[_T], safe_json: dict[str, Any]) -> _T:  # pyright: ignore[reportExplicitAny]
+        """Build an instance from a safe JSON. This method is the inverse of `model_safe_dump`."""
+        self_dict = _make_json_unsafe(safe_json)
+        return cls.model_validate(self_dict)
+
     @classmethod
     def _resolve_save_file(cls, directory: str | Path, filename: str | None = None) -> Path:
         if filename is None:
@@ -39,10 +52,9 @@ class DataStorage2(BaseModel):
         """
         savepath = self._resolve_save_file(directory, filename)
         savepath.parent.mkdir(parents=True, exist_ok=True)
-        self_dict = self.model_dump(mode="json", fallback=_pickle_encode)
         savepath.write_text(
             _pretty_json(
-                self_dict,
+                self.model_safe_dump(),
                 max_line_length=max_line_length,
                 indent=indent,
                 # Safe should not be needed here, as the fallback function in model_dump should ensure no issues
@@ -59,5 +71,4 @@ class DataStorage2(BaseModel):
         savepath = cls._resolve_save_file(directory, filename)
         with savepath.open(encoding=encoding) as f:
             self_dict = json.load(f)
-        self_dict = _make_json_unsafe(self_dict)
-        return cls.model_validate(self_dict)
+        return cls.model_safe_load(self_dict)
