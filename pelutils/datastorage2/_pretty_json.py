@@ -9,6 +9,13 @@ import json
 import pickle
 from typing import Any
 
+try:
+    import torch
+
+    _has_torch = True
+except ModuleNotFoundError:
+    _has_torch = False
+
 # Sentinel prefix so consumers can detect pickled blobs.
 _PICKLE_PREFIX = "__pickled_b64__"
 
@@ -45,6 +52,10 @@ def _get_qualified_type_name(obj: object) -> str:
 
 def _pickle_encode(value: object) -> str:
     """Pickle *value*, base64-encode the bytes, and return a prefixed string."""
+    if _has_torch and isinstance(value, torch.Tensor):  # pyright: ignore[reportPossiblyUnboundVariable]
+        # If a view of torch Tensor is given, the whole tensor is pickled, not just the view
+        # Therefore, it is cloned first to ensure that only the view itself is pickled
+        value = value.clone()
     raw = pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
     encoded = base64.b64encode(raw).decode("ascii")
     return f"{_PICKLE_PREFIX}:{_get_qualified_type_name(value)}:{encoded}"
