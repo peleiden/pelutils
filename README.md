@@ -250,7 +250,7 @@ log2.configure("path/to/save/log2.log")
 
 A few different numpy types are defined for the convenience of not having to remember what data types your arrays are - and also to satisfy your nasty type checkers.
 ```py
-from pelutils.types import AnyArray, FloatArray, IntArray
+from pelutils.types import AnyArray, BoolArray, ComplexArray, FloatArray, IntArray
 
 
 def function_which_takes_np_types(

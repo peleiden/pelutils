@@ -1,5 +1,9 @@
 # History
 
+## 3.8.5
+
+- Add `BoolArray` and `ComplexArray` numpy array types.
+
 ## 3.8.4
 
 - Add `DataStorage2.model_safe_dump` and `DataStorage2.model_safe_load`.
