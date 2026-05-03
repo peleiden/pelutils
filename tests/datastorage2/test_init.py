@@ -39,7 +39,7 @@ class WhackStorage(DataStorage2):
 data = WhackStorage(
     date=date(2026, 1, 1),
     np_arr=np.arange(5, dtype=np.float16),
-    tensor=torch.ones(5),
+    tensor=torch.ones(50)[::3],
     df=pd.DataFrame({"col1": [1, 2, 3], "col": np.arange(3)}),
     collection=Collection(
         string="Hello There",

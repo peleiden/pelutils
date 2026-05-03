@@ -24,7 +24,6 @@ import numpy as np
 import psutil
 
 try:
-    # torch is only to be installed if pelutils[ds] has been installed
     import torch
 
     _has_torch = True

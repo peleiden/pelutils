@@ -3,6 +3,7 @@
 ## 3.8.5
 
 - Add `BoolArray` and `ComplexArray` numpy array types.
+- Fix bug where views of `torch` tensors got pickled in full with `DataStorage2.model_safe_dump`, not just the view.
 
 ## 3.8.4
 
