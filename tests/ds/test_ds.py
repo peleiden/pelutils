@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 import torch
 
@@ -9,13 +10,14 @@ with pytest.warns(DeprecationWarning):
     set_seeds(sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀"))
 
 
-def test_unique():
+def test_unique():  # noqa: PLR0915
     # Simple case: Ordered numbers from 0 to 99
     n = 100
     a = np.arange(n, dtype=np.uint32)
     u = unique(a)
     assert np.all(a == u)
     u, index, inverse, counts = unique(a, return_index=True, return_inverse=True, return_counts=True)
+    assert a.dtype == u.dtype
     assert isinstance(u, np.ndarray)
     assert isinstance(index, np.ndarray)
     assert isinstance(inverse, np.ndarray)
@@ -28,6 +30,7 @@ def test_unique():
     # Test torch support
     a_t = torch.from_numpy(a)
     u_t, index_t, inverse_t, counts_t = unique(a_t, return_index=True, return_inverse=True, return_counts=True)
+    assert a_t.dtype == u_t.dtype
     assert isinstance(u_t, torch.Tensor)
     assert isinstance(index_t, torch.Tensor)
     assert isinstance(inverse_t, torch.Tensor)
@@ -43,6 +46,7 @@ def test_unique():
     a[[5, 16, 3]] = 69
     a = a.astype(np.float16)
     u, index, inverse, counts = unique(a, return_index=True, return_inverse=True, return_counts=True)
+    assert a.dtype == u.dtype
     argsort = np.argsort(u)
     npu, npindex, npcounts = np.unique(a, return_index=True, return_counts=True)
     assert np.all(u[argsort] == npu)
@@ -66,6 +70,14 @@ def test_unique():
     # Check error handling
     with pytest.raises(ValueError):
         unique(np.array([]))
+
+    df = pd.DataFrame({"a": np.array([1, 2, 3, 1], dtype=np.float16)})
+    with pytest.raises(TypeError):
+        unique(df)
+    u, c = unique(df.a, return_counts=True)
+    assert df.a.dtype == u.dtype
+    assert len(u) == 3
+    assert c.sum() == len(df)
 
 
 def _test_tensor_size(shape: list[int]):

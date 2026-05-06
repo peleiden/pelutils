@@ -1,5 +1,11 @@
 # History
 
+## 3.8.6
+
+- Made `unique` importable directly importable from `pelutils`.
+- Made `unique` support `pandas.Series` objects.
+- Fixed bug where importing `pelutils.ds` without having torch installed would cause an import error.
+
 ## 3.8.5
 
 - Add `BoolArray` and `ComplexArray` numpy array types.
