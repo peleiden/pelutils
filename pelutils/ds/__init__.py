@@ -5,7 +5,8 @@ from typing import TypeVar, Union, cast
 
 import numpy as np
 
-from pelutils.types import AnyArray, FloatArray, IntArray
+from pelutils._utils import isinstance_by_name
+from pelutils.types import AnyArray, BoolArray, FloatArray, IntArray
 
 try:
     import torch
@@ -18,29 +19,34 @@ import _pelutils_c as _c
 
 import pelutils._c as _c_utils
 
-ArrayOrTensor = TypeVar("ArrayOrTensor", bound=Union[AnyArray, torch.Tensor])
+ArrayOrTensor = Union["BoolArray | FloatArray | IntArray | torch.Tensor"]
 
 
-def unique(
-    array: ArrayOrTensor,
+def unique(  # noqa: PLR0912
+    array: ...,
     *,
     return_index: bool = False,
     return_inverse: bool = False,
     return_counts: bool = False,
     axis: int = 0,
 ) -> ArrayOrTensor | tuple[ArrayOrTensor, ...]:
-    """Similar to np.unique, but in linear time and returns unsorted."""
-    if not array.size:
-        raise ValueError("Array must be non-empty")
-
+    """Similar to np.unique, but in linear time and returns unsorted. Also supports torch.Tensor and pandas Series."""
     is_tensor = False
     if _has_torch and isinstance(array, torch.Tensor):  # pyright: ignore[reportPossiblyUnboundVariable]
         is_tensor = True
         np_array = array.numpy()
-    else:
+    elif isinstance_by_name(array, "pandas", "Series"):
+        np_array = array.values
+    elif isinstance(array, np.ndarray):
         np_array = array
+    else:
+        raise TypeError(f"Unsupported array type {type(array)}, must be numpy array, torch tensor, or pandas dataframe.")
+
     np_array = cast(AnyArray, np_array)
     del array  # Prevent reuse - underlying tensor already referenced by np_array, which should be used from here
+
+    if not np_array.size:
+        raise ValueError("Array must be non-empty")
 
     if axis:
         axes = list(range(len(np_array.shape)))
@@ -82,7 +88,7 @@ def unique(
     if _has_torch and is_tensor:
         ret = [torch.from_numpy(x) for x in ret]  # pyright: ignore[reportPossiblyUnboundVariable]
 
-    return tuple(ret) if len(ret) > 1 else ret[0]  # pyright: ignore[reportReturnType]
+    return tuple(ret) if len(ret) > 1 else ret[0]
 
 
 def tensor_bytes(x: AnyArray | torch.Tensor) -> int:
