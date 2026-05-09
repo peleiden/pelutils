@@ -67,9 +67,9 @@ def test_unique():  # noqa: PLR0915
         assert np.all(a == u[(*[slice(None)] * axis, inverse)])
         assert np.all(np.sort(counts) == np.sort(npcounts))
 
-    # Check error handling
-    with pytest.raises(ValueError):
-        unique(np.array([]))
+    u, index, inverse, counts = unique(np.array([]), return_index=True, return_inverse=True, return_counts=True)
+    assert u.dtype == np.array([]).dtype
+    assert len(u) == len(index) == len(inverse) == len(counts) == 0
 
     df = pd.DataFrame({"a": np.array([1, 2, 3, 1], dtype=np.float16)})
     with pytest.raises(TypeError):
@@ -78,6 +78,14 @@ def test_unique():  # noqa: PLR0915
     assert df.a.dtype == u.dtype
     assert len(u) == 3
     assert c.sum() == len(df)
+
+    # Check error handling
+    with pytest.raises(TypeError):
+        unique(np.array([str, "", 1, 2, object, object()]))
+    with pytest.raises(TypeError):
+        unique(np.array(str))
+    with pytest.raises(ValueError):
+        unique(torch.tensor(5))
 
 
 def _test_tensor_size(shape: list[int]):

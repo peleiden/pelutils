@@ -6,7 +6,7 @@ from typing import TypeVar, Union, cast
 import numpy as np
 
 from pelutils._utils import isinstance_by_name
-from pelutils.types import AnyArray, BoolArray, FloatArray, IntArray
+from pelutils.types import AnyArray, BoolArray, BytesArray, FloatArray, IntArray, StringArray
 
 try:
     import torch
@@ -19,7 +19,7 @@ import _pelutils_c as _c
 
 import pelutils._c as _c_utils
 
-ArrayOrTensor = Union["BoolArray | FloatArray | IntArray | torch.Tensor"]
+ArrayOrTensor = Union["BoolArray | BytesArray | FloatArray | IntArray | StringArray | torch.Tensor"]
 
 
 def unique(  # noqa: PLR0912
@@ -30,7 +30,11 @@ def unique(  # noqa: PLR0912
     return_counts: bool = False,
     axis: int = 0,
 ) -> ArrayOrTensor | tuple[ArrayOrTensor, ...]:
-    """Similar to np.unique, but in linear time and returns unsorted. Also supports torch.Tensor and pandas Series."""
+    """Return unique elements in a given numpy array (or torch tensor or pandas series).
+
+    This function works very similar to np.unique, but it runs in linear time, making it significantly faster
+    for large arrays. The returned unique elements are unsorted, however.
+    """
     is_tensor = False
     if _has_torch and isinstance(array, torch.Tensor):  # pyright: ignore[reportPossiblyUnboundVariable]
         is_tensor = True
@@ -38,15 +42,17 @@ def unique(  # noqa: PLR0912
     elif isinstance_by_name(array, "pandas", "Series"):
         np_array = array.values
     elif isinstance(array, np.ndarray):
+        if np.issubdtype(array.dtype, np.object_):
+            raise TypeError(f"Unsupported array dtype {array.dtype}")
         np_array = array
     else:
         raise TypeError(f"Unsupported array type {type(array)}, must be numpy array, torch tensor, or pandas dataframe.")
 
+    if np_array.ndim == 0:
+        raise ValueError("unique does not work for shape-less arrays")
+
     np_array = cast(AnyArray, np_array)
     del array  # Prevent reuse - underlying tensor already referenced by np_array, which should be used from here
-
-    if not np_array.size:
-        raise ValueError("Array must be non-empty")
 
     if axis:
         axes = list(range(len(np_array.shape)))
