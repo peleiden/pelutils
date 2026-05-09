@@ -5,6 +5,7 @@
 - Make `unique` importable directly importable from `pelutils`.
 - Make `unique` support `pandas.Series` objects.
 - Make `unique` support zero-size arrays.
+- Officially support numpy arrays of string and bytes in `unique`.
 - Better error handling in `unique`.
 - Fix bug where importing `pelutils.ds` without having torch installed would cause an import error.
 - Add `BytesArray`, `ObjectArray`, and `StringArray` to `pelutils.types`.

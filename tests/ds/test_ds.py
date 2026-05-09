@@ -67,6 +67,19 @@ def test_unique():  # noqa: PLR0915
         assert np.all(a == u[(*[slice(None)] * axis, inverse)])
         assert np.all(np.sort(counts) == np.sort(npcounts))
 
+    int_array = np.array([1, 2, 3, 1, 0, 2, 3, 1, 2, 101, 10, 10, 101, 101, 1, 1, 3, 2, 1])
+    bytes_array = np.array([x.item().to_bytes(x, "big") for x in int_array])
+    str_array = np.array([str(x) for x in int_array])
+    iu, iidx, iinv, ic = unique(int_array, return_index=True, return_inverse=True, return_counts=True)
+    bu, bidx, binv, bc = unique(bytes_array, return_index=True, return_inverse=True, return_counts=True)
+    su, sidx, sinv, sc = unique(str_array, return_index=True, return_inverse=True, return_counts=True)
+    assert len(iu) == len(bu) == len(su)
+    assert (iu == np.array([int(x) for x in su])).all()
+    assert (iu == np.array([int.from_bytes(b, "big") for b in bu])).all()
+    assert (iidx == bidx).all() and (iidx == sidx).all()
+    assert (iinv == binv).all() and (iinv == sinv).all()
+    assert (ic == bc).all() and (ic == sc).all()
+
     u, index, inverse, counts = unique(np.array([]), return_index=True, return_inverse=True, return_counts=True)
     assert u.dtype == np.array([]).dtype
     assert len(u) == len(index) == len(inverse) == len(counts) == 0
