@@ -2,9 +2,10 @@
 
 ## 3.8.6
 
-- Made `unique` importable directly importable from `pelutils`.
-- Made `unique` support `pandas.Series` objects.
-- Fixed bug where importing `pelutils.ds` without having torch installed would cause an import error.
+- Make `unique` importable directly importable from `pelutils`.
+- Make `unique` support `pandas.Series` objects.
+- Fix bug where importing `pelutils.ds` without having torch installed would cause an import error.
+- Add `BytesArray`, `ObjectArray`, and `StringArray` to `pelutils.types`.
 
 ## 3.8.5
 
