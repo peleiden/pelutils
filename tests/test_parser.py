@@ -9,7 +9,10 @@ import sys
 import pytest
 
 from pelutils import except_keys
-from pelutils.parser import Argument, ConfigError, Flag, JobDescription, Option, Parser, ParserError, _fixdash
+from pelutils.parser import ConfigError, Flag, JobDescription, ParserError, _fixdash
+from pelutils.parser import JobParser as Parser
+from pelutils.parser import MandatoryArg as Argument
+from pelutils.parser import OptionalArg as Option
 from pelutils.tests import UnitTestCollection, restore_argv
 
 _testdir = "parser_test"
