@@ -33,11 +33,11 @@ def _fixdash(argname: str) -> str:
 
 
 class ParserError(Exception):
-    """Raised when unable to parse arguments."""
+    """Raised when command-line or configuration input is invalid."""
 
 
 class ConfigError(ParserError):
-    """Config file related errors."""
+    """Raised when a configuration file cannot be resolved into the requested jobs."""
 
 
 class _AbstractArgument(ABC):  # noqa: B024
@@ -89,7 +89,28 @@ class _AbstractArgument(ABC):  # noqa: B024
 
 
 class RequiredArg(_AbstractArgument):
-    """Command-line argument that must be given a value."""
+    """Declare a command-line argument which every job must provide.
+
+    Values can be supplied by a command-line option or an INI configuration field.
+    The argument is exposed as ``--<name>`` and, when possible, receives an automatic
+    single-letter abbreviation.
+
+    Parameters
+    ----------
+    name : str
+        Long option name without leading dashes. Dashes are converted to underscores
+        in the resulting :class:`JobDescription` attribute.
+    type : Callable[[str], _T], optional
+        Function used to convert command-line and configuration values.
+    abbrev : str | None, optional
+        Optional single-letter short option, without its leading dash.
+    help : str | None, optional
+        Help text shown by ``--help``.
+    metavar : str | tuple[str, ...] | None, optional
+        Value label displayed in command-line help.
+    nargs : int | None, optional
+        Exact number of values required. Set to ``0`` to accept any number of values.
+    """
 
     def __init__(  # noqa: PLR0913
         self,
@@ -112,7 +133,28 @@ class RequiredArg(_AbstractArgument):
 
 
 class OptionalArg(_AbstractArgument):
-    """Optional command-line argument with a default value."""
+    """Declare a command-line argument with a default value.
+
+    The value type is inferred from ``default`` when ``type`` is omitted. For list
+    values, provide ``nargs`` and ensure every default item has the same type.
+
+    Parameters
+    ----------
+    name : str
+        Long option name without leading dashes.
+    default : _T | None, optional
+        Value used when the option is absent from both the CLI and configuration.
+    type : Callable[[str], _T] | None, optional
+        Function used to convert supplied values. Inferred from ``default`` when omitted.
+    abbrev : str | None, optional
+        Optional single-letter short option, without its leading dash.
+    help : str | None, optional
+        Help text shown by ``--help``.
+    metavar : str | tuple[str, ...] | None, optional
+        Value label displayed in command-line help.
+    nargs : int | None, optional
+        Exact number of values required. Set to ``0`` to accept any number of values.
+    """
 
     def __init__(  # noqa: PLR0913
         self,
@@ -145,7 +187,20 @@ class OptionalArg(_AbstractArgument):
 
 
 class Flag(_AbstractArgument):
-    """Boolean flag. Defaults to `False` when not given and `True` when given."""
+    """Declare a boolean command-line flag.
+
+    A flag defaults to ``False`` and becomes ``True`` when supplied on the CLI. INI
+    files may use a bare key for ``True`` or an explicit ``True``/``False`` value.
+
+    Parameters
+    ----------
+    name : str
+        Long option name without leading dashes.
+    abbrev : str | None, optional
+        Optional single-letter short option, without its leading dash.
+    help : str | None, optional
+        Help text shown by ``--help``.
+    """
 
     def __init__(
         self,
@@ -164,9 +219,12 @@ class Flag(_AbstractArgument):
 
 
 class JobDescription(Namespace):
-    """Namespace containing the values of all defined parameters parsed from the command line and config file if given.
+    """Values resolved for one job by :class:`JobParser`.
 
-    Functionally, it is very similar to Namespace from argpase.
+    Parsed values are available as attributes and through ``job["option-name"]``;
+    dash-separated and underscore-separated keys are interchangeable. ``name`` is
+    derived from a configuration section, an explicit ``--name``, or a timestamp.
+    ``explicit_args`` records values supplied by the configuration or CLI.
     """
 
     def __init__(self, name: str, explicit_args: set[str], docfile_content: str, **kwargs: Any):  # pyright: ignore[reportExplicitAny]
@@ -176,16 +234,19 @@ class JobDescription(Namespace):
         self._docfile_content = docfile_content
 
     def given_args_to_dict(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
-        """Return a dictionary version of itself which contains solely explicitly parsed arguments - that is non-default arguments."""
+        """Return the resolved public job values as a dictionary.
+
+        Parser bookkeeping and private attributes are not included in the result.
+        """
         d = vars(self)
         d = {kw: v for kw, v in d.items() if not kw.startswith("_") and kw not in {"config", "explicit_args"}}
         return d
 
     def write_documentation(self, path: str | Path, *, append: bool = True):
-        """Write documentation to a given file path.
+        """Write the resolved invocation and configuration to ``path``.
 
-        The documentation includes the CLI command given by the user for running the program as a comment as well as the config file,
-        if such a one was used.
+        Parent directories are created automatically. Set ``append=False`` to replace
+        an existing file; by default, documentation is appended.
         """
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -210,7 +271,16 @@ ArgumentTypes = Union[RequiredArg, OptionalArg, Flag]
 
 
 class JobParser:
-    """Parse command-line arguments and configuration files into job descriptions."""
+    """Resolve typed command-line arguments and INI configuration files into jobs.
+
+    Declare values with :class:`RequiredArg`, :class:`OptionalArg`, and :class:`Flag`.
+    Values supplied on the command line override configuration values, which override
+    optional defaults. A configuration file may contain a ``[DEFAULT]`` section and
+    named sections; named sections become individual jobs.
+
+    Use :meth:`parse_job` when exactly one job is expected. Set ``multiple_jobs=True``
+    and use :meth:`parse_jobs` when a configuration can select multiple named sections.
+    """
 
     _default_config_job = "DEFAULT"
 
@@ -244,6 +314,18 @@ class JobParser:
         description: str | None = None,
         multiple_jobs: bool = False,
     ):
+        """Create a parser from typed argument declarations.
+
+        Parameters
+        ----------
+        *arguments : RequiredArg | OptionalArg | Flag
+            Application-specific argument declarations.
+        description : str | None, optional
+            Description displayed by the generated ``--help`` command.
+        multiple_jobs : bool, optional
+            Allow configurations with multiple named sections. Use :meth:`parse_jobs`
+            to retrieve their job descriptions.
+        """
         # Modifications are made to the argument objects, so make a deep copy
         arguments = tuple(deepcopy(arg) for arg in arguments)
 
@@ -485,7 +567,11 @@ class JobParser:
         return job_descriptions
 
     def parse_job(self) -> JobDescription:
-        """Parse command line and/or config file arguments into exactly one job description. Use for multiple_jobs = False (default).
+        """Parse command-line and configuration input into exactly one job.
+
+        Use this method for a normal one-job invocation. It also works with a selected
+        single section when ``multiple_jobs=True``. Command-line values take precedence
+        over configuration values.
 
         Raises
         ------
@@ -498,7 +584,11 @@ class JobParser:
         return jobs[0]
 
     def parse_jobs(self) -> list[JobDescription]:
-        """Parse command line and/or config file arguments into one or more job descriptions. Use for multiple_jobs = True."""
+        """Parse command-line and configuration input into one or more jobs.
+
+        This method requires ``multiple_jobs=True`` when the configuration resolves to
+        multiple named sections. A command-line-only invocation returns a one-item list.
+        """
         return self._parse_jobs()
 
     def _get_docfile_content(self) -> str:

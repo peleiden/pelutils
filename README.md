@@ -134,57 +134,62 @@ This will produce `directory/to/save/in/BasedClass.json` with the following cont
 
 ## Config and Command-line Argument Parsing
 
-Python has built-in support for both config files (the `ArgumentParser` and `ConfigParser`, respectively), but nothing for parsing both.
-The Pelutils `Parser` supports both, while also allowing for much stricter checking of types and presence of arguments.
-It is useful for any application relying on config files where one may want to overwrite certain arguments from the command-line.
-It's prime usecase, though, is for development of parametric algorithms, such as machine learning engineering.
+`JobParser` combines typed command-line options with INI configuration files. CLI
+values override configuration values, and configuration values override defaults.
+Use `RequiredArg` for values every job must provide, `OptionalArg` for values with
+defaults, and `Flag` for booleans. Names use `--kebab-case` on the command line
+and are exposed as `snake_case` attributes on the resulting `JobDescription`.
 
-Consider the execution of a file `main.py` with the command line call
-```
-python main.py path/to/output -c path/to/config/file.ini --data-path path/to/data
-```
-The config file could contain
+For example, `config.ini` can define two experiment jobs:
 ```ini
 [DEFAULT]
-learning-rate=1e-4
+; This section is not a job, but sets defaults for other job sections in the file
+; This largely follows Python's configparser convention (https://docs.python.org/3/library/configparser.html)
+data-path = data/train
+learning-rate = 1e-4
 fp16
 
-[LOWLR]
-learning-rate=1e-5
-
-[NOFP16]
-fp16=False
+[low-lr]
+data-path = data/train
+learning-rate = 1e-5
+fp16 = False
 ```
-where `main.py` contains
+
+`main.py` can parse and run every configured job:
 ```py
-options = [
-    # Mandatory argument with set abbreviation -p
-    Argument("data-path", help="Path to where data is located", abbrv"-p"),
-    # Optional argument with auto-generated abbreviation -l
-    Option("learning-rate", default=1e-5, help="Learning rate to use for gradient descent steps"),
-    # Boolean flag with auto-generated abbreviation -f
-    Flag("fp16", help="Use mixed precision for training"),
-]
-parser = Parser(*options, multiple_jobs=True)  # Two jobs are specified in the config file, so multiple_jobs=True
-location = parser.location  # Experiments are stored here. In this case path/to/output
-job_descriptions = parser.parse_args()
-# Run each experiment
-for job in job_descriptions:
-    # Get the job as a dictionary
-    job_dict = job.todict()
-    # Clear directory where job is located and put a documentation file there
-    job.prepare_directory()
-    # Get location of this job as job.location
-    run_experiment(job)
+from pathlib import Path
+
+from pelutils import Flag, JobParser, OptionalArg, RequiredArg
+
+parser = JobParser(
+    RequiredArg("data-path", help="Training data directory"),
+    OptionalArg("learning-rate", default=1e-4, type=float, help="Optimizer learning rate"),
+    Flag("fp16", help="Use mixed precision"),
+    multiple_jobs=True,
+)
+
+for job in parser.parse_jobs():
+    print(job.name, job.data_path, job.learning_rate, job.fp16)
+    job.write_documentation(Path("runs") / job.name / "arguments.ini")
+    # Run your application with the resolved job values.
 ```
 
-This could then by run by
-`python main.py data/my-big-experiment --learning-rate 1e-5`
-or by
-`python main.py data/my-big-experiment --config cfg.ini`
-or using a combination where CLI args takes precedence:
-`python main.py data/my-big-experiment --config cfg.ini --learning-rate 1e-5`
-where `cfg.ini` could contain
+Run all configured jobs with:
+
+```console
+python main.py --config-file config.ini
+```
+
+Override one value for every selected job with:
+
+```console
+python main.py --config-file config.ini --learning-rate 5e-5
+```
+
+For a single command-line job, construct the same parser without
+`multiple_jobs=True` and call `parse_job()` instead. `parse_job()` raises a
+`ConfigError` if the configuration resolves to multiple named jobs. A config path
+can select sections directly, for example `--config-file config.ini:low-lr`.
 
 # Logging
 
