@@ -20,4 +20,4 @@ class TestUnitTestCollection(UnitTestCollection):
     def test_test_path(self):
         testpath = "test"
         testpath = self.get_test_path(testpath)
-        assert testpath.startswith(self.test_dir)
+        assert testpath.is_relative_to(self.test_dir)
