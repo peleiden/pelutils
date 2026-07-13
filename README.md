@@ -20,7 +20,7 @@ The Swiss army knife of Python projects.
 - Data-science submodule with extra utilities for statistics, plotting with `matplotlib`, and machine learning using `PyTorch`.
 - `unique` function in the style of `numpy.unique` which runs in linear time, making it significantly faster for large arrays.
 
-`pelutils` supports Python 3.9+.
+`pelutils` supports Python 3.11+.
 
 To install, simply run `pip install pelutils`.
 A small subset of the functionality requires `PyTorch`, which has to be installed separately.

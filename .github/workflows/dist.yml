@@ -19,7 +19,7 @@ jobs:
         # See supported versions at https://cibuildwheel.pypa.io/en/stable/#what-does-it-do
         # Be aware that all versions need to be supported by the used version of cibuildwheel
         # https://github.com/pypa/cibuildwheel/releases
-        python: [ 'cp39', 'cp310', 'cp311', 'cp312', 'cp313', 'cp314' ]
+        python: [ 'cp311', 'cp312', 'cp313', 'cp314' ]
 
     steps:
       - uses: actions/checkout@v4

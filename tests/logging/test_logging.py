@@ -1,7 +1,7 @@
 import multiprocessing as mp
 import os
 import re
-from itertools import chain, permutations, product
+from itertools import chain, pairwise, permutations, product
 from pathlib import Path
 from string import ascii_lowercase
 
@@ -47,7 +47,7 @@ class TestLogger(UnitTestCollection):
         inputs = [" ".join(x) for x in all_combs[-num_tests:]]
         # Remove log file, so all lines can be predictably read
         os.remove(self.logfile)
-        for q, i in zip(queries, inputs):
+        for q, i in zip(queries, inputs, strict=True):
             monkeypatch.setattr("builtins.input", lambda _: i)  # noqa: B023
             assert log.input(q) == i
         input_generator = log.input(queries)
@@ -56,12 +56,12 @@ class TestLogger(UnitTestCollection):
             assert next(input_generator) == i
         # Test that each query and input has been written twice to the logfile
         with open(self.logfile) as lf:
-            for q, i in zip(queries, inputs):
+            for q, i in zip(queries, inputs, strict=True):
                 next(lf)  # This lines declares that the logger is awaiting user input
                 assert q in next(lf)
                 assert i in next(lf)
             next(lf)
-            for q, i in zip(queries, inputs):
+            for q, i in zip(queries, inputs, strict=True):
                 assert q in next(lf)
                 assert i in next(lf)
 
@@ -125,7 +125,7 @@ class TestLogger(UnitTestCollection):
 
     def test_level_methods(self, capfd: pytest.CaptureFixture):
         methods = log.debug, log.info, log.warning, log.error, log.critical, log.section
-        for method, level in zip(methods, sorted(LogLevels)):
+        for method, level in zip(methods, sorted(LogLevels), strict=True):
             method("Bulbasaur is underrated")
             stdout, _ = capfd.readouterr()
             assert level.name in stdout
@@ -180,7 +180,7 @@ class TestLogger(UnitTestCollection):
             lines = lf.readlines()
         # _collect_test_fn logs out three lines but one function has a log less
         assert 0 < len(lines) < 3 * reps
-        for prevline, newline in zip(lines[:-1], lines[1:]):
+        for prevline, newline in pairwise(lines):
             if "log 1" in newline:
                 assert "log 2" in prevline or "log 3" in prevline
             elif "log 2" in newline:
@@ -225,7 +225,7 @@ class TestLogger(UnitTestCollection):
             assert not stdout
         with open(self.logfile) as lf, open(logfile2) as lf2:
             logger_iter = chain(*logs)
-            for line1, line2 in zip(lf, lf2):
+            for line1, line2 in zip(lf, lf2, strict=True):
                 log_item = next(logger_iter)
                 assert log_item in line1 and log_item in line2
 

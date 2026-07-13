@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable
+from typing import Any
 
 import matplotlib.colors as mcolour
 import matplotlib.pyplot as plt

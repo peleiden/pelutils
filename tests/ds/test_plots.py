@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+from itertools import pairwise
 from math import ceil
 from pathlib import Path
 
@@ -67,14 +68,14 @@ class TestBinning:
     def test_linear_binning(self):
         binning = linear_binning(self.uniform_data, self.bins)
         diffs = np.diff(binning)
-        for a, b in zip(diffs[:-1], diffs[1:]):
+        for a, b in pairwise(diffs):
             assert np.isclose(a, b)
 
     def test_log_binning(self):
         binning = log_binning(self.uniform_data, self.bins)
         ratios = binning[1:] / binning[:-1]
         diffs = np.diff(ratios)
-        for a, b in zip(diffs[:-1], diffs[1:]):
+        for a, b in pairwise(diffs):
             assert np.isclose(a, b)
 
     def test_normal_binning(self):

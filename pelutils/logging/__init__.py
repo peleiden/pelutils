@@ -4,7 +4,7 @@ import os
 import traceback as tb
 from collections.abc import Generator, Iterable
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from pelutils import OS, UnsupportedOS, get_repo, get_timestamp
 from pelutils.format import RichString

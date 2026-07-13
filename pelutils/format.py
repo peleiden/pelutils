@@ -135,10 +135,10 @@ class Table:
         hline = "+".join("-" * (width + 1 + (0 < i < self._width - 1)) for i, width in enumerate(widths))
         strs = list()
         if self._header:
-            strs.append(" | ".join(self._format_element(elem, width, True) for elem, width in zip(self._header, widths)))
+            strs.append(" | ".join(self._format_element(elem, width, True) for elem, width in zip(self._header, widths, strict=True)))
             strs.append(hline)
-        for i, (row, left_align) in enumerate(zip(self._rows, self._left_aligns)):
-            strs.append(" | ".join(self._format_element(elem, width, la) for elem, width, la in zip(row, widths, left_align)))
+        for i, (row, left_align) in enumerate(zip(self._rows, self._left_aligns, strict=True)):
+            strs.append(" | ".join(self._format_element(elem, width, la) for elem, width, la in zip(row, widths, left_align, strict=True)))
             if i in self._hlines:
                 strs.append(hline)
 

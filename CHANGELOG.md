@@ -2,6 +2,7 @@
 
 ## Unreleased - 4.0.0 - Breaking changes
 
+- Minimum supported Python version is now 3.11.
 - Removed deprecated `DataStorage`; use `DataStorage2` instead.
 - Removed deprecated `set_seeds`, `raises`, and `thousands_seperators` helpers.
 - Removed deprecated `Profile.hits`, `TickTock.stringify_time`, `TickTock.measurements_by_profile_name`, and `TickTock.__len__`.

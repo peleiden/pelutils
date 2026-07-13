@@ -1,4 +1,5 @@
 {
+    "pythonVersion": "3.11",
     "ignore": ["tests"],
     "exclude": ["**/__pycache__", ".venv"],
     "reportMissingTypeStubs": false,

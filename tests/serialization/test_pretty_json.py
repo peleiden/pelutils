@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -30,7 +30,7 @@ class _Point:
 
 class TestPickleFallback:
     def test_datetime_is_pickled(self) -> None:
-        dt = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        dt = datetime(2025, 1, 1, tzinfo=UTC)
         result = pretty_json_with_defaults({"ts": dt})
         parsed = json.loads(result)
         assert parsed["ts"].startswith(_PICKLE_PREFIX)
