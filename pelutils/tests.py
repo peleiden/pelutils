@@ -11,6 +11,8 @@ from typing import Callable, TypeVar
 
 from pelutils import OS
 
+__all__ = ("SimplePool", "UnitTestCollection", "restore_argv")
+
 _C = TypeVar("_C", bound=Callable)  # pyright: ignore[reportMissingTypeArgument]
 
 

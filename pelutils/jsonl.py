@@ -6,6 +6,8 @@ from typing import Any, TextIO
 
 import rapidjson
 
+__all__ = ("dump", "dumps", "load", "loads")
+
 
 def load(f: TextIO) -> Iterator[str]:
     """Return a generator of parsed lines in a .jsonl file. Empty lines are ignored."""

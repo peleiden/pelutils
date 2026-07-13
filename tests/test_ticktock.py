@@ -191,8 +191,7 @@ def test_profiles_with_same_name():
     with tt.profile("a"):
         pass
 
-    with pytest.warns(DeprecationWarning):
-        profiles = list(tt)
+    profiles = list(tt)
     assert profiles[0].name == "a"
     assert profiles[0].depth == 0
     assert len(profiles[0]) == 3
@@ -205,17 +204,11 @@ def test_profiles_with_same_name():
     assert profiles[2].depth == 1
     assert len(profiles[2]) == 4
 
-    with pytest.warns(DeprecationWarning):
-        assert len(tt.measurements_by_profile_name("b")) == 2
     b_n, b_sum = tt.stats_by_profile_name("b")
     assert b_n == 2
     assert isinstance(b_sum, float)
     assert b_sum > 0
-    with pytest.warns(DeprecationWarning):
-        assert all(isinstance(x, float) for x in tt.measurements_by_profile_name("b"))
 
-    with pytest.warns(DeprecationWarning), pytest.raises(KeyError):
-        tt.measurements_by_profile_name("c")
     with pytest.raises(KeyError):
         tt.stats_by_profile_name("c")
 
@@ -259,11 +252,9 @@ def test_add_external_measurements():
 
     for profile in tt.profiles:
         if profile.name == "a":
-            with pytest.warns(DeprecationWarning):
-                assert len(profile.hits) == 3
+            assert len(profile) == 3
         elif profile.name == "b":
-            with pytest.warns(DeprecationWarning):
-                assert len(profile.hits) == 7
+            assert len(profile) == 7
 
 
 def test_do_at_interval():
@@ -379,12 +370,6 @@ def test_exit_in_nested():
     assert len(tt._profile_stack) == 2
 
 
-def test_format_time():
-    with pytest.warns(DeprecationWarning):
-        assert TickTock.stringify_time(3.046e-3, TimeUnits.millisecond) == "3.05 ms"
-        assert TickTock.stringify_time(3.046, TimeUnits.second) == "3.05 s"
-
-
 def test_profile(capfd: pytest.CaptureFixture):
     p = Profile("tester", 0, None)
     assert len(p) == 0
@@ -401,5 +386,3 @@ def test_active():
     with tt.profile("test"):
         pass
     assert bool(tt)
-    with pytest.warns(DeprecationWarning):
-        len(tt)

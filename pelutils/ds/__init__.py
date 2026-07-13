@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from typing import TypeVar, Union, cast
 
 import numpy as np
+import numpy.typing as npt
 
 from pelutils._utils import isinstance_by_name
 from pelutils.types import AnyArray, BoolArray, BytesArray, FloatArray, IntArray, StringArray
@@ -19,17 +20,19 @@ import _pelutils_c as _c
 
 import pelutils._c as _c_utils
 
-ArrayOrTensor = Union["BoolArray | BytesArray | FloatArray | IntArray | StringArray | torch.Tensor"]
+__all__ = ("array_bytes", "unique")
+
+_ArrayT = TypeVar("_ArrayT", bound=npt.ArrayLike)
 
 
 def unique(  # noqa: PLR0912
-    array: ...,
+    array: _ArrayT,
     *,
     return_index: bool = False,
     return_inverse: bool = False,
     return_counts: bool = False,
     axis: int = 0,
-) -> ArrayOrTensor | tuple[ArrayOrTensor, ...]:
+) -> _ArrayT | tuple[_ArrayT, ...]:
     """Return unique elements in a given numpy array (or torch tensor or pandas series).
 
     This function works very similar to np.unique, but it runs in linear time, making it significantly faster
@@ -40,7 +43,7 @@ def unique(  # noqa: PLR0912
         is_tensor = True
         np_array = array.numpy()
     elif isinstance_by_name(array, "pandas", "Series"):
-        np_array = array.values
+        np_array = array.values  # pyright: ignore[reportAttributeAccessIssue]
     elif isinstance(array, np.ndarray):
         if np.issubdtype(array.dtype, np.object_):
             raise TypeError(f"Unsupported array dtype {array.dtype}")
@@ -94,14 +97,11 @@ def unique(  # noqa: PLR0912
     if _has_torch and is_tensor:
         ret = [torch.from_numpy(x) for x in ret]  # pyright: ignore[reportPossiblyUnboundVariable]
 
-    return tuple(ret) if len(ret) > 1 else ret[0]
+    return tuple(ret) if len(ret) > 1 else ret[0]  # pyright: ignore[reportReturnType]
 
 
-def tensor_bytes(x: AnyArray | torch.Tensor) -> int:
+def array_bytes(x: "AnyArray | torch.Tensor") -> int:
     """Calculate the size of a numpy array or torch tensor in bytes."""
-    if isinstance(x, np.ndarray):
-        return x.nbytes
-    elif _has_torch and isinstance(x, torch.Tensor):  # pyright: ignore[reportUnnecessaryIsInstance, reportPossiblyUnboundVariable]
-        return x.element_size() * x.numel()
-    else:
-        raise TypeError(f"Unable to calculate the number of bytes of a tensor with type {type(x)}")
+    if _has_torch and isinstance(x, torch.Tensor):  # pyright: ignore[reportPossiblyUnboundVariable]
+        x = x.numpy()
+    return x.nbytes

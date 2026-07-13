@@ -9,6 +9,8 @@ from rich.color import ANSI_COLOR_NAMES
 from rich.console import Console
 from typing_extensions import override
 
+__all__ = ("RichString", "Table")
+
 _stdout_console = Console(highlight=False)
 _stderr_console = Console(highlight=False, stderr=True)
 

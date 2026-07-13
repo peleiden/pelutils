@@ -3,16 +3,27 @@ from __future__ import annotations
 import time
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, Union
+from typing import Any, Callable
 
 import matplotlib.colors as mcolour
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 from scipy import stats
 
-from pelutils.types import AnyArray, FloatArray
+from pelutils.types import FloatArray, IntArray
 
-_Array = Union[list[Union[float, int]], AnyArray]
+__all__ = (
+    "Figure",
+    "base_colours",
+    "colours",
+    "get_dateticks",
+    "histogram",
+    "linear_binning",
+    "log_binning",
+    "normal_binning",
+    "tab_colours",
+)
 
 # 8 colours
 base_colours: tuple[str, ...] = tuple(mcolour.BASE_COLORS)
@@ -22,141 +33,38 @@ tab_colours: tuple[str, ...] = tuple(mcolour.TABLEAU_COLORS)
 colours: tuple[str, ...] = tab_colours[:-2] + base_colours[:-1]
 
 
-def moving_avg(
-    x: _Array,
-    y: _Array | None = None,
-    *,
-    neighbors: int = 3,
-) -> tuple[AnyArray, FloatArray]:
-    """Calculate the moving average assuming even spacing.
-
-    If one array of size n is given, it is assumed to run from 0 to n-1 on the x axis.
-    If two are given, the first are the x axis coordinates.
-    Returns x and y coordinate arrays of same size.
-    """
-    x = np.array(x)
-    if y is None:
-        y = x
-        x = np.arange(x.size)
-    else:
-        y = np.array(y)
-    x = x[neighbors:-neighbors]
-    kernel = np.arange(1, 2 * neighbors + 2)
-    kernel[-neighbors:] = np.arange(neighbors, 0, -1)
-    kernel = kernel / kernel.sum()
-    rolling = np.convolve(y, kernel, mode="valid")
-    return x, rolling
-
-
-def exp_moving_avg(
-    x: _Array,
-    y: _Array | None = None,
-    *,
-    alpha: float = 0.2,
-    reverse: bool = False,
-) -> tuple[AnyArray, FloatArray]:
-    """Calculate the exponential moving average.
-
-    alpha is a smoothing factor between 0 and 1. The lower the value, the smoother the curve.
-
-    Two arrays (containing x values and corresponding smoothed y values) of same size as x are returned.
-    This function optionally takes y similar to `moving_avg`.
-    """
-    x = np.array(x)
-    if y is None:
-        y = x
-        x = np.arange(x.size)
-    else:
-        y = np.array(y)
-    if reverse:
-        y = y[::-1]
-
-    exp = np.empty(y.size)
-    for i in range(y.size):
-        if i:
-            exp[i] = alpha * y[i] + (1 - alpha) * exp[i - 1]
-        else:
-            exp[i] = y[i]
-    return x, exp if not reverse else np.array(exp)[::-1]
-
-
-def double_moving_avg(
-    x: _Array,
-    y: _Array | None = None,
-    *,
-    inner_neighbors: int = 1,
-    outer_neighbors: int = 12,
-    samples: int = 300,
-) -> tuple[AnyArray, FloatArray]:
-    """Moving average function that produces smoother curves than normal moving average.
-
-    This function handles unevenly spaced data better and produces smoothed values for the entire span.
-    It optionally takes y as `moving_avg`.
-    If both x and y are given, x must be sorted in ascending order.
-    inner_neighbors: How many neighbors to use for the initial moving average.
-    outer_neighbors: How many neighbors to use for for the second moving average.
-    samples: How many points to sample the moving average at.
-    """  # noqa: D401
-    x = np.array(x)
-    if y is None:
-        y = x
-        x = np.arange(x.size)
-    else:
-        y = np.array(y)
-    x = np.pad(x, pad_width=inner_neighbors)
-    y = np.array([*[y[0]] * inner_neighbors, *y, *[y[-1]] * inner_neighbors])
-    x, y = moving_avg(x, y, neighbors=inner_neighbors)
-    # Sampled point along x axis
-    extra_sample = outer_neighbors / samples
-    # Sample points along x axis
-    xx = np.linspace(
-        x[0] - extra_sample * (x[-1] - x[0]),
-        x[-1] + extra_sample * (x[-1] - x[0]),
-        samples + 2 * outer_neighbors,
-    )
-    # Interpolated points
-    yy = np.zeros_like(xx)
-    yy[:outer_neighbors] = y[0]
-    yy[-outer_neighbors:] = y[-1]
-
-    # Perform interpolation
-    x_index = 0
-    for k, interp_x in enumerate(xx[outer_neighbors : outer_neighbors + samples], start=outer_neighbors):
-        while interp_x >= x[x_index + 1]:
-            x_index += 1
-        a = (y[x_index + 1] - y[x_index]) / (x[x_index + 1] - x[x_index])
-        b = y[x_index] - a * x[x_index]
-        yy[k] += a * interp_x + b
-
-    return moving_avg(xx, yy, neighbors=outer_neighbors)
-
-
 # Utility functions for histograms
-def linear_binning(x: _Array, bins: int) -> FloatArray:
+def linear_binning(x: npt.ArrayLike, bins: int) -> FloatArray:
     """Calculate linear binning for an array."""
-    return np.linspace(min(x), max(x), bins)
+    x = np.asarray(x)
+    return np.linspace(x.min(), x.max(), bins)
 
 
-def log_binning(x: _Array, bins: int) -> FloatArray:
+def log_binning(x: npt.ArrayLike, bins: int) -> FloatArray:
     """Calculate logarithmic binning for an array, meaning more bins close to zero."""
-    return np.geomspace(min(x), max(x), bins)
+    x = np.asarray(x)
+    return np.geomspace(x.min(), x.max(), bins)
 
 
-def normal_binning(x: _Array, bins: int) -> FloatArray:
-    """Calculate bins that work well for normal-ish distributed data, meaning more bins closer to the mean of x."""
-    dist = stats.norm(np.mean(x), 3 * np.std(x))
+def normal_binning(x: npt.ArrayLike, bins: int, scale: float = 3) -> FloatArray:
+    """Calculate bins that work well for normal-ish distributed data, meaning more bins closer to the mean of x.
+
+    `scale` determines how spread out the spacing is. The default value works pretty well in most cases.
+    """
+    x = np.asarray(x)
+    dist = stats.norm(x.mean(), scale * x.std())
     p = min(dist.cdf(min(x)), 1 - dist.cdf(max(x)))
     uniform_spacing = np.linspace(p, 1 - p, bins)
     return dist.ppf(uniform_spacing)
 
 
 def histogram(
-    data: AnyArray,
-    binning_fn: Callable[[_Array, int], FloatArray] = linear_binning,
+    data: npt.ArrayLike,
+    binning_fn: Callable[[npt.ArrayLike, int], FloatArray] = linear_binning,
     bins: int = 25,
     density: bool = True,
     ignore_zeros: bool = False,  # Be careful about this one, but it can be practical with log scales
-):
+) -> tuple[FloatArray, FloatArray | IntArray]:
     """Create bins for plotting a line histogram. Simplest usage is plt.plot(*histogram(data))."""
     found_bins = np.array(binning_fn(data, bins + 1))
     y, edges = np.histogram(data, bins=found_bins, density=density)
@@ -167,7 +75,7 @@ def histogram(
     return x, y
 
 
-def get_dateticks(x: _Array, num: int = 6, date_format: str = "%b %d") -> tuple[FloatArray, list[str]]:
+def get_dateticks(x: npt.ArrayLike, num: int = 6, date_format: str = "%b %d") -> tuple[FloatArray, list[str]]:
     """Produce date labels for the x axis given an array of epoch times in seconds.
 
     Example

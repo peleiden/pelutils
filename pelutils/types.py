@@ -3,6 +3,8 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
+__all__ = ("AnyArray", "BoolArray", "BytesArray", "ComplexArray", "FloatArray", "IntArray", "ObjectArray", "StringArray")
+
 # Common numpy types
 AnyArray = npt.NDArray[Any]  # pyright: ignore[reportExplicitAny]
 BoolArray = npt.NDArray[np.bool_]

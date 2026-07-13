@@ -2,6 +2,15 @@
 
 ## Unreleased - 4.0.0 - Breaking changes
 
+- Removed deprecated `DataStorage`; use `DataStorage2` instead.
+- Removed deprecated `set_seeds`, `raises`, and `thousands_seperators` helpers.
+- Removed deprecated `Profile.hits`, `TickTock.stringify_time`, `TickTock.measurements_by_profile_name`, and `TickTock.__len__`.
+- Removed moving average functions from `pelutils.ds.plots`.
+  These are reasonably well covered by [`scipy.ndimage`](https://docs.scipy.org/doc/scipy/reference/ndimage.html).
+- Curated the top-level `pelutils` API. JSONL functions, testing helpers, NumPy type aliases, and `unique` must now be imported from
+  `pelutils.jsonl`, `pelutils.tests`, `pelutils.types`, and `pelutils.ds`, respectively.
+- Importing `pelutils` no longer imports `pelutils.ds` or requires the compiled `_pelutils_c` extension.
+- Added explicit public exports to public modules.
 - Renamed `DataStorage2` to `UniversalJsonModel` and moved it from `pelutils.datastorage2` to `pelutils.serialization`.
 - Renamed `model_safe_dump` and `model_safe_load` to `to_json_dict` and `from_json_dict`.
 - `UniversalJsonModel.save` and `.load` now accept a full file path instead of a directory and optional filename.
@@ -9,6 +18,7 @@
 - Renamed `Parser`, `Argument`, and `Option` to `JobParser`, `MandatoryArg`, and `OptionalArg`.
 - Removed mandatory `location` argument from `JobParser`.
 - Renamed logger `default_seperator` to `default_separator` and TickTock timer `id` parameters to `key`.
+- Renamed and simplified `tensor_bytes` to `array_bytes`.
 
 ## 3.9.0
 
