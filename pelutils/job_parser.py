@@ -16,7 +16,7 @@ from typing import Any, Callable, TypeVar, Union
 
 from typing_extensions import override
 
-from pelutils import except_keys, get_timestamp_for_files
+from pelutils import OS, except_keys, get_timestamp_for_files
 
 _T = TypeVar("_T")
 _type = type  # Save `type` under different name to prevent name collisions
@@ -435,6 +435,10 @@ class JobParser:
         Return a dictionary where each section as a key pointing to corresponding argument/value pairs.
         """
         config_path, *sections = config_path.split(self._section_separator)
+        if len(config_path) == 1 and config_path.isalpha() and OS.is_windows:
+            # Fix Windows drive letter issue
+            config_path = f"{config_path}:{sections[0]}"
+            sections = sections[1:]
         sections = set(sections)
 
         try:

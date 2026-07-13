@@ -18,6 +18,5 @@ def test_restore_argv():
 
 class TestUnitTestCollection(UnitTestCollection):
     def test_test_path(self):
-        testpath = "test"
-        testpath = self.get_test_path(testpath)
-        assert testpath.is_relative_to(self.test_dir)
+        testpath = self.get_test_path("test")
+        assert testpath.is_relative_to(self.test_dir.resolve())

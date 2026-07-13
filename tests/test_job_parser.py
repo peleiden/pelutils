@@ -16,8 +16,8 @@ _argv_template = ["main.py"]
 _sample_argv = f"{_argv_template[0]} -g 4 --gib-num 3.2 -o 7 -i -a b c".split()
 
 
-def _sample_argv_conf(config_path: str | Path) -> list[str]:
-    return (f"{_argv_template[0]} -c {Path(config_path).resolve()} --gib-num 3.2").split()
+def _sample_argv_conf(config_path_str: str | Path) -> list[str]:
+    return (f"{_argv_template[0]} -c {config_path_str} --gib-num 3.2").split()
 
 
 _sample_arguments = [
