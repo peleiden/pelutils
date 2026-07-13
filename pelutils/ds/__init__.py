@@ -19,6 +19,8 @@ import _pelutils_c as _c
 
 import pelutils._c as _c_utils
 
+__all__ = ("ArrayOrTensor", "tensor_bytes", "unique")
+
 ArrayOrTensor = Union["BoolArray | BytesArray | FloatArray | IntArray | StringArray | torch.Tensor"]
 
 

@@ -7,10 +7,11 @@ from threading import current_thread
 from time import perf_counter
 from types import TracebackType
 
-from deprecated import deprecated
 from typing_extensions import override
 
 from pelutils.format import Table
+
+__all__ = ("TT", "Profile", "TickTock", "TickTockException", "TimeUnits")
 
 
 class TimeUnits:
@@ -77,14 +78,6 @@ class Profile:  # noqa: D101
         else:
             assert depth == 0
         self.children = list()
-
-    @property
-    @deprecated(
-        version="3.1.0",
-        reason="Length of individual hits are no longer saved, only aggregated statistics. This will return hits of average length.",
-    )
-    def hits(self):  # noqa: D102
-        return [self.mean()] * self._n
 
     def sum(self) -> float:
         """Return total runtime, the sum of all registered hits."""
@@ -347,12 +340,6 @@ class TickTock:
         return ticktock
 
     @staticmethod
-    @deprecated(version="3.5.0")
-    def stringify_time(dt: float, unit: tuple[str, float] = TimeUnits.millisecond) -> str:
-        """Stringify a time given in seconds with a given unit."""
-        return f"{dt / unit[1]:,.2f} {unit[0]}"
-
-    @staticmethod
     def _stringify_time_with_alignment(dt: float, unit: tuple[str, float]) -> str:
         return f"{dt / unit[1]:,.2f} {unit[0]:>2}"
 
@@ -386,23 +373,6 @@ class TickTock:
 
         return str(table)
 
-    @deprecated(
-        version="3.1.0", reason="Individual hits are no longer recorded, only aggregated statistics. Use stats_by_profile_name instead."
-    )
-    def measurements_by_profile_name(self, name: str) -> list[float]:
-        """Return the time measurement distribution for a profile with a given name.
-
-        Warning: Since the name does not uniquely identify a profile, this function
-        simply returns the first profile with this name, so be careful to check that
-        you get the correct one if you have multiple profiles with the same name.
-        """
-        try:
-            profile = next(profile for profile in self._id_to_profile.values() if profile.name == name)
-        except StopIteration as e:
-            raise KeyError(f"No profile with name {name}") from e
-
-        return profile.hits
-
     def stats_by_profile_name(self, name: str) -> tuple[int, float]:
         """Return the number of hits and sum of measurement lengths for a profile with a given name.
 
@@ -420,11 +390,6 @@ class TickTock:
     @override
     def __str__(self) -> str:
         return self.stringify_sections(None)
-
-    @deprecated(version="3.2.0", reason="Profiler length does not have a reasonable meaning.")
-    def __len__(self) -> int:
-        """Return the number of top-level profiles."""
-        return len(self.profiles)
 
     def __bool__(self) -> bool:
         """Return True if any profiling has been performed."""

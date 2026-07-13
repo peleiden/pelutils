@@ -8,6 +8,8 @@ from pydantic import BaseModel, ConfigDict
 
 from pelutils.datastorage2._pretty_json import _make_json_unsafe, _pickle_encode, _pretty_json  # pyright: ignore[reportPrivateUsage]
 
+__all__ = ("DataStorage2",)
+
 _T = TypeVar("_T", bound="DataStorage2")
 
 

@@ -1,7 +1,6 @@
 import numpy as np
 
-from pelutils import AnyArray, BoolArray, ComplexArray, FloatArray, IntArray, StringArray
-from pelutils.types import BytesArray, ObjectArray
+from pelutils.types import AnyArray, BoolArray, BytesArray, ComplexArray, FloatArray, IntArray, ObjectArray, StringArray
 
 
 def function_which_takes_np_types(  # noqa: PLR0913

@@ -3,6 +3,8 @@ from __future__ import annotations
 import ctypes
 import os
 import platform
+import subprocess
+import sys
 from shutil import move
 from string import ascii_letters
 
@@ -22,11 +24,8 @@ from pelutils import (
     get_repo,
     get_timestamp,
     get_timestamp_for_files,
-    raises,
     reverse_line_iterator,
-    set_seeds,
     split_path,
-    thousands_seperators,
 )
 from pelutils.tests import UnitTestCollection
 
@@ -52,36 +51,6 @@ class TestInit(UnitTestCollection):
         assert split_path(absolute + "/") == ["", "home", "senate"]
         relative = "use/pelutils/pls.py"
         assert split_path(relative) == ["use", "pelutils", "pls.py"]
-
-    def test_thousands_seperator(self):
-        cases = (
-            (1, "1", "1"),
-            (1.1, "1.1", "1,1"),
-            (1e3, "1,000.0", "1.000,0"),
-            (1.234567e4, "12,345.67", "12.345,67"),
-            (1234567890, "1,234,567,890", "1.234.567.890"),
-            (0.03413, "0.03413", "0,03413"),
-            (-0.03413, "-0.03413", "-0,03413"),
-        )
-        for num, with_dot, with_comma in cases:
-            for neg in False, True:
-                if neg == -1:
-                    num = -num  # noqa: PLW2901
-                    with_dot = "-" + with_dot  # noqa: PLW2901
-                    with_comma = "-" + with_comma  # noqa: PLW2901
-                with pytest.warns(DeprecationWarning):
-                    assert with_dot == thousands_seperators(num, ".")
-                with pytest.warns(DeprecationWarning):
-                    assert with_comma == thousands_seperators(num, ",")
-
-        with pytest.raises(ValueError), pytest.warns(DeprecationWarning):
-            thousands_seperators(1, "a")
-
-    def test_raises(self):
-        with pytest.warns(DeprecationWarning):
-            assert raises(IndexError, lambda x: x[0], [])
-            assert not raises(IndexError, lambda x: x[0], [1])
-            assert not raises(TypeError, lambda x: x[0], [])
 
     def test_binary_search(self):
         data = np.random.randint(0, 100, 100)  # noqa: NPY002
@@ -206,8 +175,7 @@ class TestInit(UnitTestCollection):
             assert str(HardwareInfo.sockets) in string
         if HardwareInfo.threads:
             # This is also a very shitty test
-            with pytest.warns(DeprecationWarning):
-                assert thousands_seperators(HardwareInfo.threads) in string
+            assert f"{HardwareInfo.threads:,}" in string
         assert str(round(HardwareInfo.memory / 2**30, 2)) in string
         if HardwareInfo.gpus:
             for gpu in HardwareInfo.gpus:
@@ -233,6 +201,30 @@ class TestInit(UnitTestCollection):
             move(".gittmp", ".git")
 
 
-def test_set_seeds():
-    with pytest.warns(DeprecationWarning):
-        set_seeds(69)  # Nice
+def test_public_api():
+    specialized_exports = {
+        "AnyArray",
+        "SimplePool",
+        "UnitTestCollection",
+        "dump",
+        "dumps",
+        "load",
+        "loads",
+        "restore_argv",
+        "unique",
+    }
+    assert specialized_exports.isdisjoint(pelutils.__all__)
+    assert not hasattr(pelutils, "DataStorage")
+    assert not hasattr(pelutils, "raises")
+    assert not hasattr(pelutils, "set_seeds")
+    assert not hasattr(pelutils, "thousands_seperators")
+
+
+def test_import_does_not_load_ds_or_c_extension():
+    script = (
+        "import sys; import pelutils; "
+        "assert 'pelutils.ds' not in sys.modules; "
+        "assert '_pelutils_c' not in sys.modules; "
+        "assert not hasattr(pelutils, 'unique')"
+    )
+    subprocess.run([sys.executable, "-c", script], check=True)

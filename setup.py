@@ -19,7 +19,6 @@ requirements = [
     "matplotlib>=3.3",
     "scipy>=1.6",
     "tqdm>=4.55",
-    "deprecated>=1.2",
     "pydantic>=2",
 ]
 requirements_dev = [

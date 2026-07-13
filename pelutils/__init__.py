@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import ctypes
 import os
-import random
 import subprocess
 import sys
 from collections.abc import Generator, Iterable, Sequence
 from datetime import datetime
 from io import DEFAULT_BUFFER_SIZE
 from pathlib import Path
-from typing import Any, Callable, TextIO, TypeVar
+from typing import TYPE_CHECKING, Any, TextIO, TypeVar
 
 import cpuinfo
 
@@ -29,7 +28,46 @@ try:
     _has_torch = True
 except ModuleNotFoundError:
     _has_torch = False
-from deprecated import deprecated
+
+if TYPE_CHECKING:
+    from .types import AnyArray
+
+__all__ = (
+    "OS",
+    "TT",
+    "Argument",
+    "ArgumentTypes",
+    "ConfigError",
+    "DataStorage2",
+    "EnvVars",
+    "Flag",
+    "HardwareInfo",
+    "JobDescription",
+    "LogLevels",
+    "Logger",
+    "LoggingException",
+    "Option",
+    "Parser",
+    "ParserError",
+    "Profile",
+    "RichString",
+    "Table",
+    "TickTock",
+    "TickTockException",
+    "TimeUnits",
+    "UnsupportedOS",
+    "__version__",
+    "array_ptr",
+    "binary_search",
+    "except_keys",
+    "get_repo",
+    "get_timestamp",
+    "get_timestamp_for_files",
+    "log",
+    "pretty_json",
+    "reverse_line_iterator",
+    "split_path",
+)
 
 _T = TypeVar("_T")
 
@@ -45,23 +83,6 @@ class OS:
     is_windows = sys.platform == "win32"
     is_mac = sys.platform == "darwin"
     is_linux = sys.platform == "linux"
-
-
-@deprecated(version="3.7.0", reason="Manage your own seeding, and control numpy randomness with np.random.default_rng or similar.")
-def set_seeds(seed: int = 0):
-    """Set seeds for various RNG modules to allow for consistent executions.
-
-    Be aware that if torch is available, this can have adverse performance effects.
-    """
-    np.random.seed(seed)  # noqa: NPY002
-    random.seed(seed)
-    if _has_torch:
-        # https://pytorch.org/docs/stable/notes/randomness.html
-        torch.manual_seed(seed)  # pyright: ignore[reportPossiblyUnboundVariable]
-        torch.cuda.manual_seed(seed)  # pyright: ignore[reportPossiblyUnboundVariable]
-        torch.cuda.manual_seed_all(seed)  # pyright: ignore[reportPossiblyUnboundVariable]
-        torch.backends.cudnn.deterministic = True  # pyright: ignore[reportPossiblyUnboundVariable]
-        torch.backends.cudnn.benchmark = False  # pyright: ignore[reportPossiblyUnboundVariable]
 
 
 def get_repo(path: str | Path | None = None) -> tuple[str | None, str | None]:
@@ -105,42 +126,6 @@ def get_timestamp_for_files(*, with_date: bool = True) -> str:
     return tstr
 
 
-@deprecated(version="3.2.0", reason="Use built-in :, formatting syntax instead.")
-def thousands_seperators(num: float | int, decimal_seperator: str = ".") -> str:
-    """Format a number using thousand seperators."""
-    if decimal_seperator not in {".", ","}:
-        raise ValueError(f"'{decimal_seperator}' is not a valid decimal seperator. Use '.' or ','")
-
-    num_str = str(num)
-    is_negative = num_str.startswith("-")
-    if is_negative:
-        num_str = num_str[1:]
-    tsep = "," if decimal_seperator == "." else "."
-
-    rest = ""
-    if "." in num_str:
-        rest = decimal_seperator + num_str[num_str.index(".") + 1 :]
-        num_str = num_str[: num_str.index(".")]
-    for i in range(len(num_str) - 3, 0, -3):
-        num_str = num_str[:i] + tsep + num_str[i:]
-    if is_negative:
-        num_str = "-" + num_str
-
-    return num_str + rest
-
-
-@deprecated(version="3.7.0", reason="There are better ways of doing error handling.")
-def raises(exc_type: type[BaseException], fun: Callable, *args, **kwargs) -> bool:  # pyright: ignore[reportUnknownParameterType, reportMissingTypeArgument, reportMissingParameterType]
-    """Check if fun(*args, **kwargs) throws an error of a given type."""
-    try:
-        fun(*args, **kwargs)
-        return False
-    except exc_type:
-        return True
-    except:  # noqa: E722
-        return False
-
-
 class EnvVars:
     """Execute a piece of code with certain environment variables.
 
@@ -173,7 +158,7 @@ class EnvVars:
                 os.environ[var] = value
 
 
-def array_ptr(arr: "Union[AnyArray, torch.Tensor]") -> ctypes.c_void_p:  # noqa: F405
+def array_ptr(arr: "AnyArray | torch.Tensor") -> ctypes.c_void_p:
     """Return a pointer to a numpy array or torch tensor which can be used to interact with it in low-level languages like C/C++/Rust.
 
     This function is mostly useful when not using Python's C api and instead interfacing with .so files directly with ctypes.
@@ -302,21 +287,11 @@ class HardwareInfo:
         return os.linesep.join(line for line in lines if line)
 
 
-# To allow imports directly from utils
-# Placed down here to prevent issues with circular imports
+# Placed down here to prevent issues with circular imports.
 from .__version__ import __version__
-from .logging import *  # noqa: F403
-
-log: Logger  # Make sure type hinting works when importing global instances  # noqa: F405
-from .parser import *  # noqa: F403
-from .ticktock import *  # noqa: F403
-
-TT: TickTock  # noqa: F405
-from .datastorage import *  # noqa: F403
-from .datastorage2 import *  # noqa: F403
-from .ds import unique
-from .format import *  # noqa: F403
-from .jsonl import *  # noqa: F403
-from .pretty_json import *  # noqa: F403
-from .tests import *  # noqa: F403
-from .types import *  # noqa: F403
+from .datastorage2 import DataStorage2
+from .format import RichString, Table
+from .logging import Logger, LoggingException, LogLevels, log
+from .parser import Argument, ArgumentTypes, ConfigError, Flag, JobDescription, Option, Parser, ParserError
+from .pretty_json import pretty_json
+from .ticktock import TT, Profile, TickTock, TickTockException, TimeUnits

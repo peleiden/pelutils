@@ -19,6 +19,8 @@ from typing_extensions import override
 
 from pelutils import except_keys, get_timestamp_for_files
 
+__all__ = ("Argument", "ArgumentTypes", "ConfigError", "Flag", "JobDescription", "Option", "Parser", "ParserError")
+
 _T = TypeVar("_T")
 _type = type  # Save `type` under different name to prevent name collisions
 

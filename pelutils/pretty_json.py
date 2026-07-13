@@ -4,6 +4,8 @@ from typing import Any
 
 from pelutils.datastorage2._pretty_json import _pretty_json  # pyright: ignore[reportPrivateUsage]
 
+__all__ = ("pretty_json",)
+
 
 def pretty_json(
     obj: dict[str, Any] | list[Any],  # pyright: ignore[reportExplicitAny]

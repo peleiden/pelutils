@@ -12,6 +12,21 @@ from scipy import stats
 
 from pelutils.types import AnyArray, FloatArray
 
+__all__ = (
+    "Figure",
+    "base_colours",
+    "colours",
+    "double_moving_avg",
+    "exp_moving_avg",
+    "get_dateticks",
+    "histogram",
+    "linear_binning",
+    "log_binning",
+    "moving_avg",
+    "normal_binning",
+    "tab_colours",
+)
+
 _Array = Union[list[Union[float, int]], AnyArray]
 
 # 8 colours

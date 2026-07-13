@@ -8,6 +8,8 @@ from scipy import stats
 
 from pelutils.ds.distributions import norm
 
+__all__ = ("corr_ci", "z")
+
 
 def z(alpha: float = 0.05, two_sided: bool = True, distribution: Any | None = None) -> float:  # pyright: ignore[reportExplicitAny]
     """Get z value for a given significance level. The distribution defaults to N(0, 1) but can be any continuous scipy distribution."""

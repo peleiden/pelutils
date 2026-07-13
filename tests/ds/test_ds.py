@@ -3,11 +3,11 @@ import pandas as pd
 import pytest
 import torch
 
-from pelutils import set_seeds
 from pelutils.ds import tensor_bytes, unique
 
-with pytest.warns(DeprecationWarning):
-    set_seeds(sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀"))
+_seed = sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀")
+np.random.seed(_seed)  # noqa: NPY002
+torch.manual_seed(_seed)
 
 
 def test_unique():  # noqa: PLR0915
@@ -84,13 +84,13 @@ def test_unique():  # noqa: PLR0915
     assert u.dtype == np.array([]).dtype
     assert len(u) == len(index) == len(inverse) == len(counts) == 0
 
-    df = pd.DataFrame({"a": np.array([1, 2, 3, 1], dtype=np.float16)})
+    data_frame = pd.DataFrame({"a": np.array([1, 2, 3, 1], dtype=np.float16)})
     with pytest.raises(TypeError):
-        unique(df)
-    u, c = unique(df.a, return_counts=True)
-    assert df.a.dtype == u.dtype
+        unique(data_frame)
+    u, c = unique(data_frame.a, return_counts=True)
+    assert data_frame.a.dtype == u.dtype
     assert len(u) == 3
-    assert c.sum() == len(df)
+    assert c.sum() == len(data_frame)
 
     # Check error handling
     with pytest.raises(TypeError):
