@@ -186,16 +186,16 @@ class TickTock:
         self._thread_name = current_thread().name
         self._thread_id = id(current_thread())
 
-    def tick(self, id: Hashable = None):
-        """Start a timer. Set id to any hashable value (e.g. string or int) to time multiple things once."""
-        self._tick_starts[id] = perf_counter()
+    def tick(self, key: Hashable = None):
+        """Start a timer identified by an optional hashable key."""
+        self._tick_starts[key] = perf_counter()
 
-    def tock(self, id: Hashable = None) -> float:
+    def tock(self, key: Hashable = None) -> float:
         """End current the timer."""
         end = perf_counter()
-        if id not in self._tick_starts:
-            raise TickTockException(f"A timer for the given ID ({id}) has not been started with .tick()")
-        return end - self._tick_starts[id]
+        if key not in self._tick_starts:
+            raise TickTockException(f"A timer for the given key ({key}) has not been started with .tick()")
+        return end - self._tick_starts[key]
 
     def profile(self, name: str, *, hits: int = 1, disable: bool = False) -> _ProfileContext:
         """Begin a profile with given name.
@@ -275,8 +275,8 @@ class TickTock:
         self.reset()
         self._tick_starts = tick_starts
 
-    def do_at_interval(self, interval: float, id: Hashable = None, *, also_first: bool = False) -> bool:
-        """Return true if it is at least `interval` since this method was called with the same id previously.
+    def do_at_interval(self, interval: float, key: Hashable = None, *, also_first: bool = False) -> bool:
+        """Return true if it is at least `interval` since this method was called with the same key previously.
 
         A common pattern is to run a piece of code at fixed intervals inside a loop. In the example below, a loop is continuously doing
         some computation which results in some telemetry. This is collected every 60 seconds.
@@ -287,15 +287,15 @@ class TickTock:
             if TT.do_at_interval(60, "telemetry"):
                 <collect telemetry>
         ```
-        If `also_first` is True, `do_at_interval` will return True the first time it is called with a given `id`.
+        If `also_first` is True, `do_at_interval` will return True the first time it is called with a given `key`.
         Otherwise, the interval has to elapse before True is returned the first time.
         """
-        id = ("__interval__", id)
-        if id not in self._tick_starts:
-            self.tick(id)
+        key = ("__interval__", key)
+        if key not in self._tick_starts:
+            self.tick(key)
             return also_first
-        if self.tock(id) >= interval:
-            self.tick(id)
+        if self.tock(key) >= interval:
+            self.tick(key)
             return True
         return False
 

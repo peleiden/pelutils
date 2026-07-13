@@ -1,37 +1,36 @@
 from __future__ import annotations
 
 import itertools
-import os
 import shlex
-import shutil
 import sys
+from pathlib import Path
 
 import pytest
 
 from pelutils import except_keys
-from pelutils.parser import Argument, ConfigError, Flag, JobDescription, Option, Parser, ParserError, _fixdash
+from pelutils.job_parser import ConfigError, Flag, JobDescription, JobParser, OptionalArg, ParserError, RequiredArg, _fixdash
 from pelutils.tests import UnitTestCollection, restore_argv
 
 _testdir = "parser_test"
-_argv_template = ["main.py", os.path.join(UnitTestCollection.test_dir, _testdir)]
-_sample_argv = f"{_argv_template[0]} {_argv_template[1]} -g 4 --gib-num 3.2 -o 7 -i -a b c".split()
+_argv_template = ["main.py"]
+_sample_argv = f"{_argv_template[0]} -g 4 --gib-num 3.2 -o 7 -i -a b c".split()
 
 
-def _sample_argv_conf(config_path: str) -> list[str]:
-    return (f"{_argv_template[0]} {_argv_template[1]} -c %s --gib-num 3.2" % config_path).split()
+def _sample_argv_conf(config_path_str: str | Path) -> list[str]:
+    return (f"{_argv_template[0]} -c {config_path_str} --gib-num 3.2").split()
 
 
 _sample_arguments = [
-    Argument("gibstr"),
-    Argument("gib-num", type=float),
-    Argument("arg-two", nargs=2),
-    Option("opt-int", default=4),
-    Option("opt-d", abbrv="o", default=6, type=lambda x: 2 * int(x)),
-    Option("opt-many", nargs=0, default=list(), type=float),
-    Option("opt-default-none", nargs=2, default=None, type=int),
-    Option("hello", default="there"),
-    Option("Cased-Option", default="Kebab-Pascal"),
-    Flag("iam-bool", abbrv="i"),
+    RequiredArg("gibstr"),
+    RequiredArg("gib-num", type=float),
+    RequiredArg("arg-two", nargs=2),
+    OptionalArg("opt-int", default=4),
+    OptionalArg("opt-d", abbrev="o", default=6, type=lambda x: 2 * int(x)),
+    OptionalArg("opt-many", nargs=0, default=list(), type=float),
+    OptionalArg("opt-default-none", nargs=2, default=None, type=int),
+    OptionalArg("hello", default="there"),
+    OptionalArg("Cased-Option", default="Kebab-Pascal"),
+    Flag("iam-bool", abbrev="i"),
     Flag("Cased-Flag"),
 ]
 
@@ -96,32 +95,31 @@ class TestParser(UnitTestCollection):
 
     def test_argument_validation(self):
         with pytest.raises(ValueError):
-            Argument("")
+            RequiredArg("")
         with pytest.raises(ValueError):
-            Option("--Hello there", default="General Kenobi")
+            OptionalArg("--Hello there", default="General Kenobi")
         with pytest.raises(ValueError):
-            Flag("show-memes", abbrv="sm")
+            Flag("show-memes", abbrev="sm")
         with pytest.raises(ValueError):
-            Option("memes", abbrv="-s", default="doge")
+            OptionalArg("memes", abbrev="-s", default="doge")
         with pytest.raises(ValueError):
             Flag("-show-memes")
         for char in (" ", "\t", "\n"):
             with pytest.raises(ValueError):
-                Argument(f"hello{char}there")
+                RequiredArg(f"hello{char}there")
         with pytest.raises(TypeError):
-            Argument("default", default=4)
+            RequiredArg("default", default=4)
         with pytest.raises(TypeError):
-            Argument("multiple-args", nargs="?")
+            RequiredArg("multiple-args", nargs="?")
         with pytest.raises(ValueError):
-            Option("no-args", nargs=-1, default=[])
-        Argument("meme-folder")
-        Option("memes", abbrv="m", default="doge")
-        Flag("show-memes", abbrv="s")
+            OptionalArg("no-args", nargs=-1, default=[])
+        RequiredArg("meme-folder")
+        OptionalArg("memes", abbrev="m", default="doge")
+        Flag("show-memes", abbrev="s")
 
     def test_job_description(self):
         j = JobDescription(
             name="groot",
-            location="i_am_groot",
             explicit_args=set(),
             docfile_content="",
             a=2,
@@ -136,7 +134,7 @@ class TestParser(UnitTestCollection):
         with pytest.raises(AttributeError):
             j.ab  # noqa: B018
 
-        job_dict = j.todict()
+        job_dict = j.given_args_to_dict()
         for kw, v in job_dict.items():
             assert getattr(j, kw) == v
             assert not kw.startswith("_")
@@ -145,9 +143,9 @@ class TestParser(UnitTestCollection):
     @restore_argv
     def test_job_description_format(self):
         sys.argv = _sample_argv
-        parser = Parser(*_sample_arguments)
+        parser = JobParser(*_sample_arguments)
 
-        job = parser.parse_args()
+        job = parser.parse_job()
         for arg in _sample_arguments:
             assert _fixdash(arg.name) in str(job)
 
@@ -157,51 +155,47 @@ class TestParser(UnitTestCollection):
             assert arg.__class__.__name__ in str(arg)
 
     def test_argument_hash(self):
-        assert hash(Argument("name")) == hash(Option("name")) == hash(Flag("name"))
-        assert hash(Argument("name")) != hash(Option("namer")) != hash(Flag("namerr"))
+        assert hash(RequiredArg("name")) == hash(OptionalArg("name")) == hash(Flag("name"))
+        assert hash(RequiredArg("name")) != hash(OptionalArg("namer")) != hash(Flag("namerr"))
 
     @restore_argv
-    def test_name_and_abbrv_handling(self):
+    def test_name_and_abbreviation_handling(self):
         """Test that name abbreviation ordering and collisions are handled properly"""
         with pytest.raises(ParserError):
-            Parser(Argument("arg1", abbrv="a"), Argument("arg2", abbrv="a"))
+            JobParser(RequiredArg("arg1", abbrev="a"), RequiredArg("arg2", abbrev="a"))
         with pytest.raises(ParserError):
-            Parser(Argument("location"))
-        with pytest.raises(ParserError):
-            Parser(Argument("help"))
+            JobParser(RequiredArg("help"))
 
         # Test that under no permutations is the ordering changed in the argparser
-        sys.argv = f"main.py {os.path.join(self.test_dir, _testdir)}".split()
+        sys.argv = _argv_template
         sample_args = [
-            Option("quick-mafs", default=0),
-            Flag("Quick-flag", abbrv="Q"),
-            Option("quick-boi", abbrv="q", default=1),
+            OptionalArg("quick-mafs", default=0),
+            Flag("Quick-flag", abbrev="Q"),
+            OptionalArg("quick-boi", abbrev="q", default=1),
         ]
         for ordering in itertools.permutations(range(len(sample_args))):
-            p = Parser(*(sample_args[i] for i in ordering))
+            p = JobParser(*(sample_args[i] for i in ordering))
             args = p._argparser.parse_args()
-            for i, (argname, value) in enumerate(except_keys(vars(args), [_fixdash(x) for x in Parser._reserved_names]).items()):
+            for i, (argname, value) in enumerate(except_keys(vars(args), [_fixdash(x) for x in JobParser._reserved_names]).items()):
                 arg = sample_args[ordering[i]]
                 assert _fixdash(arg.name) == argname
                 assert arg.default == value
 
         # Test naming conflicts
         with pytest.raises(ParserError):
-            Parser(Argument("a-b"), Flag("a_b"))
+            JobParser(RequiredArg("a-b"), Flag("a_b"))
 
     def test_parser_properties(self):
-        assert Parser().reserved_names == {"location", "config", "name", "help"}
-        assert Parser().reserved_abbrvs == {"c"}
-        assert Parser().encoding_seperator == Parser._encoding_separator
+        assert JobParser().reserved_names == {"config-file", "name", "help"}
+        assert JobParser().reserved_abbreviations == {"c"}
 
     @restore_argv
     def test_no_conf_single_job(self):
         sys.argv = _sample_argv
-        parser = Parser(*_sample_arguments, multiple_jobs=False)
-        job = parser.parse_args()
+        parser = JobParser(*_sample_arguments, multiple_jobs=False)
+        job = parser.parse_job()
 
         assert isinstance(job, JobDescription)
-        assert job.location == os.path.join(self.test_dir, _testdir)
         assert job.gibstr == "4"
         assert job.gib_num == float("3.2")
         assert job.arg_two == ["b", "c"]
@@ -210,17 +204,16 @@ class TestParser(UnitTestCollection):
         assert job.opt_many == list()
         assert job.opt_default_none is None
         assert job.iam_bool
-        assert job.explicit_args == {"location", "gibstr", "gib_num", "arg_two", "opt_d", "iam_bool"}
+        assert job.explicit_args == {"gibstr", "gib_num", "arg_two", "opt_d", "iam_bool"}
 
     @restore_argv
     def test_conf_single_job(self):
         # Test with only default section
         sys.argv = _sample_argv_conf(self._single_job_file)
-        parser = Parser(*_sample_arguments, multiple_jobs=False)
-        job = parser.parse_args()
+        parser = JobParser(*_sample_arguments, multiple_jobs=False)
+        job = parser.parse_job()
 
         assert job.name == "BUTWHATABOUTSECONDJOB"
-        assert job.location == os.path.join(self.test_dir, _testdir)
         assert job.gibstr == "pistaccio"
         assert job.gib_num == float("3.2")
         assert job.opt_int == 4
@@ -229,24 +222,23 @@ class TestParser(UnitTestCollection):
 
         # Test that multiple sections throws an error, unless DEFAULT is one of only two sections
         sys.argv = _sample_argv_conf(self._single_job_file)
-        parser = Parser(*_sample_arguments, multiple_jobs=False)
-        parser.parse_args()
+        parser = JobParser(*_sample_arguments, multiple_jobs=False)
+        parser.parse_job()
 
         sys.argv = _sample_argv_conf(self._multiple_jobs_file)
-        parser = Parser(*_sample_arguments, multiple_jobs=False)
+        parser = JobParser(*_sample_arguments, multiple_jobs=False)
         with pytest.raises(ConfigError):
-            parser.parse_args()
+            parser.parse_job()
 
     @restore_argv
     def test_no_conf_multiple_jobs(self):
         sys.argv = [*_sample_argv, "--name", "good-name"]
-        parser = Parser(*_sample_arguments, multiple_jobs=True)
-        jobs = parser.parse_args()
+        parser = JobParser(*_sample_arguments, multiple_jobs=True)
+        jobs = parser.parse_jobs()
         assert len(jobs) == 1
         job = jobs[0]
 
         assert job.name == "good-name"
-        assert job.location == os.path.join(self.test_dir, _testdir, job.name)
         assert job.gibstr == "4"
         assert job.gib_num == float("3.2")
         assert job.arg_two == ["b", "c"]
@@ -258,12 +250,11 @@ class TestParser(UnitTestCollection):
     @restore_argv
     def test_conf_multiple_jobs(self):
         sys.argv = _sample_argv_conf(self._multiple_jobs_file)
-        parser = Parser(*_sample_arguments, multiple_jobs=True)
-        jobs = parser.parse_args()
+        parser = JobParser(*_sample_arguments, multiple_jobs=True)
+        jobs = parser.parse_jobs()
         assert len(jobs) == 2
 
         assert jobs[0].name == "BUTWHATABOUTSECONDJOB"
-        assert jobs[0].location == os.path.join(self.test_dir, _testdir, jobs[0].name)
         assert jobs[0].gibstr == "pistaccio"
         assert jobs[0].gib_num == float("3.2")
         assert jobs[0].opt_int == 4
@@ -271,7 +262,6 @@ class TestParser(UnitTestCollection):
         assert not jobs[0].iam_bool
 
         assert jobs[1].name == "THETHIRDJOB"
-        assert jobs[1].location == os.path.join(self.test_dir, _testdir, jobs[1].name)
         assert jobs[1].gibstr == "but they were all of them deceived, for another job was made"
         assert jobs[1].gib_num == float("3.2")
         assert jobs[1].opt_int == 5
@@ -281,88 +271,74 @@ class TestParser(UnitTestCollection):
 
         # We allow setting default section name from CLI
         sys.argv = [*_sample_argv_conf(self._default_file), "--name", "funky-name"]
-        parser = Parser(*_sample_arguments, multiple_jobs=True)
-        jobs = parser.parse_args()
+        parser = JobParser(*_sample_arguments, multiple_jobs=True)
+        jobs = parser.parse_jobs()
         assert len(jobs) == 1
         assert jobs[0].name == "funky-name"
-        assert jobs[0].location == os.path.join(self.test_dir, _testdir, "funky-name")
 
     @restore_argv
     def test_conf_specific_jobs(self):
         sys.argv = _sample_argv_conf(f"{self._multiple_jobs_file}:BUTWHATABOUTSECONDJOB")
-        parser = Parser(*_sample_arguments, multiple_jobs=True)
-        jobs = parser.parse_args()
+        parser = JobParser(*_sample_arguments, multiple_jobs=True)
+        jobs = parser.parse_jobs()
         assert len(jobs) == 1
         assert jobs[0].name == "BUTWHATABOUTSECONDJOB"
 
         sys.argv = _sample_argv_conf(f"{self._multiple_jobs_file}:THETHIRDJOB:BUTWHATABOUTSECONDJOB")
-        parser = Parser(*_sample_arguments, multiple_jobs=True)
-        jobs = parser.parse_args()
+        parser = JobParser(*_sample_arguments, multiple_jobs=True)
+        jobs = parser.parse_jobs()
         assert len(jobs) == 2
         assert jobs[0].name == "BUTWHATABOUTSECONDJOB"
         assert jobs[1].name == "THETHIRDJOB"
 
         sys.argv = _sample_argv_conf(f"{self._multiple_jobs_file}:THETHIRDJOB:FAKEJOB:BUTWHATABOUTSECONDJOB")
-        parser = Parser(*_sample_arguments, multiple_jobs=True)
+        parser = JobParser(*_sample_arguments, multiple_jobs=True)
         with pytest.raises(ParserError):
-            jobs = parser.parse_args()
+            jobs = parser.parse_jobs()
 
     @restore_argv
     def test_missing_arg(self):
         sys.argv = _argv_template
-        parser = Parser(*_sample_arguments)
+        parser = JobParser(*_sample_arguments)
         with pytest.raises(ParserError):
-            parser.parse_args()
+            parser.parse_job()
 
     @restore_argv
     def test_no_default_section(self):
         sys.argv = _sample_argv_conf(self._no_default_file)
-        parser = Parser(*_sample_arguments, multiple_jobs=False)
-        job = parser.parse_args()
+        parser = JobParser(*_sample_arguments, multiple_jobs=False)
+        job = parser.parse_job()
 
         assert job.name == "IAMNOTDEFAULT"
-        assert job.location == os.path.join(self.test_dir, _testdir)
         assert job.gibstr == "not default"
         assert job.gib_num == float("3.2")
         assert job.arg_two == ["1", "2"]
         assert job.opt_default_none == [2, 3]
 
         sys.argv += shlex.split("--opt-default-none 1 3 5")
-        parser = Parser(*_sample_arguments, multiple_jobs=False)
+        parser = JobParser(*_sample_arguments, multiple_jobs=False)
         with pytest.raises(ValueError):
-            parser.parse_args()
+            parser.parse_job()
 
     @restore_argv
-    def test_non_optional_args(self):
-        sys.argv = f"main.py {self.get_test_path(_testdir)} -c {self._multiple_jobs_file}".split()
-        parser = Parser(*_sample_arguments, multiple_jobs=True)
+    def test_required_args(self):
+        sys.argv = f"{_argv_template[0]} -c {self._multiple_jobs_file}".split()
+        parser = JobParser(*_sample_arguments, multiple_jobs=True)
         with pytest.raises(ParserError):
-            parser.parse_args()
-
-    @restore_argv
-    def test_clear_folders(self):
-        d = os.path.join(self.test_dir, _testdir)
-        os.makedirs(d)
-        with open(os.path.join(d, "tmp.txt"), "w") as f:
-            f.write("")
-        sys.argv = f"main.py {self.get_test_path(_testdir)}".split()
-        parser = Parser()
-        parser.parse_args()
-        assert os.listdir(d)
-        job = parser.parse_args()
-        job.prepare_directory()
-        assert len(os.listdir(d)) == 1 and os.listdir(d)[0] == JobDescription.document_filename
+            parser.parse_jobs()
 
     @restore_argv
     def test_nargs(self):
         # Test an expected case
         sys.argv = [*_argv_template, "--bar", "1", "2"]
-        parser = Parser(
-            Argument("bar", nargs=2, type=int), Option("foo", nargs=3, default=["a", "b", "c"]), Option("fizz", nargs=1, default=(1,))
+        parser = JobParser(
+            RequiredArg("bar", nargs=2, type=int),
+            OptionalArg("foo", nargs=3, default=["a", "b", "c"]),
+            OptionalArg("fizz", nargs=1, default=(1,)),
         )
         assert parser._arguments["fizz"].type is int
 
-        args = parser.parse_args()
+        args = parser.parse_job()
         assert len(args.bar) == 2
         assert args.bar == [1, 2]
         assert len(args.foo) == 3
@@ -370,72 +346,66 @@ class TestParser(UnitTestCollection):
 
         # Test if argument not given
         sys.argv = _argv_template
-        parser = Parser(
-            Argument("bar", nargs=0, type=int),
+        parser = JobParser(
+            RequiredArg("bar", nargs=0, type=int),
         )
         with pytest.raises(ParserError):
-            parser.parse_args()
+            parser.parse_job()
 
         # Test if wrong number of arguments
         sys.argv = [*_argv_template, "--bar", "1", "2"]
-        parser = Parser(Argument("bar", nargs=3))
+        parser = JobParser(RequiredArg("bar", nargs=3))
         with pytest.raises(ValueError):
-            parser.parse_args()
-        parser = Parser(Option("bar", nargs=3, default=[1, 2, 3]))
+            parser.parse_job()
+        parser = JobParser(OptionalArg("bar", nargs=3, default=[1, 2, 3]))
         with pytest.raises(ValueError):
-            parser.parse_args()
+            parser.parse_job()
 
         # Make sure stuff also works if config file is wrong
-        sys.argv = [*_argv_template, "-c", self._sample_single_nargs_file]
-        parser = Parser(Argument("foo", nargs=3))
+        sys.argv = [*_argv_template, "-c", str(self._sample_single_nargs_file)]
+        parser = JobParser(RequiredArg("foo", nargs=3))
         with pytest.raises(ValueError):
-            parser.parse_args()
+            parser.parse_job()
 
         # Test type parsing
-        parser = Parser(Argument("foo", nargs=2, type=int))
-        args = parser.parse_args()
+        parser = JobParser(RequiredArg("foo", nargs=2, type=int))
+        args = parser.parse_job()
         assert args.foo == [3, 4]
 
     @restore_argv
     def test_no_unknown_args(self):
         # Test with command line argument
         sys.argv = [*_argv_template, "--bar", "1", "--foo", "1"]
-        parser = Parser(Argument("bar"))
+        parser = JobParser(RequiredArg("bar"))
         with pytest.raises(SystemExit) as pytest_wrapped_e:
-            parser.parse_args()
+            parser.parse_job()
         assert pytest_wrapped_e.type is SystemExit
         assert pytest_wrapped_e.value.code == 2
 
         # Test with config argument
-        sys.argv = [*_argv_template, "-c", self._sample_single_nargs_file]
-        parser = Parser(Option("bar", type=int, default=[1, 2]))
+        sys.argv = [*_argv_template, "-c", str(self._sample_single_nargs_file)]
+        parser = JobParser(OptionalArg("bar", type=int, default=[1, 2]))
         with pytest.raises(ParserError):
-            parser.parse_args()
+            parser.parse_job()
 
     @restore_argv
     def test_document(self):
-        shutil.rmtree(self.get_test_path(_testdir))
+        output_dir = self.get_test_path(_testdir)
+        docfile = output_dir / "docfile.ini"
         sys.argv = _sample_argv_conf(self._no_default_file)
-        parser = Parser(*_sample_arguments)
-        job = parser.parse_args()
-        job.prepare_directory()
+        parser = JobParser(*_sample_arguments)
+        job = parser.parse_job()
 
-        with open(os.path.join(job.location, job.document_filename)) as fh:
-            content = fh.read()
+        job.write_documentation(docfile)
+        content = docfile.read_text()
         assert _sample_no_default.replace("=", " = ").strip() in content.strip()
         assert " ".join(_sample_argv_conf(self._no_default_file)) in content
-
-        # Write documentation manually again
-        job.write_documentation()
-        with open(os.path.join(job.location, job.document_filename)) as fh:
-            content2 = fh.read()
-        assert content2 == 2 * content
 
     @restore_argv
     def test_names(self):
         sys.argv = _sample_argv
-        parser = Parser(*_sample_arguments)
-        job = parser.parse_args()
+        parser = JobParser(*_sample_arguments)
+        job = parser.parse_job()
 
         # Assert that characters not friendly to filenames
         # do not appear in autogenerated names

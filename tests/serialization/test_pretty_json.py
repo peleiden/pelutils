@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from pelutils.datastorage2._pretty_json import _PICKLE_PREFIX, _decode_unpickle, _pretty_json
+from pelutils.serialization._pretty_json import _PICKLE_PREFIX, _decode_unpickle, _pretty_json
 
 
 def pretty_json_with_defaults(obj: Any) -> Any:

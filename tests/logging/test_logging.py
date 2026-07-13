@@ -242,7 +242,7 @@ class TestLogger(UnitTestCollection):
         assert "This does" in lines[0]
         assert "not fail" in lines[1]
 
-        log.configure(logfile, default_seperator=" ", append=True)
+        log.configure(logfile, default_separator=" ", append=True)
         log("This does", "not fail")
         with open(logfile) as lf:
             lines = lf.readlines()
