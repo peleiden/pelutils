@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import io
-import os
 import re
 import shlex
 import sys
@@ -11,8 +10,8 @@ from ast import literal_eval
 from configparser import ConfigParser, MissingSectionHeaderError
 from copy import deepcopy
 from datetime import datetime
+from pathlib import Path
 from pprint import pformat
-from shutil import rmtree
 from typing import Any, Callable, TypeVar, Union
 
 from typing_extensions import override
@@ -89,7 +88,7 @@ class _AbstractArgument(ABC):  # noqa: B024
         return hash(self.name)
 
 
-class MandatoryArg(_AbstractArgument):
+class RequiredArg(_AbstractArgument):
     """Command-line argument that must be given a value."""
 
     def __init__(  # noqa: PLR0913
@@ -170,36 +169,27 @@ class JobDescription(Namespace):
     Functionally, it is very similar to Namespace from argpase.
     """
 
-    document_filename = "used-config.ini"
-
-    def __init__(self, name: str, location: str, explicit_args: set[str], docfile_content: str, **kwargs: Any):  # pyright: ignore[reportExplicitAny]
+    def __init__(self, name: str, explicit_args: set[str], docfile_content: str, **kwargs: Any):  # pyright: ignore[reportExplicitAny]
         super().__init__(**kwargs)
         self.name = name
-        self.location = location
         self.explicit_args = explicit_args
         self._docfile_content = docfile_content
 
-    def to_dict(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
-        """Return a dictionary version of itself which contains solely the parsed values."""
+    def given_args_to_dict(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
+        """Return a dictionary version of itself which contains solely explicitly parsed arguments - that is non-default arguments."""
         d = vars(self)
         d = {kw: v for kw, v in d.items() if not kw.startswith("_") and kw not in {"config", "explicit_args"}}
         return d
 
-    def prepare_directory(self, encoding: str | None = None):
-        """Clear the job directory and puts a documentation file in it."""
-        rmtree(self.location, ignore_errors=True)
-        os.makedirs(self.location)
-        self.write_documentation(encoding)
+    def write_documentation(self, path: str | Path, *, append: bool = True):
+        """Write documentation to a given file path.
 
-    def write_documentation(self, encoding: str | None = None, *, append: bool = True):
-        """Write, or append if one already exists, a documentation file in the location.
-
-        The file has the CLI command user for running the program as a comment as well as the config file,
+        The documentation includes the CLI command given by the user for running the program as a comment as well as the config file,
         if such a one was used.
         """
-        os.makedirs(self.location, exist_ok=True)
-        path = os.path.join(self.location, self.document_filename)
-        with open(path, "a" if append else "w", encoding=encoding) as docfile:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a" if append else "w") as docfile:
             docfile.write(self._docfile_content)
 
     def __getitem__(self, key: str) -> Any:  # pyright: ignore[reportExplicitAny]
@@ -213,33 +203,27 @@ class JobDescription(Namespace):
 
     @override
     def __str__(self) -> str:
-        return pformat(self.to_dict())
+        return pformat(self.given_args_to_dict())
 
 
-ArgumentTypes = Union[MandatoryArg, OptionalArg, Flag]
+ArgumentTypes = Union[RequiredArg, OptionalArg, Flag]
 
 
 class JobParser:
     """Parse command-line arguments and configuration files into job descriptions."""
 
-    location: str | None = None  # Set in `parse` method
-
     _default_config_job = "DEFAULT"
 
-    _location_arg = MandatoryArg("location")
-    _location_arg._name_or_flags = lambda: ("location",)  # pyright: ignore[reportPrivateUsage]
     _name_arg = OptionalArg("name", default=None, help="Name of the job")
     _section_separator = ":"
-    _encoding_separator = "::"
     _config_arg = OptionalArg(
-        "config",
+        "config-file",
         default=None,
         abbrev="c",
-        help=f"Path to config file. Encoding can be specified by giving <path>{_encoding_separator}<encoding>, "
-        + f"e.g. --config path/to/config.ini{_encoding_separator}utf-8",
+        help="Path a config file which uses the .ini/.conf file format.",
     )
 
-    _reserved_arguments: tuple[ArgumentTypes, ...] = (_location_arg, _name_arg, _config_arg)
+    _reserved_arguments: tuple[ArgumentTypes, ...] = (_name_arg, _config_arg)
     _reserved_names = {arg.name for arg in _reserved_arguments}  # noqa: RUF012
     _reserved_names.add("help")  # Reserved by argparse
     _reserved_abbreviations = {arg.abbrev for arg in _reserved_arguments if arg.abbrev}  # noqa: RUF012
@@ -253,11 +237,6 @@ class JobParser:
     def reserved_abbreviations(self) -> set[str]:
         """Argument abbreviations which are reserved."""
         return self._reserved_abbreviations
-
-    @property
-    def encoding_separator(self) -> str:
-        """Separator used to specify the encoding of the config file."""
-        return self._encoding_separator
 
     def __init__(
         self,
@@ -284,10 +263,8 @@ class JobParser:
         self._arguments = {_fixdash(arg.name): arg for arg in self._reserved_arguments + arguments}
         if len(self._arguments) != len(self._reserved_arguments) + len(arguments):
             raise ParserError(
-                "Conflicting arguments found. Notice that '-' and '_' are counted the same,so e.g. 'a-b' and 'a_b' would cause a conflict"
+                "Conflicting arguments found. Note that '-' and '_' are counted the same,so e.g. 'a-b' and 'a_b' would cause a conflict"
             )
-
-        self._location_arg.help = "Directory containing all job directories" if self._multiple_jobs else "Job directory"
 
         # Build abbreviations for arguments
         # Those with explicit abbreviations are handled first to prevent being overwritten
@@ -312,7 +289,7 @@ class JobParser:
         for argument in self._arguments.values():
             # nargs is given as "*" to argparser to prevent it from raising errors
             # Input validity is then checked later
-            if isinstance(argument, MandatoryArg):
+            if isinstance(argument, RequiredArg):
                 self._argparser.add_argument(
                     *argument._name_or_flags(),  # pyright: ignore[reportPrivateUsage]
                     type=argument.type,
@@ -375,16 +352,11 @@ class JobParser:
 
         Return a dictionary where each section as a key pointing to corresponding argument/value pairs.
         """
-        if self._encoding_separator in config_path:
-            config_path, encoding = config_path.split(self._encoding_separator, maxsplit=1)
-        else:
-            encoding = None
-
         config_path, *sections = config_path.split(self._section_separator)
         sections = set(sections)
 
         try:
-            if not self._configparser.read(config_path, encoding=encoding):
+            if not self._configparser.read(config_path):
                 raise FileNotFoundError(f"Configuration file not found at {config_path}")
         except MissingSectionHeaderError as e:
             raise ConfigError(
@@ -428,7 +400,7 @@ class JobParser:
 
         return config_dict
 
-    def parse_args(self) -> JobDescription | list[JobDescription]:  # noqa: PLR0912
+    def _parse_jobs(self) -> list[JobDescription]:  # noqa: PLR0912
         """Parse command line arguments and optionally a configuration file if given.
 
         If multiple_jobs was set to True in __init__, a list of job descriptions is returned.
@@ -437,32 +409,25 @@ class JobParser:
         job_descriptions: list[JobDescription] = list()
         args = self._argparser.parse_args()
         explicit_cli_args = self._parse_explicit_cli_args()
-        self.location = args.location
-        assert self.location is not None
 
-        if args.config is None:
+        if args.config_file is None:
             docfile_content = self._get_docfile_content()
             name = args.name or get_timestamp_for_files()
-            if self._multiple_jobs:
-                location = os.path.join(self.location, name)
-            else:
-                location = self.location
             arg_dict = vars(args)
             for argname, arg in self._arguments.items():
-                if isinstance(arg, MandatoryArg) and arg_dict[argname] is None:
+                if isinstance(arg, RequiredArg) and arg_dict[argname] is None:
                     raise ParserError(f"Missing value for '{arg.name}'")
 
             job_descriptions.append(
                 JobDescription(
                     name=name,
-                    location=location,
                     explicit_args=explicit_cli_args,
                     docfile_content=docfile_content,
-                    **except_keys(arg_dict, ("location", "name")),
+                    **except_keys(arg_dict, ("name",)),
                 )
             )
         else:
-            config_dict = self._parse_config_file(args.config)
+            config_dict = self._parse_config_file(args.config_file)
             # Update documentation file docname
             docfile_content = self._get_docfile_content()
             # If any section other than DEFAULT is given, then the sections consist of DEFAULT and the others
@@ -478,10 +443,8 @@ class JobParser:
                     name = section
                     if section == self._default_config_job:
                         name = section if self._name_arg.name not in explicit_cli_args else args.name
-                    location = os.path.join(self.location, name)
                 else:
                     name = section if self._name_arg.name not in explicit_cli_args else args.name
-                    location = self.location
 
                 # Final values of all arguments
                 # No prepended dashes, but in-word dashes have been changed to underscores
@@ -491,16 +454,11 @@ class JobParser:
                         ("name", "config"),
                     ),
                     **config_args,
-                    **{
-                        argname: value
-                        for argname, value in except_keys(vars(args), ("name", "location")).items()
-                        if argname in explicit_cli_args
-                    },
+                    **{argname: value for argname, value in except_keys(vars(args), ("name",)).items() if argname in explicit_cli_args},
                 }
                 job_descriptions.append(
                     JobDescription(
                         name=name,
-                        location=location,
                         explicit_args={*config_args.keys(), *explicit_cli_args},
                         docfile_content=docfile_content,
                         **value_dict,
@@ -513,8 +471,8 @@ class JobParser:
                 argument = self._arguments[argname]
                 if argname not in job:
                     raise ParserError(f"Job '{job.name}' is missing value for '{arg.name}'")
-                elif isinstance(argument, (MandatoryArg, OptionalArg)) and argument.nargs is not None:
-                    if job[argname] is None and isinstance(argument, MandatoryArg):
+                elif isinstance(argument, (RequiredArg, OptionalArg)) and argument.nargs is not None:
+                    if job[argname] is None and isinstance(argument, RequiredArg):
                         raise ParserError(f"Argument '{argname}' has not been given in job '{job.name}'")
                     assert isinstance(job[argname], list) or job[argname] is None
                     if job[argname] is not None:
@@ -524,19 +482,36 @@ class JobParser:
                                 f"Mandatory argument '{argname}' expected {argument.nargs} values but received {len(job[argname])}"
                             )
 
-        return job_descriptions if self._multiple_jobs else job_descriptions[0]
+        return job_descriptions
+
+    def parse_job(self) -> JobDescription:
+        """Parse command line and/or config file arguments into exactly one job description. Use for multiple_jobs = False (default).
+
+        Raises
+        ------
+        ConfigError
+            If the selected configuration resolves to multiple jobs.
+        """
+        jobs = self._parse_jobs()
+        if len(jobs) != 1:
+            raise ConfigError("Multiple jobs were resolved; use parse_jobs() instead")
+        return jobs[0]
+
+    def parse_jobs(self) -> list[JobDescription]:
+        """Parse command line and/or config file arguments into one or more job descriptions. Use for multiple_jobs = True."""
+        return self._parse_jobs()
 
     def _get_docfile_content(self) -> str:
         buffer = io.StringIO()
-        buffer.write(f"# Running job at {datetime.now()}{os.linesep}")
+        buffer.write(f"# Running job at {datetime.now()}\n")
         lines: list[str] = [
             "CLI command",
             " ".join(sys.argv),
             "Default values",
             *pformat(self._get_default_values(), width=120).splitlines(),
         ]
-        buffer.write(f"{os.linesep}# " + f"{os.linesep}# ".join(lines) + os.linesep)
-        cline = f"# Used config file{os.linesep}"
+        buffer.write("\n# " + "\n# ".join(lines) + "\n")
+        cline = "# Used config file\n"
         buffer.write(cline)
         position = buffer.tell()
         self._configparser.write(buffer)
@@ -544,7 +519,7 @@ class JobParser:
             # Nothing was written to the buffer, so clear the config file section
             buffer.seek(position - len(cline))
             buffer.truncate()
-            buffer.write(2 * os.linesep)
+            buffer.write(2 * "\n")
         content = buffer.getvalue()
         buffer.close()
         return content

@@ -308,7 +308,7 @@ from .__version__ import __version__
 from .logging import *  # noqa: F403
 
 log: Logger  # Make sure type hinting works when importing global instances  # noqa: F405
-from .parser import *  # noqa: F403
+from .job_parser import *  # noqa: F403
 from .ticktock import *  # noqa: F403
 
 TT: TickTock  # noqa: F405

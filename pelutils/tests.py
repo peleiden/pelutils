@@ -5,6 +5,7 @@ import os
 import sys
 import tempfile
 from functools import wraps
+from pathlib import Path
 from shutil import rmtree
 from typing import Callable, TypeVar
 
@@ -80,7 +81,7 @@ class UnitTestCollection:
     ```
     """
 
-    test_dir = tempfile.mkdtemp() if OS.is_linux else ".local-test-dir"
+    test_dir = Path(tempfile.mkdtemp() if OS.is_linux else ".local-test-dir")
 
     @classmethod
     def setup_class(cls):
@@ -100,9 +101,9 @@ class UnitTestCollection:
         raise except_instance
 
     @classmethod
-    def get_test_path(cls, path: str) -> str:
+    def get_test_path(cls, relative_path: str | Path) -> Path:
         """Return a path inside the test directory.
 
         `path` would often just be a filename which can be written to and is automatically cleaned up after the test.
         """
-        return os.path.join(cls.test_dir, path)
+        return (cls.test_dir / relative_path).resolve()
