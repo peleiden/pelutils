@@ -12,6 +12,8 @@
   `pelutils.jsonl`, `pelutils.tests`, `pelutils.types`, and `pelutils.ds`, respectively.
 - Importing `pelutils` no longer imports `pelutils.ds` or requires the compiled `_pelutils_c` extension.
 - Added explicit public exports to public modules.
+- Added `linesep` option to `Table`.
+- Fixed bug in `Table` where invalid list lengths could be added before being detected.
 - Renamed `DataStorage2` to `UniversalJsonModel` and moved it from `pelutils.datastorage2` to `pelutils.serialization`.
 - Renamed `model_safe_dump` and `model_safe_load` to `to_json_dict` and `from_json_dict`.
 - `UniversalJsonModel.save` and `.load` now accept a full file path instead of a directory and optional filename.
@@ -20,6 +22,7 @@
 - Removed mandatory `location` argument from `JobParser`.
 - Renamed logger `default_seperator` to `default_separator` and TickTock timer `id` parameters to `key`.
 - Renamed and simplified `tensor_bytes` to `array_bytes`.
+- Renamed `Table.tex` -> `Table.to_latex`.
 
 ## 3.9.0
 

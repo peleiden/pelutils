@@ -153,7 +153,7 @@ class Figure:
         if self._style:
             plt.style.use(self._style)
 
-        self._rc_context = plt.rc_context(self._rc_params)  # pyright: ignore[reportUninitializedInstanceVariable]
+        self._rc_context = plt.rc_context(self._rc_params)  # pyright: ignore[reportUninitializedInstanceVariable, reportArgumentType]
         self._rc_context.__enter__()
 
     def __exit__(self, et: type[BaseException] | None, ev: BaseException | None, tb: TracebackType | None):

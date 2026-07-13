@@ -40,7 +40,7 @@ def test_tex():
     t.add_header(list(ascii_letters))
     for i in range(3):
         t.add_row([i * x for x in range(len(ascii_letters))])
-    tex = t.tex()
+    tex = t.to_latex()
     texlines = tex.splitlines()
     assert r"\toprule" in texlines[0]
     assert r"\midrule" in texlines[2]

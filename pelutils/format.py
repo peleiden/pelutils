@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import re
-from collections.abc import Iterable
+from collections.abc import Sequence
 from typing import Any
 
 from rich.color import ANSI_COLOR_NAMES
@@ -59,32 +59,32 @@ class RichString:
 class Table:
     """Table for nicely formatting tabular data."""
 
-    def __init__(self):
+    def __init__(self, linesep: str = os.linesep):
         self._width: int | None = None  # Number of elements in each row - set when first row or header added
-        self._header: list[Any] = list()  # Header elements  # pyright: ignore[reportExplicitAny]
-        self._rows: list[list[Any]] = list()  # All non-header rows  # pyright: ignore[reportExplicitAny]
-        self._left_aligns: list[list[bool]] = list()  # True for left align, False for right align
+        self._header: tuple[str, ...] = tuple()  # Header elements
+        self._rows: list[tuple[str, ...]] = list()  # All non-header rows
+        self._left_aligns: list[tuple[bool, ...]] = list()  # True for left align, False for right align
         self._hlines: set[int] = set()  # Row indexes that are followed by a horizontal line
+        self._linesep = linesep
 
-    def _set_and_check_width(self, row: list[Any]):  # pyright: ignore[reportExplicitAny]
+    def _set_and_check_width(self, row: Sequence[Any]):  # pyright: ignore[reportExplicitAny]
         if self._width is not None and len(row) != self._width:
             raise ValueError(f"Given row has {len(row)} elements, but table width is {self._width}")
         if self._width is None:
             self._width = len(row)
 
-    def add_header(self, header: list[Any]):  # pyright: ignore[reportExplicitAny]
+    def add_header(self, header: Sequence[Any]):  # pyright: ignore[reportExplicitAny]
         """Add a header row to the table."""
         self._set_and_check_width(header)
-        self._header = header
+        self._header = tuple(str(x) for x in header)
 
-    def add_row(self, row: list[Any], left_align: Iterable[bool] | None = None):  # pyright: ignore[reportExplicitAny]
+    def add_row(self, row: Sequence[Any], left_align: Sequence[bool] | None = None):  # pyright: ignore[reportExplicitAny]
         """Add a row to the table.
 
         `left_align` is a boolean iterable of equal length to `row`, indicating whether each element is right or left aligned.
         If None, the first element is left aligned, and the rest are right aligned.
         """
         self._set_and_check_width(row)
-        self._rows.append(row)
         if left_align is None:
             assert self._width is not None
             left_align = [False] * self._width
@@ -95,13 +95,14 @@ class Table:
         if len(row) != len(left_align):
             raise ValueError(f"Number of row elements ({len(row)}) does not match number of left aligns ({len(left_align)})")
 
-        self._left_aligns.append(left_align)
+        self._rows.append(tuple(str(x) for x in row))
+        self._left_aligns.append(tuple(left_align))
 
     def add_hline(self):
         """Add a horizontal line."""
         self._hlines.add(len(self._rows) - 1)
 
-    def tex(self) -> str:
+    def to_latex(self) -> str:
         """Produce LaTeX code for the table to included in a tabular environment.
 
         It assumes the booktabs package is used.
@@ -117,11 +118,10 @@ class Table:
             elif re.match(r"^(.+\|)+.+$", line):
                 lines[i] = line.replace("|", "&") + r" \\"
 
-        return os.linesep.join(lines)
+        return self._linesep.join(lines)
 
     @staticmethod
-    def _format_element(element: Any, width: int, left_align: bool) -> str:  # pyright: ignore[reportExplicitAny]
-        element = str(element)
+    def _format_element(element: str, width: int, left_align: bool) -> str:
         if left_align:
             return element + " " * (width - len(element))
         else:
@@ -131,7 +131,7 @@ class Table:
     def __str__(self) -> str:
         assert self._width is not None
         all_rows = [self._header, *self._rows] if self._header else self._rows
-        widths = [max(len(str(all_rows[i][j])) for i in range(len(all_rows))) for j in range(self._width)]
+        widths = [max(len(all_rows[i][j]) for i in range(len(all_rows))) for j in range(self._width)]
         hline = "+".join("-" * (width + 1 + (0 < i < self._width - 1)) for i, width in enumerate(widths))
         strs = list()
         if self._header:
@@ -142,4 +142,4 @@ class Table:
             if i in self._hlines:
                 strs.append(hline)
 
-        return os.linesep.join(strs)
+        return self._linesep.join(strs)
