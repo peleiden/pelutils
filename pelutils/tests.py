@@ -81,7 +81,7 @@ class UnitTestCollection:
     ```
     """
 
-    test_dir = Path(tempfile.mkdtemp() if OS.is_linux else ".local-test-dir")
+    test_dir = Path(tempfile.mkdtemp() if OS.is_linux else ".local-test-dir").resolve()
 
     @classmethod
     def setup_class(cls):
