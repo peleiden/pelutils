@@ -18,6 +18,7 @@
 - Renamed `Parser`, `Argument`, and `Option` to `JobParser`, `MandatoryArg`, and `OptionalArg`.
 - Removed mandatory `location` argument from `JobParser`.
 - Renamed logger `default_seperator` to `default_separator` and TickTock timer `id` parameters to `key`.
+- Renamed and simplified `tensor_bytes` to `array_bytes`.
 
 ## 3.9.0
 

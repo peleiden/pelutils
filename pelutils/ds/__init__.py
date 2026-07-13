@@ -20,7 +20,7 @@ import _pelutils_c as _c
 
 import pelutils._c as _c_utils
 
-__all__ = ("tensor_bytes", "unique")
+__all__ = ("array_bytes", "unique")
 
 _ArrayT = TypeVar("_ArrayT", bound=npt.ArrayLike)
 
@@ -100,11 +100,8 @@ def unique(  # noqa: PLR0912
     return tuple(ret) if len(ret) > 1 else ret[0]  # pyright: ignore[reportReturnType]
 
 
-def tensor_bytes(x: AnyArray | torch.Tensor) -> int:
+def array_bytes(x: "AnyArray | torch.Tensor") -> int:
     """Calculate the size of a numpy array or torch tensor in bytes."""
-    if isinstance(x, np.ndarray):
-        return x.nbytes
-    elif _has_torch and isinstance(x, torch.Tensor):  # pyright: ignore[reportUnnecessaryIsInstance, reportPossiblyUnboundVariable]
-        return x.element_size() * x.numel()
-    else:
-        raise TypeError(f"Unable to calculate the number of bytes of a tensor with type {type(x)}")
+    if _has_torch and isinstance(x, torch.Tensor):  # pyright: ignore[reportPossiblyUnboundVariable]
+        x = x.numpy()
+    return x.nbytes

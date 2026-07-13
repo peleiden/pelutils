@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 import torch
 
-from pelutils.ds import tensor_bytes, unique
+from pelutils.ds import array_bytes, unique
 
 _seed = sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀")
 np.random.seed(_seed)  # noqa: NPY002
@@ -115,8 +115,8 @@ def _test_tensor_size(shape: list[int]):
         np_array = np.empty(shape, dtype=np_dtype)
         torch_tensor = torch.empty(shape, dtype=torch_dtype)
         assert len(np_array.shape) == len(torch_tensor.shape)
-        np_size = tensor_bytes(np_array)
-        torch_size = tensor_bytes(torch_tensor)
+        np_size = array_bytes(np_array)
+        torch_size = array_bytes(torch_tensor)
         assert isinstance(np_size, int)
         assert isinstance(torch_size, int)
         assert np_size == torch_size
@@ -124,13 +124,10 @@ def _test_tensor_size(shape: list[int]):
 
         if shape[0] > 1 and size > 0:
             # Test views
-            assert tensor_bytes(np_array[::2]) < size
-            assert tensor_bytes(torch_tensor[::2]) < size
-            assert tensor_bytes(np_array[::2]) == tensor_bytes(torch.from_numpy(np_array[::2]))
-            assert tensor_bytes(torch_tensor[::2]) == tensor_bytes(torch_tensor[::2].numpy())
-
-    with pytest.raises(TypeError):
-        tensor_bytes([1, 2, 3])
+            assert array_bytes(np_array[::2]) < size
+            assert array_bytes(torch_tensor[::2]) < size
+            assert array_bytes(np_array[::2]) == array_bytes(torch.from_numpy(np_array[::2]))
+            assert array_bytes(torch_tensor[::2]) == array_bytes(torch_tensor[::2].numpy())
 
 
 def test_tensor_size():
