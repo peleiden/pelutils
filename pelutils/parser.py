@@ -89,8 +89,8 @@ class _AbstractArgument(ABC):  # noqa: B024
         return hash(self.name)
 
 
-class Argument(_AbstractArgument):
-    """Argument that must be given a value."""
+class MandatoryArg(_AbstractArgument):
+    """Command-line argument that must be given a value."""
 
     def __init__(  # noqa: PLR0913
         self,
@@ -112,8 +112,8 @@ class Argument(_AbstractArgument):
         self.nargs = nargs
 
 
-class Option(_AbstractArgument):
-    """Optional argument with a default value."""
+class OptionalArg(_AbstractArgument):
+    """Optional command-line argument with a default value."""
 
     def __init__(  # noqa: PLR0913
         self,
@@ -216,22 +216,22 @@ class JobDescription(Namespace):
         return pformat(self.to_dict())
 
 
-ArgumentTypes = Union[Argument, Option, Flag]
+ArgumentTypes = Union[MandatoryArg, OptionalArg, Flag]
 
 
-class Parser:
-    """Extension of built-in argparse.ArgumentParser which also supports reading from config files."""
+class JobParser:
+    """Parse command-line arguments and configuration files into job descriptions."""
 
     location: str | None = None  # Set in `parse` method
 
     _default_config_job = "DEFAULT"
 
-    _location_arg = Argument("location")
+    _location_arg = MandatoryArg("location")
     _location_arg._name_or_flags = lambda: ("location",)  # pyright: ignore[reportPrivateUsage]
-    _name_arg = Option("name", default=None, help="Name of the job")
+    _name_arg = OptionalArg("name", default=None, help="Name of the job")
     _section_separator = ":"
     _encoding_separator = "::"
-    _config_arg = Option(
+    _config_arg = OptionalArg(
         "config",
         default=None,
         abbrev="c",
@@ -312,7 +312,7 @@ class Parser:
         for argument in self._arguments.values():
             # nargs is given as "*" to argparser to prevent it from raising errors
             # Input validity is then checked later
-            if isinstance(argument, Argument):
+            if isinstance(argument, MandatoryArg):
                 self._argparser.add_argument(
                     *argument._name_or_flags(),  # pyright: ignore[reportPrivateUsage]
                     type=argument.type,
@@ -321,7 +321,7 @@ class Parser:
                     nargs="*" if argument.nargs is not None else None,
                     **argument.kwargs,
                 )
-            elif isinstance(argument, Option):
+            elif isinstance(argument, OptionalArg):
                 self._argparser.add_argument(
                     *argument._name_or_flags(),  # pyright: ignore[reportPrivateUsage]
                     default=argument.default,
@@ -449,7 +449,7 @@ class Parser:
                 location = self.location
             arg_dict = vars(args)
             for argname, arg in self._arguments.items():
-                if isinstance(arg, Argument) and arg_dict[argname] is None:
+                if isinstance(arg, MandatoryArg) and arg_dict[argname] is None:
                     raise ParserError(f"Missing value for '{arg.name}'")
 
             job_descriptions.append(
@@ -513,14 +513,16 @@ class Parser:
                 argument = self._arguments[argname]
                 if argname not in job:
                     raise ParserError(f"Job '{job.name}' is missing value for '{arg.name}'")
-                elif hasattr(argument, "nargs") and argument.nargs is not None:  # pyright: ignore[reportAttributeAccessIssue]
-                    if job[argname] is None and isinstance(argument, Argument):
+                elif isinstance(argument, (MandatoryArg, OptionalArg)) and argument.nargs is not None:
+                    if job[argname] is None and isinstance(argument, MandatoryArg):
                         raise ParserError(f"Argument '{argname}' has not been given in job '{job.name}'")
                     assert isinstance(job[argname], list) or job[argname] is None
                     if job[argname] is not None:
-                        assert all(isinstance(x, argument.type) for x in job[argname])  # pyright: ignore[reportArgumentType, reportAttributeAccessIssue]
-                        if argument.nargs > 0 and len(job[argname]) != argument.nargs:  # pyright: ignore[reportAttributeAccessIssue]
-                            raise ValueError(f"Argument '{argname}' expected {argument.nargs} values but received {len(job[argname])}")  # pyright: ignore[reportAttributeAccessIssue]
+                        assert all(isinstance(x, argument.type) for x in job[argname])  # pyright: ignore[reportArgumentType]
+                        if argument.nargs > 0 and len(job[argname]) != argument.nargs:
+                            raise ValueError(
+                                f"Mandatory argument '{argname}' expected {argument.nargs} values but received {len(job[argname])}"
+                            )
 
         return job_descriptions if self._multiple_jobs else job_descriptions[0]
 
