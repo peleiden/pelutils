@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pelutils.datastorage2._pretty_json import _pretty_json  # pyright: ignore[reportPrivateUsage]
+from pelutils.serialization._pretty_json import _pretty_json  # pyright: ignore[reportPrivateUsage]
 
 
 def pretty_json(

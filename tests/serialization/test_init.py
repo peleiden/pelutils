@@ -6,19 +6,19 @@ import pandas as pd
 import pytest
 import torch
 
-from pelutils.datastorage2 import DataStorage2
-from pelutils.datastorage2._pretty_json import _PICKLE_PREFIX
+from pelutils.serialization import UniversalJsonModel
+from pelutils.serialization._pretty_json import _PICKLE_PREFIX
 from pelutils.tests import UnitTestCollection
 from pelutils.types import FloatArray
 
 
-class DeepCollection(DataStorage2):
+class DeepCollection(UniversalJsonModel):
     np_arr: FloatArray
     tensor: torch.Tensor
     df: pd.DataFrame
 
 
-class Collection(DataStorage2):
+class Collection(UniversalJsonModel):
     string: str
     list_of_floats: list[float]
     tuple_of_floats: tuple[float, ...]
@@ -26,7 +26,7 @@ class Collection(DataStorage2):
     collection: DeepCollection
 
 
-class WhackStorage(DataStorage2):
+class WhackStorage(UniversalJsonModel):
     """Whack struct with lots of nested non-native data types."""
 
     date: date
@@ -55,16 +55,14 @@ data = WhackStorage(
 )
 
 
-class TestDataStorage2(UnitTestCollection):
+class TestUniversalJsonModel(UnitTestCollection):
     def test_save_load(self):
         # Test save and load with custom file name
-        save_dir = Path(self.test_dir) / "subdir 1" / "subdir 2"
-        save_path = data.save(save_dir, filename="bollocks")
+        save_path = Path(self.test_dir) / "subdir 1" / "subdir 2" / "bollocks.json"
+        data.save(save_path)
         assert '"date": "2026-01-01"' in save_path.read_text()  # Ensure that dates get serialised to strings
-        WhackStorage.load(save_dir, filename="bollocks")
-        # Set save and load with default file name
-        data.save(save_dir)
-        loaded = WhackStorage.load(save_dir)
+        WhackStorage.load(save_path)
+        loaded = WhackStorage.load(save_path)
         assert data.date == loaded.date
         assert (data.np_arr == loaded.np_arr).all()
         assert data.np_arr.dtype == loaded.np_arr.dtype
@@ -82,8 +80,8 @@ class TestDataStorage2(UnitTestCollection):
         assert data.collection.collection.df.equals(loaded.collection.collection.df)
 
         # Check that corrupted data raises a ValueError
-        json_content = data._resolve_save_file(save_dir).read_text()
+        json_content = save_path.read_text()
         json_content = json_content.replace(_PICKLE_PREFIX, f"_{_PICKLE_PREFIX}")
-        data._resolve_save_file(save_dir).write_text(json_content)
+        save_path.write_text(json_content)
         with pytest.raises(ValueError):
-            WhackStorage.load(save_dir)
+            WhackStorage.load(save_path)

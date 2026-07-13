@@ -313,10 +313,10 @@ from .ticktock import *  # noqa: F403
 
 TT: TickTock  # noqa: F405
 from .datastorage import *  # noqa: F403
-from .datastorage2 import *  # noqa: F403
 from .ds import unique
 from .format import *  # noqa: F403
 from .jsonl import *  # noqa: F403
 from .pretty_json import *  # noqa: F403
+from .serialization import UniversalJsonModel
 from .tests import *  # noqa: F403
 from .types import *  # noqa: F403
