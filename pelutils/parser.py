@@ -47,28 +47,28 @@ class _AbstractArgument(ABC):  # noqa: B024
     '--' is automatically prepended to `name` when given from the command line.
     """
 
-    def __init__(self, name: str, abbrv: str | None, help: str | None, **kwargs: Any):  # pyright: ignore[reportExplicitAny]
-        self._validate(name, abbrv)
+    def __init__(self, name: str, abbrev: str | None, help: str | None, **kwargs: Any):  # pyright: ignore[reportExplicitAny]
+        self._validate(name, abbrev)
 
         self.name = name
-        self.abbrv = abbrv
+        self.abbrev = abbrev
         self.help = help
         self.kwargs = kwargs
 
     @staticmethod
-    def _validate(name: str, abbrv: str | None):
+    def _validate(name: str, abbrev: str | None):
         if not name:
             raise ValueError(f"`name` ('{name}') must not be an empty string")
         if name.startswith("-"):
             raise ValueError(f"Double dashes are automatically prepended and should not be given by user: '{name}'")
-        if isinstance(abbrv, str) and (len(abbrv) != 1 or not abbrv.isalpha()):
-            raise ValueError(f"`abbrv` ('{abbrv}') must be an alpha character and have length 1")
+        if isinstance(abbrev, str) and (len(abbrev) != 1 or not abbrev.isalpha()):
+            raise ValueError(f"`abbrev` ('{abbrev}') must be an alpha character and have length 1")
         if re.search(r"\s", name):
             raise ValueError(f"`name` ('{name}') cannot contain whitespace")
 
     def _name_or_flags(self) -> tuple[str, ...]:
-        if self.abbrv:
-            return ("-" + self.abbrv, "--" + self.name)
+        if self.abbrev:
+            return ("-" + self.abbrev, "--" + self.name)
         else:
             return ("--" + self.name,)
 
@@ -97,13 +97,13 @@ class Argument(_AbstractArgument):
         name: str,
         *,
         type: Callable[[str], _T] = str,
-        abbrv: str | None = None,
+        abbrev: str | None = None,
         help: str | None = None,
         metavar: str | tuple[str, ...] | None = None,
         nargs: _NargsTypes = None,
         **kwargs: Any,  # pyright: ignore[reportExplicitAny]
     ):
-        super().__init__(name, abbrv, help=help, **kwargs)
+        super().__init__(name, abbrev, help=help, **kwargs)
         self._validate_nargs(nargs)
         if "default" in kwargs:
             raise TypeError(f"Class {self.__class__.__name__} does not accept keyword argument 'default'")
@@ -121,13 +121,13 @@ class Option(_AbstractArgument):
         *,
         default: _T | None = None,
         type: Callable[[str], _T] | None = None,
-        abbrv: str | None = None,
+        abbrev: str | None = None,
         help: str | None = None,
         metavar: str | tuple[str, ...] | None = None,
         nargs: _NargsTypes = None,
         **kwargs: Any,  # pyright: ignore[reportExplicitAny]
     ):
-        super().__init__(name, abbrv, help, **kwargs)
+        super().__init__(name, abbrev, help, **kwargs)
         self._validate_nargs(nargs)
 
         self.default = default
@@ -152,11 +152,11 @@ class Flag(_AbstractArgument):
         self,
         name: str,
         *,
-        abbrv: str | None = None,
+        abbrev: str | None = None,
         help: str | None = None,
         **kwargs: Any,  # pyright: ignore[reportExplicitAny]
     ):
-        super().__init__(name, abbrv, help, **kwargs)
+        super().__init__(name, abbrev, help, **kwargs)
 
     @property
     def default(self) -> bool:
@@ -179,7 +179,7 @@ class JobDescription(Namespace):
         self.explicit_args = explicit_args
         self._docfile_content = docfile_content
 
-    def todict(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
+    def to_dict(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
         """Return a dictionary version of itself which contains solely the parsed values."""
         d = vars(self)
         d = {kw: v for kw, v in d.items() if not kw.startswith("_") and kw not in {"config", "explicit_args"}}
@@ -213,7 +213,7 @@ class JobDescription(Namespace):
 
     @override
     def __str__(self) -> str:
-        return pformat(self.todict())
+        return pformat(self.to_dict())
 
 
 ArgumentTypes = Union[Argument, Option, Flag]
@@ -234,7 +234,7 @@ class Parser:
     _config_arg = Option(
         "config",
         default=None,
-        abbrv="c",
+        abbrev="c",
         help=f"Path to config file. Encoding can be specified by giving <path>{_encoding_separator}<encoding>, "
         + f"e.g. --config path/to/config.ini{_encoding_separator}utf-8",
     )
@@ -242,7 +242,7 @@ class Parser:
     _reserved_arguments: tuple[ArgumentTypes, ...] = (_location_arg, _name_arg, _config_arg)
     _reserved_names = {arg.name for arg in _reserved_arguments}  # noqa: RUF012
     _reserved_names.add("help")  # Reserved by argparse
-    _reserved_abbrvs = {arg.abbrv for arg in _reserved_arguments if arg.abbrv}  # noqa: RUF012
+    _reserved_abbreviations = {arg.abbrev for arg in _reserved_arguments if arg.abbrev}  # noqa: RUF012
 
     @property
     def reserved_names(self) -> set[str]:
@@ -250,13 +250,13 @@ class Parser:
         return self._reserved_names
 
     @property
-    def reserved_abbrvs(self) -> set[str]:
+    def reserved_abbreviations(self) -> set[str]:
         """Argument abbreviations which are reserved."""
-        return self._reserved_abbrvs
+        return self._reserved_abbreviations
 
     @property
-    def encoding_seperator(self) -> str:
-        """Seperator used to specify the encoding (if given) of the config file."""
+    def encoding_separator(self) -> str:
+        """Separator used to specify the encoding of the config file."""
         return self._encoding_separator
 
     def __init__(
@@ -277,8 +277,8 @@ class Parser:
         # Ensure that no conflicts exist with reserved arguments
         if any(arg.name in self._reserved_names for arg in arguments):
             raise ParserError(f"An argument conflicted with one of the reserved arguments: {self._reserved_names}")
-        if any(arg.abbrv in self._reserved_abbrvs for arg in arguments):
-            raise ParserError(f"An argument conflicted with one of the reserved abbreviations: {self._reserved_abbrvs}")
+        if any(arg.abbrev in self._reserved_abbreviations for arg in arguments):
+            raise ParserError(f"An argument conflicted with one of the reserved abbreviations: {self._reserved_abbreviations}")
 
         # Map argument names to arguments with dashes replaced by underscores
         self._arguments = {_fixdash(arg.name): arg for arg in self._reserved_arguments + arguments}
@@ -289,24 +289,24 @@ class Parser:
 
         self._location_arg.help = "Directory containing all job directories" if self._multiple_jobs else "Job directory"
 
-        # Build abbrevations for arguments
+        # Build abbreviations for arguments
         # Those with explicit abbreviations are handled first to prevent being overwritten
-        _used_abbrvs = {"h"}  # Reserved by argparse
-        _args_with_abbrvs_first = sorted(self._arguments, key=lambda arg: self._arguments[arg].abbrv is None)
-        for argname in _args_with_abbrvs_first:
+        _used_abbreviations = {"h"}  # Reserved by argparse
+        _args_with_abbreviations_first = sorted(self._arguments, key=lambda arg: self._arguments[arg].abbrev is None)
+        for argname in _args_with_abbreviations_first:
             argument = self._arguments[argname]
-            if argument.abbrv and argument.abbrv not in _used_abbrvs:
-                _used_abbrvs.add(argument.abbrv)
-            elif argument.abbrv:
-                raise ParserError(f"Abbreviation '{argument.abbrv}' was used multiple times")
+            if argument.abbrev and argument.abbrev not in _used_abbreviations:
+                _used_abbreviations.add(argument.abbrev)
+            elif argument.abbrev:
+                raise ParserError(f"Abbreviation '{argument.abbrev}' was used multiple times")
             # Autogenerate abbreviation
             # First argname[0] is tried. If it exists, the other casing is used if it does not exist
-            elif argname[0] not in _used_abbrvs:
-                argument.abbrv = argname[0]
-                _used_abbrvs.add(argument.abbrv)
-            elif argname[0].swapcase() not in _used_abbrvs:
-                argument.abbrv = argname[0].swapcase()
-                _used_abbrvs.add(argument.abbrv)
+            elif argname[0] not in _used_abbreviations:
+                argument.abbrev = argname[0]
+                _used_abbreviations.add(argument.abbrev)
+            elif argname[0].swapcase() not in _used_abbreviations:
+                argument.abbrev = argname[0].swapcase()
+                _used_abbreviations.add(argument.abbrev)
 
         # Finally, add all arguments to argparser
         for argument in self._arguments.values():

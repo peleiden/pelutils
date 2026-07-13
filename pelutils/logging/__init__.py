@@ -58,7 +58,7 @@ class Logger:
         self,
         fpath: str | Path | None,
         *,
-        default_seperator: str = "\n",
+        default_separator: str = "\n",
         append: bool = False,
         print_level: LogLevels | None = LogLevels.INFO,
         rotation: str | None = None,
@@ -71,8 +71,8 @@ class Logger:
         ----------
         fpath : str | Path | None
             Path to logfile. Missing directories are created. If None, no file is created, and the logger is more like an advanced `print`.
-        default_seperator : str, optional
-            Default seperator when logging multiple strings in a single call, by default \n.
+        default_separator : str, optional
+            Default separator when logging multiple strings in a single call, by default \n.
         append : bool, optional
             If True, existing log file(s) are appended to rather that overwritten, by default False.
         print_level : LogLevels | None, optional
@@ -98,7 +98,7 @@ class Logger:
         else:
             self._rotater = None
 
-        self._default_sep = default_seperator  # pyright: ignore[reportUninitializedInstanceVariable]
+        self._default_sep = default_separator  # pyright: ignore[reportUninitializedInstanceVariable]
         self._print_level = print_level if print_level is not None else max(LogLevels) + 1  # pyright: ignore[reportUninitializedInstanceVariable]
         self._is_configured = True
 

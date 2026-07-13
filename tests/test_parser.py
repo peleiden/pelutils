@@ -26,12 +26,12 @@ _sample_arguments = [
     Argument("gib-num", type=float),
     Argument("arg-two", nargs=2),
     Option("opt-int", default=4),
-    Option("opt-d", abbrv="o", default=6, type=lambda x: 2 * int(x)),
+    Option("opt-d", abbrev="o", default=6, type=lambda x: 2 * int(x)),
     Option("opt-many", nargs=0, default=list(), type=float),
     Option("opt-default-none", nargs=2, default=None, type=int),
     Option("hello", default="there"),
     Option("Cased-Option", default="Kebab-Pascal"),
-    Flag("iam-bool", abbrv="i"),
+    Flag("iam-bool", abbrev="i"),
     Flag("Cased-Flag"),
 ]
 
@@ -100,9 +100,9 @@ class TestParser(UnitTestCollection):
         with pytest.raises(ValueError):
             Option("--Hello there", default="General Kenobi")
         with pytest.raises(ValueError):
-            Flag("show-memes", abbrv="sm")
+            Flag("show-memes", abbrev="sm")
         with pytest.raises(ValueError):
-            Option("memes", abbrv="-s", default="doge")
+            Option("memes", abbrev="-s", default="doge")
         with pytest.raises(ValueError):
             Flag("-show-memes")
         for char in (" ", "\t", "\n"):
@@ -115,8 +115,8 @@ class TestParser(UnitTestCollection):
         with pytest.raises(ValueError):
             Option("no-args", nargs=-1, default=[])
         Argument("meme-folder")
-        Option("memes", abbrv="m", default="doge")
-        Flag("show-memes", abbrv="s")
+        Option("memes", abbrev="m", default="doge")
+        Flag("show-memes", abbrev="s")
 
     def test_job_description(self):
         j = JobDescription(
@@ -136,7 +136,7 @@ class TestParser(UnitTestCollection):
         with pytest.raises(AttributeError):
             j.ab  # noqa: B018
 
-        job_dict = j.todict()
+        job_dict = j.to_dict()
         for kw, v in job_dict.items():
             assert getattr(j, kw) == v
             assert not kw.startswith("_")
@@ -161,10 +161,10 @@ class TestParser(UnitTestCollection):
         assert hash(Argument("name")) != hash(Option("namer")) != hash(Flag("namerr"))
 
     @restore_argv
-    def test_name_and_abbrv_handling(self):
+    def test_name_and_abbreviation_handling(self):
         """Test that name abbreviation ordering and collisions are handled properly"""
         with pytest.raises(ParserError):
-            Parser(Argument("arg1", abbrv="a"), Argument("arg2", abbrv="a"))
+            Parser(Argument("arg1", abbrev="a"), Argument("arg2", abbrev="a"))
         with pytest.raises(ParserError):
             Parser(Argument("location"))
         with pytest.raises(ParserError):
@@ -174,8 +174,8 @@ class TestParser(UnitTestCollection):
         sys.argv = f"main.py {os.path.join(self.test_dir, _testdir)}".split()
         sample_args = [
             Option("quick-mafs", default=0),
-            Flag("Quick-flag", abbrv="Q"),
-            Option("quick-boi", abbrv="q", default=1),
+            Flag("Quick-flag", abbrev="Q"),
+            Option("quick-boi", abbrev="q", default=1),
         ]
         for ordering in itertools.permutations(range(len(sample_args))):
             p = Parser(*(sample_args[i] for i in ordering))
@@ -191,8 +191,8 @@ class TestParser(UnitTestCollection):
 
     def test_parser_properties(self):
         assert Parser().reserved_names == {"location", "config", "name", "help"}
-        assert Parser().reserved_abbrvs == {"c"}
-        assert Parser().encoding_seperator == Parser._encoding_separator
+        assert Parser().reserved_abbreviations == {"c"}
+        assert Parser().encoding_separator == Parser._encoding_separator
 
     @restore_argv
     def test_no_conf_single_job(self):
