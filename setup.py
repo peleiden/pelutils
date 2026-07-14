@@ -35,6 +35,11 @@ requirements_dev = [
     "freezegun>=1.5",
     "pandas>=2.3",
 ]
+requirements_docs = [
+    "sphinx",
+    "sphinx-autobuild",
+    "furo",
+]
 
 with open("README.md") as readme_file:
     README = readme_file.read()
@@ -81,7 +86,7 @@ setup_args = dict(
     url="https://github.com/peleiden/pelutils",
     download_url="https://pypi.org/project/pelutils/",
     install_requires=[requirements],
-    extras_require={"dev": requirements_dev},
+    extras_require={"docs": requirements_docs, "dev": requirements_dev + requirements_docs},
     entry_points={
         "console_scripts": [
             "linecounter = pelutils._entry_points.linecounter:run",

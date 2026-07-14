@@ -221,17 +221,19 @@ class Logger:
     def parse_bool_input(cls, answer: str, *, default: bool | None = None) -> bool | None:
         """Validate user yes/no input. None is returned if the input is not parsable.
 
-        Example:
-        ```
-        answer = log.input("Do you like this question? [y/N] ")
-        likes_answer = log.bool_input(answer, default=False)
-        # User answered y/Y/yes/Yes/YES/yE etc.
-        likes_answer == True
-        # User answered nothing or n/N/no/No/nO/NO
-        likes_answer == False
-        # User answered something unparsable as yes/no
-        likes_answer == None
-        ```
+        Example
+        -------
+
+        .. code-block:: python
+
+            answer = log.input("Do you like this question? [y/N] ")
+            likes_answer = log.bool_input(answer, default=False)
+            # User answered y/Y/yes/Yes/YES/yE etc.
+            likes_answer == True
+            # User answered nothing or n/N/no/No/nO/NO
+            likes_answer == False
+            # User answered something unparsable as yes/no
+            likes_answer == None
         """
         answer = answer.strip()
         if not answer:

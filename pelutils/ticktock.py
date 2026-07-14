@@ -140,40 +140,43 @@ class TickTockException(RuntimeError):  # noqa: N818
 class TickTock:
     """Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
 
-    It is possible to import `TT` directly as a global instance for convenience, or import `TickTock` and create a new instance.
-    For most use cases, importing `TT` is recommended, but when using threads (or async), creating a ticktock instance per thread
+    It is possible to import ``TT`` directly as a global instance for convenience, or import ``TickTock`` and create a new instance.
+    For most use cases, importing ``TT`` is recommended, but when using threads (or async), creating a ticktock instance per thread
     is recommended.
 
     Basic use is as follows.
-    ```py
-    TT.tick()
-    <some task>
-    seconds_used = TT.tock()
 
-    for i in range(100):
-        with TT.profile("Repeated code"):
-        <some task>
-        with TT.profile("Subtask"):
-            <some subtask>
-    print(TT)  # Print a table view of profiled code sections
+    .. code-block:: python
 
-    # When using multiprocessing, it can be useful to simulate multiple hits of the same profile
-    with mp.Pool() as p, TT.profile("Processing 100 items on multiple threads", hits=100):
-        p.map(100 items)
-    # Similar for very quick loops
-    a = 0
-    with TT.profile("Adding 1 to a", hits=100):
+        TT.tick()
+        # Some task
+        seconds_used = TT.tock()
+
         for _ in range(100):
-            a += 1
+            with TT.profile("Repeated code"):
+                # Some task
+                with TT.profile("Subtask"):
+                    # Some subtask
+                    pass
+        print(TT)  # Print a table view of profiled code sections
 
-    # To use the TickTock instance as a timer to trigger events, do
-    while True:
-        if TT.do_at_interval(60, "task1"):  # Do task 1 every 60 seconds
-            <task 1>
-        if TT.do_at_interval(30, "task2"):  # Do task 2 every 30 seconds
-            <task 2>
-        time.sleep(0.01)
-    ```
+        # When using multiprocessing, it can be useful to simulate multiple hits of the same profile.
+        with mp.Pool() as pool, TT.profile("Processing 100 items on multiple threads", hits=100):
+            pool.map(process_item, items)
+
+        # Similar for very quick loops.
+        a = 0
+        with TT.profile("Adding 1 to a", hits=100):
+            for _ in range(100):
+                a += 1
+
+        # To use the TickTock instance as a timer to trigger events:
+        while True:
+            if TT.do_at_interval(60, "task1"):  # Do task 1 every 60 seconds.
+                run_task_1()
+            if TT.do_at_interval(30, "task2"):  # Do task 2 every 30 seconds.
+                run_task_2()
+            time.sleep(0.01)
     """
 
     def __init__(self):
@@ -203,16 +206,18 @@ class TickTock:
         Optionally it is possible to register this as several hits that sum to the total time.
         This is useful when profiling a very large number of quick operations.
         The following two snippets are functionally identical:
-        ```py
-        with TT.profile("Op", hits=5):
-            for i in range(5):
-                ...
 
-        for i in range(5):
-            with TT.profile("Op"):
-                ...
-        ```
-        If `disable` is True, the profile, as well as all child profiles will not be counted.
+        .. code-block:: python
+
+            with TT.profile("Op", hits=5):
+                for i in range(5):
+                    ...
+
+            for i in range(5):
+                with TT.profile("Op"):
+                    ...
+
+        If ``disable`` is True, the profile, as well as all child profiles will not be counted.
         """
         if self._thread_id != id(current_thread()):
             warnings.warn(
@@ -280,14 +285,16 @@ class TickTock:
 
         A common pattern is to run a piece of code at fixed intervals inside a loop. In the example below, a loop is continuously doing
         some computation which results in some telemetry. This is collected every 60 seconds.
-        ```py
-        while True:
-            <stuff which produces some telemetry>
+
+        .. code-block:: python
+
+            while True:
+                produce_telemetry()
 
             if TT.do_at_interval(60, "telemetry"):
-                <collect telemetry>
-        ```
-        If `also_first` is True, `do_at_interval` will return True the first time it is called with a given `key`.
+                collect_telemetry()
+
+        If ``also_first`` is True, ``do_at_interval`` will return True the first time it is called with a given ``key``.
         Otherwise, the interval has to elapse before True is returned the first time.
         """
         key = ("__interval__", key)

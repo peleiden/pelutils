@@ -66,7 +66,7 @@ def histogram(
     density: bool = True,
     ignore_zeros: bool = False,  # Be careful about this one, but it can be practical with log scales
 ) -> tuple[FloatArray, FloatArray | IntArray]:
-    """Create bins for plotting a line histogram. Simplest usage is plt.plot(*histogram(data))."""
+    """Create bins for plotting a line histogram. Simplest usage is ``plt.plot(*histogram(data))``."""
     found_bins = np.array(binning_fn(data, bins + 1))
     y, edges = np.histogram(data, bins=found_bins, density=density)
     x = (edges[1:] + edges[:-1]) / 2
@@ -81,11 +81,12 @@ def get_dateticks(x: npt.ArrayLike, num: int = 6, date_format: str = "%b %d") ->
 
     Example
     -------
-    ```py
-    # x is an array of epoch times in seconds
-    plt.plot(x, y)
-    plt.xticks(*get_dateticks(x))
-    ```
+
+    .. code-block:: python
+
+        # x is an array of epoch times in seconds
+        plt.plot(x, y)
+        plt.xticks(*get_dateticks(x))
     """
     if not isinstance(num, int) or num < 2:  # pyright: ignore[reportUnnecessaryIsInstance]
         raise ValueError(f"num must int of value 2 or greater, not {num}")
@@ -100,14 +101,16 @@ class Figure:
 
     Example
     -------
-    ```py
-    with Figure("figure.png", figsize=(20, 10), fontsize=50):
-        plt.plot(x, y)
-        plt.title("Very large title")
-        plt.grid()
-    # The finished figure is saved to "figure.png"
-    # All settings are reset here
-    ```
+
+    .. code-block:: python
+
+        with Figure("figure.png", figsize=(20, 10), fontsize=50):
+            plt.plot(x, y)
+            plt.title("Very large title")
+            plt.grid()
+
+        # The finished figure is saved to "figure.png".
+        # All settings are reset here.
     """
 
     def __init__(  # noqa: PLR0913

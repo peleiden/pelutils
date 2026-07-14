@@ -21,15 +21,17 @@ def restore_argv(fun: _C) -> _C:
     """Decorator function to restore sys.argv after function exit.
 
     This is useful for testing command line argument handling.
-    ```py
-    @restore_argv
-    def test_my_function():
-        sys.argv = ["test", "with", "different", "value", "of", "sys.argv"]
-        <tests>
-    # sys.argv has value x here
-    test_my_function()
-    # sys.argv still has value x here
-    ```
+
+    .. code-block:: python
+
+        @restore_argv
+        def test_my_function():
+            sys.argv = ["test", "with", "different", "value", "of", "sys.argv"]
+            # Tests
+
+        # sys.argv has value x here.
+        test_my_function()
+        # sys.argv still has value x here.
     """  # noqa: D401
 
     @wraps(fun)
@@ -74,14 +76,15 @@ class UnitTestCollection:
     This class ensures that test directory is automatically created and deleted between tests.
 
     See this example for usage:
-    ```py
-    class TestMyProgram(UnitTestCollection):
-        def test_somefun(self):
-            result = ...
-            with open(f"{self.test_dir}/myresultfile.txt", "w") as f:
-                f.write(result)
-            assert "myresultfile.txt" in os.listdir(self.test_dir)
-    ```
+
+    .. code-block:: python
+
+        class TestMyProgram(UnitTestCollection):
+            def test_somefun(self):
+                result = ...
+                with open(f"{self.test_dir}/myresultfile.txt", "w") as f:
+                    f.write(result)
+                assert "myresultfile.txt" in os.listdir(self.test_dir)
     """
 
     test_dir = Path(tempfile.mkdtemp() if OS.is_linux else ".local-test-dir").resolve()
