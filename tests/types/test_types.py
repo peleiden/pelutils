@@ -1,6 +1,6 @@
 import numpy as np
 
-from pelutils.types import AnyArray, BoolArray, BytesArray, ComplexArray, FloatArray, IntArray, ObjectArray, StringArray
+from pelutils.types import AnyArray, BoolArray, BytesArray, ComplexArray, FloatArray, IntArray, ObjectArray, StringArray, StructuredArray
 
 
 def function_which_takes_np_types(  # noqa: PLR0913
@@ -12,18 +12,28 @@ def function_which_takes_np_types(  # noqa: PLR0913
     int_array: IntArray,
     object_array: ObjectArray,
     string_array: StringArray,
+    structured_array: StructuredArray,
 ) -> ComplexArray:
     assert np.issubdtype(object_array.dtype, np.object_)
     assert not np.issubdtype(bytes_array.dtype, np.object_)
     assert not np.issubdtype(string_array.dtype, np.object_)
     assert not np.issubdtype(float_array.dtype, np.object_)
-    return any_array + bool_array + complex_array + float_array + int_array + len(bytes_array) + len(string_array)
+    return (
+        any_array
+        + bool_array
+        + complex_array
+        + float_array
+        + int_array
+        + len(bytes_array)
+        + len(string_array)
+        + structured_array["weight"][0]
+    )
 
 
 def test_types():
-    """There isn't much to test.
+    """There isn"t much to test.
 
-    Just make sure that using the types doesn't break anything silly like function declarations.
+    Just make sure that using the types doesn"t break anything silly like function declarations.
     """
     any_array = np.arange(5, dtype=np.float16)
     bool_array = np.arange(5).astype(bool)
@@ -33,4 +43,7 @@ def test_types():
     int_array = np.arange(5)
     string_array = np.array([str(x) for x in list(range(5))])
     object_array = np.array([str, "", 1, 2, object, object()])
-    function_which_takes_np_types(any_array, bool_array, bytes_array, complex_array, float_array, int_array, object_array, string_array)
+    structured_array = np.array([("Rex", 9, 81.0), ("Fido", 3, 27.0)], dtype=[("name", "U10"), ("age", "i4"), ("weight", "f4")])
+    function_which_takes_np_types(
+        any_array, bool_array, bytes_array, complex_array, float_array, int_array, object_array, string_array, structured_array
+    )
