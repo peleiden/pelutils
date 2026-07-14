@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import os
 import re
 from collections.abc import Sequence
@@ -45,7 +43,7 @@ class RichString:
         self.console.print("".join(r for r in self.riches))
 
     @staticmethod
-    def multiprint(rss: list[RichString]):
+    def multiprint(rss: "list[RichString]"):
         """Print content of multiple RichStrings at once."""
         for rs in rss:
             rs.print()

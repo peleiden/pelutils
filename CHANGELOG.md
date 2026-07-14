@@ -13,8 +13,8 @@
 - Removed `binary_search` as it is already well-covered by the built-in `bisect` module.
 - Removed `split_path` which is covered by `Path.parents`.
 - Removed `corr_ci`.
-- Curated the top-level `pelutils` API. JSONL functions, testing helpers, NumPy type aliases, and `unique` must now be imported from
-  `pelutils.jsonl`, `pelutils.tests`, `pelutils.types`, and `pelutils.ds`, respectively.
+- Curated the top-level `pelutils` API.
+  Most functionality is now exported from submodules, not top-level.
 - Importing `pelutils` no longer imports `pelutils.ds` or requires the compiled `_pelutils_c` extension.
 - Added explicit public exports to public modules.
 - Added `linesep` option to `Table`.

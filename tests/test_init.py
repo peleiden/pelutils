@@ -1,21 +1,17 @@
 from __future__ import annotations
 
-import ctypes
 import os
 import subprocess
 import sys
 from shutil import move
 from string import ascii_letters
 
-import numpy as np
 import pytest
-import torch
 
 import pelutils
 from pelutils import (
     OS,
     UnsupportedOS,
-    array_ptr,
     except_keys,
     get_repo,
     reverse_line_iterator,
@@ -87,15 +83,6 @@ class TestInit(UnitTestCollection):
         assert "a" in d and "b" in d
         assert "a" in d2 and "b" not in d2
 
-    def test_array_ptr(self):
-        with pytest.raises(TypeError):
-            array_ptr(None)
-        with pytest.raises(ValueError):
-            array_ptr(np.arange(5)[::2])
-        assert isinstance(array_ptr(torch.arange(5)), ctypes.c_void_p)
-        a = torch.arange(5)
-        assert array_ptr(a).value == array_ptr(a.numpy()).value
-
     def test_get_repo(self):
         if ".git" in os.listdir() and pelutils.git is not None:
             a, b = get_repo()
@@ -142,6 +129,5 @@ def test_import_does_not_load_ds_or_c_extension():
         "import sys; import pelutils; "
         "assert 'pelutils.ds' not in sys.modules; "
         "assert '_pelutils_c' not in sys.modules; "
-        "assert not hasattr(pelutils, 'unique')"
     )
     subprocess.run([sys.executable, "-c", script], check=True)

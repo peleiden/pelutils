@@ -1,23 +1,41 @@
-from __future__ import annotations
-
-from collections.abc import Iterable
+import ctypes
 from typing import TypeVar, cast
 
 import _pelutils_c as _c
 import numpy as np
 import numpy.typing as npt
 
-import pelutils._c as _c_utils
+import pelutils._c as c_utils
 from pelutils._misc.conditional_import import import_pandas, import_torch
-from pelutils._utils import isinstance_by_name
-from pelutils.types import AnyArray, BoolArray, BytesArray, FloatArray, IntArray, StringArray
+from pelutils.types import AnyArray
 
 pd = import_pandas()
 torch = import_torch()
 
-__all__ = ("array_bytes", "unique")
-
 _ArrayT = TypeVar("_ArrayT", bound=npt.ArrayLike)
+
+
+def array_ptr(arr: npt.ArrayLike) -> ctypes.c_void_p:
+    """Return a pointer to a numpy array or torch tensor which can be used to interact with it in low-level languages like C/C++/Rust.
+
+    This function is mostly useful when not using Python's C api and instead interfacing with .so files directly with ctypes.
+    """
+    if torch is not None and isinstance(arr, torch.Tensor):
+        return ctypes.c_void_p(arr.data_ptr())
+    if not isinstance(arr, np.ndarray):
+        raise TypeError(f"Array should be of type np.ndarray or torch.Tensor, not {type(arr)}")
+    if not arr.flags.c_contiguous:
+        raise ValueError("Array must be C-contiguous")
+    return ctypes.c_void_p(arr.ctypes.data)
+
+
+def array_bytes(x: npt.ArrayLike) -> int:
+    """Calculate the size of a numpy array or torch tensor in bytes."""
+    if torch is not None and isinstance(x, torch.Tensor):
+        x = x.numpy()
+    if isinstance(x, np.ndarray):
+        return x.nbytes
+    raise TypeError(f"`x` of type {type(x)} is not a numpy array or torch tensor")
 
 
 def unique(  # noqa: PLR0912
@@ -67,7 +85,7 @@ def unique(  # noqa: PLR0912
     counts = np.empty(len(np_array), dtype=np.int64) if return_counts else None
 
     c = _c.unique(
-        *_c_utils.get_array_c_args(np_array),
+        *c_utils.get_array_c_args(np_array),
         index.ctypes.data,
         inverse.ctypes.data if inverse is not None else 0,
         counts.ctypes.data if counts is not None else 0,
@@ -93,12 +111,3 @@ def unique(  # noqa: PLR0912
         ret = [torch.from_numpy(x) for x in ret]
 
     return tuple(ret) if len(ret) > 1 else ret[0]  # pyright: ignore[reportReturnType]
-
-
-def array_bytes(x: npt.ArrayLike) -> int:
-    """Calculate the size of a numpy array or torch tensor in bytes."""
-    if torch is not None and isinstance(x, torch.Tensor):
-        x = x.numpy()
-    if isinstance(x, np.ndarray):
-        return x.nbytes
-    raise TypeError(f"`x` of type {type(x)} is not a numpy array or torch tensor")

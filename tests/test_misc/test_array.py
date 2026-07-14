@@ -1,13 +1,14 @@
+import ctypes
+
 import numpy as np
 import pandas as pd
 import pytest
 import torch
 
-from pelutils.ds import array_bytes, unique
+from pelutils import array_bytes, array_ptr, unique
 
-_seed = sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀")
-np.random.seed(_seed)  # noqa: NPY002
-torch.manual_seed(_seed)
+seed = sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀")
+np_rng = np.random.default_rng(seed)
 
 
 def test_unique():  # noqa: PLR0915
@@ -55,7 +56,7 @@ def test_unique():  # noqa: PLR0915
     assert np.all(counts[argsort] == npcounts)
 
     # Axis and multidimensional array
-    a = np.random.randint(0, 5, (10, 5, 5))  # noqa: NPY002
+    a = np_rng.integers(0, 5, (10, 5, 5))
     a[2] = a[4]
     a[3] = a[4]
     a[4] = a[6]
@@ -128,6 +129,16 @@ def _test_tensor_size(shape: list[int]):
             assert array_bytes(torch_tensor[::2]) < size
             assert array_bytes(np_array[::2]) == array_bytes(torch.from_numpy(np_array[::2]))
             assert array_bytes(torch_tensor[::2]) == array_bytes(torch_tensor[::2].numpy())
+
+
+def test_array_ptr():
+    with pytest.raises(TypeError):
+        array_ptr(None)
+    with pytest.raises(ValueError):
+        array_ptr(np.arange(5)[::2])
+    assert isinstance(array_ptr(torch.arange(5)), ctypes.c_void_p)
+    a = torch.arange(5)
+    assert array_ptr(a).value == array_ptr(a.numpy()).value
 
 
 def test_tensor_size():

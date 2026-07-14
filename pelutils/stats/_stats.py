@@ -1,10 +1,6 @@
-from __future__ import annotations
-
 from typing import Any
 
-from pelutils.ds.distributions import norm
-
-__all__ = ("z_score",)
+from ._distributions import norm
 
 
 def z_score(alpha: float = 0.05, two_sided: bool = True, distribution: Any | None = None) -> float:  # pyright: ignore[reportExplicitAny]

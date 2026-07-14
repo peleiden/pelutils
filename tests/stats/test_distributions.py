@@ -3,7 +3,7 @@ from itertools import product
 import numpy as np
 import pytest
 
-from pelutils.ds.distributions import (
+from pelutils.stats import (
     bernoulli,
     beta,
     binomial,
