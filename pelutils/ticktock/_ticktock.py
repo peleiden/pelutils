@@ -9,7 +9,7 @@ from types import TracebackType
 
 from typing_extensions import override
 
-from pelutils import Table
+from pelutils.misc import Table
 
 _TimeUnit = tuple[str, float]  # Unit suffix, unit value in seconds
 # Time units available for formatting

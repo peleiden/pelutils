@@ -7,7 +7,7 @@ from pathlib import Path
 from shutil import rmtree
 from typing import TypeVar
 
-from pelutils import OS
+from pelutils.misc import OS
 
 __all__ = ("UnitTestCollection", "restore_argv")
 

@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from pelutils import except_keys
 from pelutils.job_parser import ConfigError, Flag, JobDescription, JobParser, JobParserError, OptionalArg, RequiredArg
 from pelutils.job_parser._structs import fixdash
+from pelutils.misc import except_keys
 from pelutils.tests import UnitTestCollection, restore_argv
 
 _testdir = "parser_test"

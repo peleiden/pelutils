@@ -79,5 +79,5 @@ extend-select = ["E111", "E112", "E113", "E114", "E115", "E116", "E117", "E201",
 convention = "numpy"
 
 [lint.per-file-ignores]
-"__init__.py" = ["E402", "F401"]  # Unused imports
+"__init__.py" = ["E402"]  # Unused imports
 "tests/**/*.py" = ["D"]

@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 import torch
 
-from pelutils import array_bytes, array_ptr, unique
+from pelutils.misc import array_bytes, array_ptr, unique
 
 seed = sum(ord(c) for c in "GME TO THE MOON! 🚀🚀🚀🚀🚀🚀🚀🚀")
 np_rng = np.random.default_rng(seed)

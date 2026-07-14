@@ -7,7 +7,7 @@ from typing import cast
 import numpy as np
 import numpy.typing as npt
 
-from pelutils._misc.conditional_import import import_torch
+from pelutils.misc._conditional_import import import_torch
 from pelutils.types import AnyArray
 
 torch = import_torch()

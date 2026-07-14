@@ -2,7 +2,7 @@ from string import ascii_letters
 
 import pytest
 
-from pelutils import Table
+from pelutils.misc import Table
 
 
 class TestTable:

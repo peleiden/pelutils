@@ -9,8 +9,7 @@ from datetime import datetime
 from pprint import pformat
 from typing import Any
 
-from pelutils import except_keys
-from pelutils._misc.platform import OS
+from pelutils.misc import OS, except_keys
 
 from ._structs import ArgumentTypes, ConfigError, Flag, JobDescription, JobParserError, OptionalArg, RequiredArg, fixdash
 
