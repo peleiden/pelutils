@@ -1,7 +1,6 @@
 """Utility methods for the .jsonl file format. .jsonl are files in which each line is a valid json string."""
 
 import json
-import os
 from collections.abc import Iterable, Iterator
 from typing import Any, TextIO
 
@@ -29,11 +28,11 @@ def jsonl_dump(objects: Iterable[Any], f: TextIO, single_block: bool = True):  #
     It can be usefull to set this to False if there is a large amount of lazily generated data.
     """
     if single_block:
-        f.write(os.linesep.join(json.dumps(obj) for obj in objects) + os.linesep)
+        f.write("\n".join(json.dumps(obj) for obj in objects) + "\n")
     else:
-        f.writelines(json.dumps(obj) + os.linesep for obj in objects)
+        f.writelines(json.dumps(obj) + "\n" for obj in objects)
 
 
 def jsonl_dumps(objects: Iterable[Any]) -> str:  # pyright: ignore[reportExplicitAny]
     """Return a string representation of an iterable in a string."""
-    return os.linesep.join(json.dumps(obj) for obj in objects)
+    return "\n".join(json.dumps(obj) for obj in objects)

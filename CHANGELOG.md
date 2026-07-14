@@ -23,6 +23,7 @@
 - Renamed `HardwareInfo` to `hardware_info` and made it lazy and more convenient.
   Also moved along with `OS` to new `_misc.platform` submodule.
 - Renamed `z` -> `z_score`.
+- Use `\n` as default line separator instead of `os.linesep`.
 
 ### Removals
 
