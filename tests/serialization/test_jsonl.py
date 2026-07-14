@@ -28,7 +28,7 @@ class TestJsonl(UnitTestCollection):
 
         # Test stringification methods
         str_repr = jsonl_dumps(self.data)
-        assert str_repr == f'{{"a":1}}{os.linesep}{{"b":2}}{os.linesep}{{"c":3}}'
+        assert str_repr == f'{{"a": 1}}{os.linesep}{{"b": 2}}{os.linesep}{{"c": 3}}'
         assert list(jsonl_loads(str_repr)) == self.data
 
     def test_append(self):

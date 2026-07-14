@@ -13,6 +13,7 @@
 - Removed `binary_search` as it is already well-covered by the built-in `bisect` module.
 - Removed `split_path` which is covered by `Path.parents`.
 - Removed `corr_ci`.
+- Replaced `rapidjson` dependency with built-in `json`.
 - Curated the top-level `pelutils` API.
   Most functionality is now exported from submodules, not top-level.
 - Importing `pelutils` no longer imports `pelutils.ds` or requires the compiled `_pelutils_c` extension.
