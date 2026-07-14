@@ -2,8 +2,18 @@
 
 ## Unreleased - 4.0.0 - Breaking changes
 
+Version 4 of `pelutils` is largely a cleanup update.
+`pelutils` has accumulated a lot of tech debt over the years, resulting in much functionality being inappropriately named, having bad ergonomics, or already being covered in widely used libraries.
+A very large amount of functionality is also exported top-level, without any consideration of unintended reexports.
+
+Version 4 intends to clean this up.
+Naturally, this has required massive breaking changes to achieve, so updating existing code bases to use version 4 will take some work.
+However, the result is a less bloated and more user-friendly library.
+Documentation has also been massively improved and is exposed on the brand new [documentation website](https://pelutils.readthedocs.io).
+
 ### Additions
 
+- Added documentation at [pelutils.readthedocs.io](https://pelutils.readthedocs.io).
 - Added explicit public exports to public modules.
 
 ### Changes
