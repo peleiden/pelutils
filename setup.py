@@ -13,7 +13,6 @@ requirements = [
     "numpy>=2.0",
     "gitpython>=3.1.0",
     "rich>=10.0.0",
-    "python-rapidjson>=1.5",
     "py-cpuinfo>=8.0.0",
     "psutil>=5.8.0",
     "matplotlib>=3.3",

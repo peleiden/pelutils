@@ -125,9 +125,5 @@ def test_public_api():
 
 
 def test_import_does_not_load_ds_or_c_extension():
-    script = (
-        "import sys; import pelutils; "
-        "assert 'pelutils.ds' not in sys.modules; "
-        "assert '_pelutils_c' not in sys.modules; "
-    )
+    script = "import sys; import pelutils; assert 'pelutils.ds' not in sys.modules; assert '_pelutils_c' not in sys.modules; "
     subprocess.run([sys.executable, "-c", script], check=True)
