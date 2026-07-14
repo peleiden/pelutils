@@ -47,6 +47,7 @@ Documentation has also been massively improved and is exposed on the brand new [
 - Removed `binary_search` as it is already well-covered by the built-in `bisect` module.
 - Removed `split_path` which is covered by `Path.parents`.
 - Removed `corr_ci`.
+- Removed `SimplePool` as the issue it solved is [not an issue](https://github.com/pytest-dev/pytest-cov/issues/250) in newer pytest versions.
 
 ### Fixes
 

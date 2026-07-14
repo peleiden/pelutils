@@ -10,7 +10,7 @@ import pytest
 import pelutils
 from pelutils import OS, UnsupportedOS
 from pelutils.logging import Logger, LoggingException, LogLevels, log
-from pelutils.tests import SimplePool, UnitTestCollection
+from pelutils.tests import UnitTestCollection
 
 
 def _collect_test_fn(args):
@@ -157,7 +157,7 @@ class TestLogger(UnitTestCollection):
         # Clear log file
         os.remove(self.logfile)
         # Test that logs do not get messed up
-        with SimplePool(mp.cpu_count()) as p:
+        with mp.Pool(mp.cpu_count()) as p:
             p.map(_collect_test_fn, reps * [(log, False)])
         with open(self.logfile) as lf:
             lines = lf.readlines()
@@ -172,7 +172,7 @@ class TestLogger(UnitTestCollection):
         # Clear log file
         os.remove(self.logfile)
         # Test that logs do not get messed up
-        with SimplePool(mp.cpu_count()) as p:
+        with mp.Pool(mp.cpu_count()) as p:
             args = reps * [(log, False)]
             args[reps // 2] = (log, True)
             with pytest.raises(RuntimeError):
@@ -197,7 +197,7 @@ class TestLogger(UnitTestCollection):
         logfile = os.path.join(self.test_dir, "test_logging2.log")
         log = Logger().configure(logfile, print_level=None)
         # Test that logs do not get messed up
-        with SimplePool() as p:
+        with mp.Pool() as p:
             p.map(_collect_test_fn, reps * [(log, False)])
         with open(logfile) as lf:
             lines = lf.readlines()
@@ -209,7 +209,7 @@ class TestLogger(UnitTestCollection):
     @pytest.mark.skipif(not OS.is_windows, reason="Error should only be raised on Windows")
     def test_collect_error_on_windows(self):
         reps = 100
-        with pytest.raises(UnsupportedOS), SimplePool() as p:
+        with pytest.raises(UnsupportedOS), mp.Pool() as p:
             p.map(_collect_test_fn, reps * [(log, False)])
 
     def test_multiple_loggers(self, capfd: pytest.CaptureFixture):
