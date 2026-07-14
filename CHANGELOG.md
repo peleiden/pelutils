@@ -2,24 +2,16 @@
 
 ## Unreleased - 4.0.0 - Breaking changes
 
-- Minimum supported Python version is now 3.11.
-- Removed deprecated `DataStorage`; use `DataStorage2` instead.
-- Removed deprecated `set_seeds`, `raises`, and `thousands_seperators` helpers.
-- Removed deprecated `Profile.hits`, `TickTock.stringify_time`, `TickTock.measurements_by_profile_name`, and `TickTock.__len__`.
-- Removed moving average functions from `pelutils.ds.plots`.
-  These are reasonably well covered by [`scipy.ndimage`](https://docs.scipy.org/doc/scipy/reference/ndimage.html).
-- Removed mandatory `location` argument from `JobParser`.
-- Removed `get_timestamp` and `get_timestamp_for_files` functions.
-- Removed `binary_search` as it is already well-covered by the built-in `bisect` module.
-- Removed `split_path` which is covered by `Path.parents`.
-- Removed `corr_ci`.
-- Replaced `rapidjson` dependency with built-in `json`.
-- Curated the top-level `pelutils` API.
-  Most functionality is now exported from submodules, not top-level.
-- Importing `pelutils` no longer imports `pelutils.ds` or requires the compiled `_pelutils_c` extension.
+### Additions
+
 - Added explicit public exports to public modules.
-- Added `linesep` option to `Table`.
-- Fixed bug in `Table` where invalid list lengths could be added before being detected.
+
+### Changes
+
+- Minimum supported Python version is now 3.11.
+- Curated the top-level `pelutils` API.
+  Most functionality now has to be imported from relevant submodules rather than as top-level imports.
+- Replaced `rapidjson` dependency with built-in `json`.
 - Renamed `DataStorage2` to `UniversalJsonModel` and moved it from `pelutils.datastorage2` to `pelutils.serialization`.
 - Renamed `model_safe_dump` and `model_safe_load` to `to_json_dict` and `from_json_dict`.
 - `UniversalJsonModel.save` and `.load` now accept a full file path instead of a directory and optional filename.
@@ -31,6 +23,23 @@
 - Renamed `HardwareInfo` to `hardware_info` and made it lazy and more convenient.
   Also moved along with `OS` to new `_misc.platform` submodule.
 - Renamed `z` -> `z_score`.
+
+### Removals
+
+- Removed deprecated `DataStorage`; use `DataStorage2` instead.
+- Removed deprecated `set_seeds`, `raises`, and `thousands_seperators` helpers.
+- Removed deprecated `Profile.hits`, `TickTock.stringify_time`, `TickTock.measurements_by_profile_name`, and `TickTock.__len__`.
+- Removed moving average functions from `pelutils.ds.plots`.
+  These are reasonably well covered by [`scipy.ndimage`](https://docs.scipy.org/doc/scipy/reference/ndimage.html).
+- Removed mandatory `location` argument from `JobParser`.
+- Removed `get_timestamp` and `get_timestamp_for_files` functions.
+- Removed `binary_search` as it is already well-covered by the built-in `bisect` module.
+- Removed `split_path` which is covered by `Path.parents`.
+- Removed `corr_ci`.
+
+### Fixes
+
+- Fixed bug in `Table` where invalid list lengths could be added before being detected.
 
 ## 3.9.0
 
