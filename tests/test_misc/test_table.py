@@ -1,4 +1,3 @@
-import os
 from string import ascii_letters
 
 import pytest
@@ -14,7 +13,7 @@ class TestTable:
         with pytest.raises(ValueError):
             t.add_row([1, 2, 3])
         t.add_row([12, 2], [True, False])
-        assert str(t) == os.linesep.join([
+        assert str(t) == "\n".join([
             "a  | 69",
             "---+---",
             "12 |  2",
