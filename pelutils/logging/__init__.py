@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from pelutils import OS, UnsupportedOS, get_repo
-from pelutils.format import RichString
 
+from ._rich_string import RichString
 from ._rotate import LogFileRotater as _LogFileRotater  # Rename to prevent reexport
 from ._utils import CollectLogs as _CollectLogs
 from ._utils import LevelManager as _LevelManager
