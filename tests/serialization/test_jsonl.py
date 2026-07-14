@@ -1,6 +1,6 @@
 import os
 
-from pelutils.jsonl import dump, dumps, load, loads
+from pelutils.serialization import jsonl_dump, jsonl_dumps, jsonl_load, jsonl_loads
 from pelutils.tests import UnitTestCollection
 
 
@@ -14,31 +14,31 @@ class TestJsonl(UnitTestCollection):
     def test_jsonl(self):
         # Test single block
         with open(self.path, "w") as f:
-            dump(iter(self.data), f, single_block=True)
+            jsonl_dump(iter(self.data), f, single_block=True)
         with open(self.path) as f:
-            content = load(f)
+            content = jsonl_load(f)
             assert list(content) == [{"a": 1}, {"b": 2}, {"c": 3}]
 
         # Test without single block
         with open(self.path, "w") as f:
-            dump(iter(self.data), f, single_block=False)
+            jsonl_dump(iter(self.data), f, single_block=False)
         with open(self.path) as f:
-            content = load(f)
+            content = jsonl_load(f)
             assert list(content) == [{"a": 1}, {"b": 2}, {"c": 3}]
 
         # Test stringification methods
-        str_repr = dumps(self.data)
+        str_repr = jsonl_dumps(self.data)
         assert str_repr == f'{{"a":1}}{os.linesep}{{"b":2}}{os.linesep}{{"c":3}}'
-        assert list(loads(str_repr)) == self.data
+        assert list(jsonl_loads(str_repr)) == self.data
 
     def test_append(self):
         data = [{letter: value} for letter, value in zip(("a", "b", "c"), (1, 2, 3), strict=True)]
 
         with open(self.path, "w") as f:
-            dump(data, f)
+            jsonl_dump(data, f)
         with open(self.path, "a") as f:
-            dump(data, f)
+            jsonl_dump(data, f)
         with open(self.path) as f:
-            content = list(load(f))
+            content = list(jsonl_load(f))
 
         assert content == 2 * data

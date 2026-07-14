@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 
 from pelutils import get_repo
-from pelutils.ds.plots import Figure, get_dateticks
+from pelutils.plots import Figure, get_dateticks
 from pelutils.types import FloatArray, IntArray
 
 _default_extensions = ", ".join((

@@ -2,10 +2,10 @@ import numpy as np
 import pytest
 from scipy.stats import norm
 
-from pelutils.ds.stats import z_score
+from pelutils.stats import z_score
 
 
-def test_get_z():
+def test_z_score():
     with pytest.raises(ValueError):
         z_score(alpha=-0.01)
     with pytest.raises(ValueError):

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import ctypes
 import os
 import subprocess
@@ -20,6 +18,7 @@ if TYPE_CHECKING:
     from .types import AnyArray
 
 
+from pelutils._misc.array import array_bytes, array_ptr, unique
 from pelutils._misc.conditional_import import import_git, import_torch
 from pelutils._misc.platform import OS, UnsupportedOS, hardware_info
 
@@ -53,20 +52,6 @@ def get_repo(path: str | Path | None = None) -> tuple[str | None, str | None]:
         pdir = os.path.dirname(cdir)
 
     return None, None
-
-
-def array_ptr(arr: npt.ArrayLike) -> ctypes.c_void_p:
-    """Return a pointer to a numpy array or torch tensor which can be used to interact with it in low-level languages like C/C++/Rust.
-
-    This function is mostly useful when not using Python's C api and instead interfacing with .so files directly with ctypes.
-    """
-    if torch is not None and isinstance(arr, torch.Tensor):
-        return ctypes.c_void_p(arr.data_ptr())
-    if not isinstance(arr, np.ndarray):
-        raise TypeError(f"Array should be of type np.ndarray or torch.Tensor, not {type(arr)}")
-    if not arr.flags.c_contiguous:
-        raise ValueError("Array must be C-contiguous")
-    return ctypes.c_void_p(arr.ctypes.data)
 
 
 def _read_file_chunk(file: TextIO, chunksize: int) -> str:
@@ -159,6 +144,7 @@ __all__ = (
     "UniversalJsonModel",
     "UnsupportedOS",
     "__version__",
+    "array_bytes",
     "array_ptr",
     "except_keys",
     "get_repo",
@@ -166,4 +152,5 @@ __all__ = (
     "log",
     "pretty_json",
     "reverse_line_iterator",
+    "unique",
 )

@@ -6,10 +6,8 @@ from typing import Any, TextIO
 
 import rapidjson
 
-__all__ = ("dump", "dumps", "load", "loads")
 
-
-def load(f: TextIO) -> Iterator[str]:
+def jsonl_load(f: TextIO) -> Iterator[str]:
     """Return a generator of parsed lines in a .jsonl file. Empty lines are ignored."""
     for line in f:
         stripped = line.strip()
@@ -17,7 +15,7 @@ def load(f: TextIO) -> Iterator[str]:
             yield rapidjson.loads(stripped)
 
 
-def loads(string: str) -> Iterator[str]:
+def jsonl_loads(string: str) -> Iterator[str]:
     """Return a generator of parsed lines. Empty lines are ignored."""
     for line in string.splitlines():
         stripped = line.strip()
@@ -25,7 +23,7 @@ def loads(string: str) -> Iterator[str]:
             yield rapidjson.loads(stripped)
 
 
-def dump(objects: Iterable[Any], f: TextIO, single_block: bool = True):  # pyright: ignore[reportExplicitAny]
+def jsonl_dump(objects: Iterable[Any], f: TextIO, single_block: bool = True):  # pyright: ignore[reportExplicitAny]
     """Save an iterable to a .jsonl file.
 
     If single_block is True, objects will be joined to a single block before being written.
@@ -37,6 +35,6 @@ def dump(objects: Iterable[Any], f: TextIO, single_block: bool = True):  # pyrig
         f.writelines(rapidjson.dumps(obj) + os.linesep for obj in objects)
 
 
-def dumps(objects: Iterable[Any]) -> str:  # pyright: ignore[reportExplicitAny]
+def jsonl_dumps(objects: Iterable[Any]) -> str:  # pyright: ignore[reportExplicitAny]
     """Return a string representation of an iterable in a string."""
     return os.linesep.join(rapidjson.dumps(obj) for obj in objects)
