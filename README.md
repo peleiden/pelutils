@@ -7,6 +7,7 @@
 [![PyPi](https://img.shields.io/pypi/v/pelutils.svg)](https://pypi.org/project/pelutils/)
 [![Python versions](https://img.shields.io/pypi/pyversions/pelutils)](https://img.shields.io/pypi/pyversions/pelutils)
 [![image](https://img.shields.io/pypi/l/pelutils.svg)](https://github.com/peleiden/pelutils/blob/master/LICENSE.txt)
+[![readthedocs](https://app.readthedocs.org/projects/pelutils/badge/?version=latest)](https://pelutils.readthedocs.io/en/latest/)
 
 The Swiss army knife of Python projects.
 
