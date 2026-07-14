@@ -276,15 +276,18 @@ Includes various commonly used statistical functions.
 There are also wrappers around a number of scipy distributions reparametrized as in Jim Pitman's "Probability", instead of using scale and loc, which can be quite unintuitive for many distributions.
 
 ```py
-from pelutils.ds.stats import z, corr_zi
+from pelutils.ds.stats import z_score
 from pelutils.ds.distributions import expon
 
 # Get one sided z value for exponential(lambda=2) distribution with a significance level of 1 %
-zval = z(alpha=0.01, two_sided=False, distribution=expon(2))
+zval = z_score(alpha=0.01, two_sided=False, distribution=expon(2))
 
-# Get correlation, confidence interval, and p value for two vectors
-a, b = np.random.randn(100), np.random.randn(100)
-r, lower_r, upper_r, p = corr_ci(a, b, alpha=0.01)
+# The most common use case is getting the 95 % confidence interval from a standard normal distribution
+# This is achieved with the default parameters - z_score() returns ~1.96 which should be multiplied on the standard deviation
+mu = 1
+std = 2
+ci_lower = mu - std * z_score()
+ci_upper = mu + std * z_score()
 ```
 
 ## Plotting

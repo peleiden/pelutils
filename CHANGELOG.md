@@ -12,6 +12,7 @@
 - Removed `get_timestamp` and `get_timestamp_for_files` functions.
 - Removed `binary_search` as it is already well-covered by the built-in `bisect` module.
 - Removed `split_path` which is covered by `Path.parents`.
+- Removed `corr_ci`.
 - Curated the top-level `pelutils` API. JSONL functions, testing helpers, NumPy type aliases, and `unique` must now be imported from
   `pelutils.jsonl`, `pelutils.tests`, `pelutils.types`, and `pelutils.ds`, respectively.
 - Importing `pelutils` no longer imports `pelutils.ds` or requires the compiled `_pelutils_c` extension.
@@ -28,6 +29,7 @@
 - Renamed `Table.tex` -> `Table.to_latex`.
 - Renamed `HardwareInfo` to `hardware_info` and made it lazy and more convenient.
   Also moved along with `OS` to new `_misc.platform` submodule.
+- Renamed `z` -> `z_score`.
 
 ## 3.9.0
 
