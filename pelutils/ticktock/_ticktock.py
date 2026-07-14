@@ -11,49 +11,27 @@ from typing_extensions import override
 
 from pelutils import Table
 
-__all__ = ("TT", "Profile", "TickTock", "TickTockException", "TimeUnits")
-
-
-class TimeUnits:
-    """Enum-like list of out-of-the-box available units.
-
-    Each element is a tuple of the unit suffix and its length in seconds.
-    """
-
-    nanosecond = ("ns", 1e-9)
-    microsecond = ("us", 1e-6)
-    millisecond = ("ms", 1e-3)
-    second = ("s", 1)
-    hour = ("h", 3600)
-
-    @classmethod
-    def units(cls, reverse: bool = False) -> list[tuple[str, float]]:
-        """List all time units in order of increasing duration, unless reverse is True."""
-        units = (unit for name, unit in cls.__dict__.items() if not callable(getattr(cls, name)) and not name.startswith("__"))
-        units = sorted(units, key=lambda unit: unit[1], reverse=reverse)
-        return units
-
-    @classmethod
-    def next_bigger(cls, unit: tuple[str, float]) -> tuple[str, float]:
-        """Get smallest available time unit bigger than given."""
-        return min((u for u in cls.units() if u[1] > unit[1]), key=lambda x: x[1])
-
-    @classmethod
-    def next_smaller(cls, unit: tuple[str, float]) -> tuple[str, float]:
-        """Get largest available time unit smaller than given."""
-        return max((u for u in cls.units() if u[1] < unit[1]), key=lambda x: x[1])
+_TimeUnit = tuple[str, float]  # Unit suffix, unit value in seconds
+# Time units available for formatting
+# These must be sorted by tiem
+_time_units = (
+    ("ns", 1e-9),
+    ("us", 1e-6),
+    ("ms", 1e-3),
+    ("s", 1),
+    ("h", 3600),
+)
 
 
 def _get_smallest_suitable_unit(duration_s: float) -> tuple[str, float]:
     """Return the smallest unit for which the duration is at least the same size as the unit."""
-    units = TimeUnits.units(reverse=True)
-    for unit, unit_duration in units:
+    for unit, unit_duration in _time_units[::-1]:
         if duration_s >= unit_duration:
             return unit, unit_duration
-    return units[-1]  # No unit is small enough, so return the smallest unit
+    return _time_units[0]  # No unit is small enough, so return the smallest unit
 
 
-class Profile:  # noqa: D101
+class Profile:
     def __init__(self, name: str, depth: int, parent: Profile | None):
         """Data for a profiled code section.
 
@@ -350,36 +328,6 @@ class TickTock:
     def _stringify_time_with_alignment(dt: float, unit: tuple[str, float]) -> str:
         return f"{dt / unit[1]:,.2f} {unit[0]:>2}"
 
-    def stringify_sections(self, unit: tuple[str, float] | None = TimeUnits.second) -> str:
-        """Return a pretty string representation of the profile tree.
-
-        If unit is None, suitable units will be automatically detected.
-        """
-        if self._profile_stack:
-            raise ValueError("TickTock instance cannot be stringified while profiling is still ongoing. Please end all profiles first")
-
-        table = Table()
-        h = ["Profile", "Total time", "Percentage", "Hits", "Average"]
-        table.add_header(h)
-        total_time = sum(p.sum() for p in self.profiles)
-        for profile in self:
-            psum = profile.sum()
-            pmean = profile.mean()
-            row = [
-                "  " * profile.depth + profile.name,
-                self._stringify_time_with_alignment(psum, unit if unit is not None else _get_smallest_suitable_unit(psum)),
-                "%.2f" % (100 * psum / (profile.parent.sum() if profile.parent else total_time))
-                + (" <" if profile.depth else "")
-                + "--" * (profile.depth - 1),
-                f"{len(profile):,}",
-                self._stringify_time_with_alignment(
-                    pmean, TimeUnits.next_smaller(unit) if unit is not None else _get_smallest_suitable_unit(pmean)
-                ),
-            ]
-            table.add_row(row, [True] + [False] * (len(row) - 1))
-
-        return str(table)
-
     def stats_by_profile_name(self, name: str) -> tuple[int, float]:
         """Return the number of hits and sum of measurement lengths for a profile with a given name.
 
@@ -396,7 +344,32 @@ class TickTock:
 
     @override
     def __str__(self) -> str:
-        return self.stringify_sections(None)
+        """Return a pretty string representation of the profile tree.
+
+        If unit is None, suitable units will be automatically detected.
+        """
+        if self._profile_stack:
+            raise ValueError("TickTock instance cannot be stringified while profiling is still ongoing. Please end all profiles first")
+
+        table = Table()
+        h = ["Profile", "Total time", "Percentage", "Hits", "Average"]
+        table.add_header(h)
+        total_time = sum(p.sum() for p in self.profiles)
+        for profile in self:
+            psum = profile.sum()
+            pmean = profile.mean()
+            row = [
+                "  " * profile.depth + profile.name,
+                self._stringify_time_with_alignment(psum, _get_smallest_suitable_unit(psum)),
+                "%.2f" % (100 * psum / (profile.parent.sum() if profile.parent else total_time))
+                + (" <" if profile.depth else "")
+                + "--" * (profile.depth - 1),
+                f"{len(profile):,}",
+                self._stringify_time_with_alignment(pmean, _get_smallest_suitable_unit(pmean)),
+            ]
+            table.add_row(row, [True] + [False] * (len(row) - 1))
+
+        return str(table)
 
     def __bool__(self) -> bool:
         """Return True if any profiling has been performed."""

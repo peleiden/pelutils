@@ -3,8 +3,8 @@ from threading import Thread
 
 import pytest
 
-from pelutils import TT, Profile, TickTock, TimeUnits
-from pelutils.ticktock import TickTockException, _get_smallest_suitable_unit
+from pelutils.ticktock import TT, Profile, TickTock, TickTockException
+from pelutils.ticktock._ticktock import _get_smallest_suitable_unit
 
 
 def test_ticktock():
@@ -119,22 +119,17 @@ def test_throw():
         str(tt)
 
 
-def test_timeunits():
-    assert TimeUnits.next_bigger(("nice", 69)) == TimeUnits.hour
-    assert TimeUnits.next_smaller(TimeUnits.second) == TimeUnits.millisecond
-
-
 def test_smallest_suitable_unit():
-    assert _get_smallest_suitable_unit(1e-10) == TimeUnits.nanosecond
-    assert _get_smallest_suitable_unit(1e-8) == TimeUnits.nanosecond
-    assert _get_smallest_suitable_unit(1e-6) == TimeUnits.microsecond
-    assert _get_smallest_suitable_unit(2e-6) == TimeUnits.microsecond
-    assert _get_smallest_suitable_unit(1e-3) == TimeUnits.millisecond
-    assert _get_smallest_suitable_unit(2e-3) == TimeUnits.millisecond
-    assert _get_smallest_suitable_unit(1) == TimeUnits.second
-    assert _get_smallest_suitable_unit(2) == TimeUnits.second
-    assert _get_smallest_suitable_unit(3600) == TimeUnits.hour
-    assert _get_smallest_suitable_unit(1e10) == TimeUnits.hour
+    assert _get_smallest_suitable_unit(1e-10) == ("ns", 1e-9)
+    assert _get_smallest_suitable_unit(1e-8) == ("ns", 1e-9)
+    assert _get_smallest_suitable_unit(1e-6) == ("us", 1e-6)
+    assert _get_smallest_suitable_unit(2e-6) == ("us", 1e-6)
+    assert _get_smallest_suitable_unit(1e-3) == ("ms", 1e-3)
+    assert _get_smallest_suitable_unit(2e-3) == ("ms", 1e-3)
+    assert _get_smallest_suitable_unit(1) == ("s", 1)
+    assert _get_smallest_suitable_unit(2) == ("s", 1)
+    assert _get_smallest_suitable_unit(3600) == ("h", 3600)
+    assert _get_smallest_suitable_unit(1e10) == ("h", 3600)
 
 
 def test_reset():
