@@ -7,9 +7,9 @@ from string import ascii_lowercase
 
 import pytest
 
-import pelutils
-from pelutils import OS, UnsupportedOS
+import pelutils.misc._git as pelutils_git
 from pelutils.logging import Logger, LoggingException, LogLevels, log
+from pelutils.misc import OS, UnsupportedOS
 from pelutils.tests import UnitTestCollection
 
 
@@ -143,13 +143,13 @@ class TestLogger(UnitTestCollection):
             assert re.search(r"\b[0-9a-f]{40}\b", stdout) is None
             assert "Unable" in stdout
 
-        git = pelutils.git
-        pelutils.git = None
+        git = pelutils_git.git
+        pelutils_git.git = None
         log.log_repo()
         stdout, _ = capfd.readouterr()
         assert re.search(r"\b[0-9a-f]{40}\b", stdout) is None
         assert "Unable" in stdout
-        pelutils.git = git
+        pelutils_git.git = git
 
     @pytest.mark.skipif(OS.is_windows, reason="Log collection is not supported on Windows")
     def test_collect(self):

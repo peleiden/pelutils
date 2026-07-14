@@ -2,7 +2,7 @@ import platform
 
 import torch
 
-from pelutils import OS, hardware_info
+from pelutils.misc import OS, hardware_info
 
 
 def test_is_windows():

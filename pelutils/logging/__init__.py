@@ -1,13 +1,10 @@
-from __future__ import annotations
-
-import os
 import traceback as tb
 from collections.abc import Generator, Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from pelutils import OS, UnsupportedOS, get_repo
+from pelutils.misc import OS, UnsupportedOS, git_repo_info
 
 from ._rich_string import RichString
 from ._rotate import LogFileRotater as _LogFileRotater  # Rename to prevent reexport
@@ -243,9 +240,9 @@ class Logger:
         if cls._no.startswith(answer.lower()):
             return False
 
-    def log_repo(self, level: LogLevels = LogLevels.DEBUG):
-        """Niceness method for logging the git repo that the code is run in."""
-        repo, commit = get_repo()
+    def log_repo(self, path: str | Path | None = None, level: LogLevels = LogLevels.DEBUG):
+        """Niceness method for logging the git repo that the code is run in (default), or the git repo in a specified directory."""
+        repo, commit = git_repo_info(path)
         if repo is not None:
             self._log(
                 f"Executing in repository: {repo}",

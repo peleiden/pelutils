@@ -20,7 +20,7 @@ Documentation has also been massively improved and is exposed on the brand new [
 
 - Minimum supported Python version is now 3.11.
 - Curated the top-level `pelutils` API.
-  Most functionality now has to be imported from relevant submodules rather than as top-level imports.
+  All functionality now has to be imported from relevant submodules rather than as top-level imports.
 - Replaced `rapidjson` dependency with built-in `json`.
 - Renamed `DataStorage2` to `UniversalJsonModel` and moved it from `pelutils.datastorage2` to `pelutils.serialization`.
 - Renamed `model_safe_dump` and `model_safe_load` to `to_json_dict` and `from_json_dict`.

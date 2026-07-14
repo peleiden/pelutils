@@ -9,7 +9,7 @@ import cpuinfo
 import psutil
 from typing_extensions import override
 
-from pelutils._misc.conditional_import import import_torch
+from pelutils.misc._conditional_import import import_torch
 
 torch = import_torch()
 

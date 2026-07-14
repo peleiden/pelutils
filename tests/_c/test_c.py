@@ -5,7 +5,7 @@ import pytest
 import torch
 
 import pelutils._c as c_utils
-from pelutils import OS
+from pelutils.misc import OS
 
 
 @pytest.mark.skipif(OS.is_windows, reason="This test does spooky shit that scares Windows")

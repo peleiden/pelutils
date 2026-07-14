@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 import pelutils._c as c_utils
-from pelutils._misc.conditional_import import import_pandas, import_torch
+from pelutils.misc._conditional_import import import_pandas, import_torch
 from pelutils.types import AnyArray
 
 pd = import_pandas()

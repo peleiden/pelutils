@@ -9,7 +9,7 @@ import json
 import pickle
 from typing import Any
 
-from pelutils._misc.conditional_import import import_torch
+from pelutils.misc._conditional_import import import_torch
 
 torch = import_torch()
 

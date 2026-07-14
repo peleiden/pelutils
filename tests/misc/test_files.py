@@ -1,19 +1,9 @@
-from __future__ import annotations
-
 import os
-from shutil import move
 from string import ascii_letters
 
 import pytest
 
-import pelutils
-from pelutils import (
-    OS,
-    UnsupportedOS,
-    except_keys,
-    get_repo,
-    reverse_line_iterator,
-)
+from pelutils.misc import OS, UnsupportedOS, reverse_line_iterator
 from pelutils.tests import UnitTestCollection
 
 
@@ -74,30 +64,3 @@ class TestInit(UnitTestCollection):
                 size = os.path.getsize(path)
                 assert size <= prev_size
                 prev_size = size
-
-    def test_except_keys(self):
-        d = {"a": 3, "b": 5}
-        d2 = except_keys(d, ["b", "c"])
-        assert "a" in d and "b" in d
-        assert "a" in d2 and "b" not in d2
-
-    def test_get_repo(self):
-        if ".git" in os.listdir() and pelutils.git is not None:
-            a, b = get_repo()
-            assert isinstance(a, str)
-            assert isinstance(b, str)
-
-        git = pelutils.git
-
-        pelutils.git = None
-        a, b = get_repo()
-        assert a is None
-        assert b is None
-
-        pelutils.git = git
-        if ".git" in os.listdir():
-            move(".git", ".gittmp")
-            a, b = get_repo()
-            assert a is None
-            assert b is None
-            move(".gittmp", ".git")

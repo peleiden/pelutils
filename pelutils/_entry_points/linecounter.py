@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 
-from pelutils import get_repo
+from pelutils.misc import git_repo_info
 from pelutils.plots import Figure, get_dateticks
 from pelutils.types import FloatArray, IntArray
 
@@ -96,7 +96,7 @@ def linecounter(repos: list[str], output: str, extensions: str, date_format: str
     wd = os.getcwd()
     repo_names, all_times, all_counts = list(), list(), list()
     for possible_repo_path in repos:
-        repo_path, __ = get_repo(possible_repo_path)
+        repo_path, __ = git_repo_info(possible_repo_path)
         if repo_path is None:
             raise ValueError(f"{repo_path} is not a git repository")
         os.chdir(repo_path)
