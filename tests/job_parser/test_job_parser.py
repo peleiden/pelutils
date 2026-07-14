@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import itertools
 import shlex
 import sys
@@ -8,7 +6,8 @@ from pathlib import Path
 import pytest
 
 from pelutils import except_keys
-from pelutils.job_parser import ConfigError, Flag, JobDescription, JobParser, OptionalArg, ParserError, RequiredArg, _fixdash
+from pelutils.job_parser import ConfigError, Flag, JobDescription, JobParser, JobParserError, OptionalArg, RequiredArg
+from pelutils.job_parser._structs import fixdash
 from pelutils.tests import UnitTestCollection, restore_argv
 
 _testdir = "parser_test"
@@ -147,7 +146,7 @@ class TestParser(UnitTestCollection):
 
         job = parser.parse_job()
         for arg in _sample_arguments:
-            assert _fixdash(arg.name) in str(job)
+            assert fixdash(arg.name) in str(job)
 
     def test_argument_format(self):
         for arg in _sample_arguments:
@@ -161,9 +160,9 @@ class TestParser(UnitTestCollection):
     @restore_argv
     def test_name_and_abbreviation_handling(self):
         """Test that name abbreviation ordering and collisions are handled properly"""
-        with pytest.raises(ParserError):
+        with pytest.raises(JobParserError):
             JobParser(RequiredArg("arg1", abbrev="a"), RequiredArg("arg2", abbrev="a"))
-        with pytest.raises(ParserError):
+        with pytest.raises(JobParserError):
             JobParser(RequiredArg("help"))
 
         # Test that under no permutations is the ordering changed in the argparser
@@ -176,13 +175,13 @@ class TestParser(UnitTestCollection):
         for ordering in itertools.permutations(range(len(sample_args))):
             p = JobParser(*(sample_args[i] for i in ordering))
             args = p._argparser.parse_args()
-            for i, (argname, value) in enumerate(except_keys(vars(args), [_fixdash(x) for x in JobParser._reserved_names]).items()):
+            for i, (argname, value) in enumerate(except_keys(vars(args), [fixdash(x) for x in JobParser._reserved_names]).items()):
                 arg = sample_args[ordering[i]]
-                assert _fixdash(arg.name) == argname
+                assert fixdash(arg.name) == argname
                 assert arg.default == value
 
         # Test naming conflicts
-        with pytest.raises(ParserError):
+        with pytest.raises(JobParserError):
             JobParser(RequiredArg("a-b"), Flag("a_b"))
 
     def test_parser_properties(self):
@@ -293,14 +292,14 @@ class TestParser(UnitTestCollection):
 
         sys.argv = _sample_argv_conf(f"{self._multiple_jobs_file}:THETHIRDJOB:FAKEJOB:BUTWHATABOUTSECONDJOB")
         parser = JobParser(*_sample_arguments, multiple_jobs=True)
-        with pytest.raises(ParserError):
+        with pytest.raises(JobParserError):
             jobs = parser.parse_jobs()
 
     @restore_argv
     def test_missing_arg(self):
         sys.argv = _argv_template
         parser = JobParser(*_sample_arguments)
-        with pytest.raises(ParserError):
+        with pytest.raises(JobParserError):
             parser.parse_job()
 
     @restore_argv
@@ -324,7 +323,7 @@ class TestParser(UnitTestCollection):
     def test_required_args(self):
         sys.argv = f"{_argv_template[0]} -c {self._multiple_jobs_file}".split()
         parser = JobParser(*_sample_arguments, multiple_jobs=True)
-        with pytest.raises(ParserError):
+        with pytest.raises(JobParserError):
             parser.parse_jobs()
 
     @restore_argv
@@ -349,7 +348,7 @@ class TestParser(UnitTestCollection):
         parser = JobParser(
             RequiredArg("bar", nargs=0, type=int),
         )
-        with pytest.raises(ParserError):
+        with pytest.raises(JobParserError):
             parser.parse_job()
 
         # Test if wrong number of arguments
@@ -385,7 +384,7 @@ class TestParser(UnitTestCollection):
         # Test with config argument
         sys.argv = [*_argv_template, "-c", str(self._sample_single_nargs_file)]
         parser = JobParser(OptionalArg("bar", type=int, default=[1, 2]))
-        with pytest.raises(ParserError):
+        with pytest.raises(JobParserError):
             parser.parse_job()
 
     @restore_argv

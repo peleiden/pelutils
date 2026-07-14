@@ -1,4 +1,3 @@
-
 from pelutils.serialization import jsonl_dump, jsonl_dumps, jsonl_load, jsonl_loads
 from pelutils.tests import UnitTestCollection
 
