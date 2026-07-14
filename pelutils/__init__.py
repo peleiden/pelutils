@@ -69,11 +69,6 @@ def array_ptr(arr: npt.ArrayLike) -> ctypes.c_void_p:
     return ctypes.c_void_p(arr.ctypes.data)
 
 
-def split_path(path: str) -> list[str]:
-    """Split a path into components."""
-    return os.path.normpath(path).split(os.sep)
-
-
 def _read_file_chunk(file: TextIO, chunksize: int) -> str:
     """Read a chunk starting from `chunksize` before file pointer and up to current file pointer.
 
@@ -171,5 +166,4 @@ __all__ = (
     "log",
     "pretty_json",
     "reverse_line_iterator",
-    "split_path",
 )

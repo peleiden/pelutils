@@ -19,22 +19,11 @@ from pelutils import (
     except_keys,
     get_repo,
     reverse_line_iterator,
-    split_path,
 )
 from pelutils.tests import UnitTestCollection
 
 
 class TestInit(UnitTestCollection):
-    def test_split_path(self):
-        empty = ""
-        assert split_path(empty) == ["."]
-        root = "/"
-        assert split_path(root) == ["", ""]
-        absolute = "/home/senate"
-        assert split_path(absolute) == ["", "home", "senate"]
-        assert split_path(absolute + "/") == ["", "home", "senate"]
-        relative = "use/pelutils/pls.py"
-        assert split_path(relative) == ["use", "pelutils", "pls.py"]
 
     @classmethod
     def _setup_lineiter_files(cls) -> list[str]:
