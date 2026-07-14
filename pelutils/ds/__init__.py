@@ -3,22 +3,17 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TypeVar, cast
 
+import _pelutils_c as _c
 import numpy as np
 import numpy.typing as npt
 
+import pelutils._c as _c_utils
+from pelutils._misc.conditional_import import import_pandas, import_torch
 from pelutils._utils import isinstance_by_name
 from pelutils.types import AnyArray, BoolArray, BytesArray, FloatArray, IntArray, StringArray
 
-try:
-    import torch
-
-    _has_torch = True
-except ModuleNotFoundError:
-    _has_torch = False
-
-import _pelutils_c as _c
-
-import pelutils._c as _c_utils
+pd = import_pandas()
+torch = import_torch()
 
 __all__ = ("array_bytes", "unique")
 
@@ -39,11 +34,11 @@ def unique(  # noqa: PLR0912
     for large arrays. The returned unique elements are unsorted, however.
     """
     is_tensor = False
-    if _has_torch and isinstance(array, torch.Tensor):  # pyright: ignore[reportPossiblyUnboundVariable]
+    if torch is not None and isinstance(array, torch.Tensor):
         is_tensor = True
         np_array = array.numpy()
-    elif isinstance_by_name(array, "pandas", "Series"):
-        np_array = array.values  # pyright: ignore[reportAttributeAccessIssue]
+    elif pd is not None and isinstance(array, pd.Series):
+        np_array = array.values
     elif isinstance(array, np.ndarray):
         if np.issubdtype(array.dtype, np.object_):
             raise TypeError(f"Unsupported array dtype {array.dtype}")
@@ -94,14 +89,16 @@ def unique(  # noqa: PLR0912
         assert counts is not None
         ret.append(counts[index])
 
-    if _has_torch and is_tensor:
-        ret = [torch.from_numpy(x) for x in ret]  # pyright: ignore[reportPossiblyUnboundVariable]
+    if torch is not None and is_tensor:
+        ret = [torch.from_numpy(x) for x in ret]
 
     return tuple(ret) if len(ret) > 1 else ret[0]  # pyright: ignore[reportReturnType]
 
 
-def array_bytes(x: "AnyArray | torch.Tensor") -> int:
+def array_bytes(x: npt.ArrayLike) -> int:
     """Calculate the size of a numpy array or torch tensor in bytes."""
-    if _has_torch and isinstance(x, torch.Tensor):  # pyright: ignore[reportPossiblyUnboundVariable]
+    if torch is not None and isinstance(x, torch.Tensor):
         x = x.numpy()
-    return x.nbytes
+    if isinstance(x, np.ndarray):
+        return x.nbytes
+    raise TypeError(f"`x` of type {type(x)} is not a numpy array or torch tensor")

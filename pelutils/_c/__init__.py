@@ -5,23 +5,20 @@ from __future__ import annotations
 from typing import cast
 
 import numpy as np
+import numpy.typing as npt
 
+from pelutils._misc.conditional_import import import_torch
 from pelutils.types import AnyArray
 
-try:
-    import torch
-
-    _has_torch = True
-except ModuleNotFoundError:
-    _has_torch = False
+torch = import_torch()
 
 
 # Data pointer, num dims, dimensions pointer, strides pointer
 ArrayArgs = tuple[int, int, int, int]
 
 
-def get_array_c_args(arr: AnyArray | torch.Tensor) -> ArrayArgs:
-    if _has_torch and isinstance(arr, torch.Tensor):  # pyright: ignore[reportPossiblyUnboundVariable]
+def get_array_c_args(arr: npt.ArrayLike) -> ArrayArgs:
+    if torch is not None and isinstance(arr, torch.Tensor):
         arr = arr.numpy()
     # Tell the type checker that arr for sure is AnyArray
     # Not applied directly to arr.numpy() above as torch is possibly unbound, making the poor checker confused

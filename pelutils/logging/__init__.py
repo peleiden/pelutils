@@ -3,10 +3,11 @@ from __future__ import annotations
 import os
 import traceback as tb
 from collections.abc import Generator, Iterable
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from pelutils import OS, UnsupportedOS, get_repo, get_timestamp
+from pelutils import OS, UnsupportedOS, get_repo
 from pelutils.format import RichString
 
 from ._rotate import LogFileRotater as _LogFileRotater  # Rename to prevent reexport
@@ -162,7 +163,7 @@ class Logger:
             return
         sep = sep or self._default_sep
         with_print = level >= self._print_level if with_print is None else with_print
-        time = get_timestamp()
+        time = datetime.now().isoformat(sep=" ", timespec="milliseconds")
         str_tolog = sep.join([str(x) for x in tolog])
         time_spaces = len(time) * " "
         level_format = level.name + (self._maxlen - len(level.name)) * " "
