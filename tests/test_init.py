@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import ctypes
 import os
-import platform
 import subprocess
 import sys
 from shutil import move
@@ -15,8 +14,6 @@ import torch
 import pelutils
 from pelutils import (
     OS,
-    EnvVars,
-    HardwareInfo,
     UnsupportedOS,
     array_ptr,
     binary_search,
@@ -31,16 +28,6 @@ from pelutils.tests import UnitTestCollection
 
 
 class TestInit(UnitTestCollection):
-    def test_envvars(self):
-        os.environ["var1"] = "v1"
-        assert os.environ["var1"] == "v1"
-        assert "var2" not in os.environ
-        with EnvVars(var1="v2", var2=2):
-            assert os.environ["var1"] == "v2"
-            assert os.environ["var2"] == "2"
-        assert os.environ["var1"] == "v1"
-        assert "var2" not in os.environ
-
     def test_split_path(self):
         empty = ""
         assert split_path(empty) == ["."]
@@ -82,18 +69,6 @@ class TestInit(UnitTestCollection):
                 f.write("\n")
                 f.write(ascii_letters * 1000 + ("\n" if i < 99 else ""))
         return paths
-
-    def test_is_windows(self):
-        # What a dumb test
-        assert OS.is_windows == platform.platform().startswith("Windows")
-
-    def test_is_mac(self):
-        # What a dumb test
-        assert OS.is_mac == (platform.platform().startswith("Darwin") or platform.platform().startswith("macOS"))
-
-    def test_is_linux(self):
-        # What a dumb test
-        assert OS.is_linux == platform.platform().startswith("Linux")
 
     def test_reverse_line_iterator(self):
         if OS.is_windows:
@@ -151,35 +126,6 @@ class TestInit(UnitTestCollection):
             ts1 = get_timestamp_for_files(with_date=date)
             assert len(ts0[:-4]) == len(ts1)
             assert ts1 == ts0[:-4].replace(" ", "_").replace(":", "-")
-
-    def test_hardware_info(self):
-        assert isinstance(HardwareInfo.cpu, str) and len(HardwareInfo.cpu) > 0
-        if OS.is_linux:
-            assert isinstance(HardwareInfo.sockets, int)
-        else:
-            assert HardwareInfo.sockets is None
-        assert isinstance(HardwareInfo.threads, int) and HardwareInfo.threads > 0
-        assert isinstance(HardwareInfo.memory, int) and HardwareInfo.memory > 0
-        if torch.cuda.is_available():
-            assert isinstance(HardwareInfo.gpus, list)
-            assert len(HardwareInfo.gpus) > 0
-            for gpu in HardwareInfo.gpus:
-                assert isinstance(gpu, str)
-        else:
-            assert HardwareInfo.gpus is None
-
-        string = HardwareInfo.string()
-        assert HardwareInfo.cpu in string
-        if HardwareInfo.sockets:
-            # This is a very shitty test
-            assert str(HardwareInfo.sockets) in string
-        if HardwareInfo.threads:
-            # This is also a very shitty test
-            assert f"{HardwareInfo.threads:,}" in string
-        assert str(round(HardwareInfo.memory / 2**30, 2)) in string
-        if HardwareInfo.gpus:
-            for gpu in HardwareInfo.gpus:
-                assert gpu in string
 
     def test_get_repo(self):
         if ".git" in os.listdir() and pelutils._has_git:

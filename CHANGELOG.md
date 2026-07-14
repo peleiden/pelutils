@@ -23,6 +23,8 @@
 - Renamed logger `default_seperator` to `default_separator` and TickTock timer `id` parameters to `key`.
 - Renamed and simplified `tensor_bytes` to `array_bytes`.
 - Renamed `Table.tex` -> `Table.to_latex`.
+- Renamed `HardwareInfo` to `hardware_info` and made it lazy and more convenient.
+  Also moved along with `OS` to new `_misc.platform` submodule.
 
 ## 3.9.0
 

@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 from collections.abc import Generator, Iterable, Sequence
+from copy import deepcopy
 from datetime import datetime
 from io import DEFAULT_BUFFER_SIZE
 from pathlib import Path
@@ -33,20 +34,10 @@ if TYPE_CHECKING:
     from .types import AnyArray
 
 
+from pelutils._misc.platform import OS, UnsupportedOS, hardware_info
+
 _T = TypeVar("_T")
-
-
-class UnsupportedOS(Exception):  # noqa: N818
-    """Error raised when an operation is attempted which is not supported on the current OS."""
-
-
-class OS:
-    """Class for checking the current OS."""
-
-    # See https://docs.python.org/3/library/sys.html#sys.platform for all platforms
-    is_windows = sys.platform == "win32"
-    is_mac = sys.platform == "darwin"
-    is_linux = sys.platform == "linux"
+_V = TypeVar("_V")
 
 
 def get_repo(path: str | Path | None = None) -> tuple[str | None, str | None]:
@@ -88,38 +79,6 @@ def get_timestamp_for_files(*, with_date: bool = True) -> str:
     if not with_date:
         tstr = tstr[11:]
     return tstr
-
-
-class EnvVars:
-    """Execute a piece of code with certain environment variables.
-
-    ALl environment variables are restored after with block.
-    Example: Disabling multithreading in tesseract:
-    ```
-    with EnvVars(OMP_THREAD_LIMIT=1):
-        # Tesseract code here
-    ```
-    Any existing environment variables are restored, and newly added are removed after exiting with block.
-    """
-
-    def __init__(self, **env_vars: Any):  # pyright: ignore[reportExplicitAny]
-        self._vars = env_vars
-        self._original_env_vars: dict[str, str | None] = dict()
-
-    def __enter__(self):
-        """Store a copy of the currently active environment variables and set the new."""
-        self._original_env_vars = dict()
-        for var, value in self._vars.items():
-            self._original_env_vars[var] = os.environ.get(var)
-            os.environ[var] = str(value)
-
-    def __exit__(self, *_):
-        """Reset environment variables to their original values."""
-        for var, value in self._original_env_vars.items():
-            if value is None:
-                del os.environ[var]
-            else:
-                os.environ[var] = value
 
 
 def array_ptr(arr: "AnyArray | torch.Tensor") -> ctypes.c_void_p:
@@ -215,40 +174,10 @@ def reverse_line_iterator(file: TextIO, chunksize: int = DEFAULT_BUFFER_SIZE, li
     yield "".join(reversed_contents)[::-1]
 
 
-def except_keys(d: dict[_T, Any], except_keys: Iterable[_T]) -> dict[_T, Any]:  # pyright: ignore[reportExplicitAny]
+def except_keys(d: dict[_T, _V], except_keys: Iterable[_T]) -> dict[_T, _V]:
     """Return a shallow copy of the given dictionary, but with given keys removed."""
     except_keys = set(except_keys)
     return {kw: v for kw, v in d.items() if kw not in except_keys}
-
-
-class HardwareInfo:
-    """Information on the available hardware."""
-
-    # Name of the CPU
-    cpu: str = cpuinfo.get_cpu_info()["brand_raw"]
-    # How many CPU sockets there are on the system
-    # Only works on Linux, otherwise None
-    sockets = int(subprocess.check_output('cat /proc/cpuinfo | grep "physical id" | sort -u | wc -l', shell=True)) if OS.is_linux else None
-    # Total threads available across all CPU sockets
-    threads = os.cpu_count()
-    # Total system memory in bytes
-    memory = psutil.virtual_memory().total
-    # Available gpu
-    # Requires torch, otherwise None
-    gpus = [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())] if _has_torch and torch.cuda.is_available() else None  # pyright: ignore[reportPossiblyUnboundVariable]
-
-    @classmethod
-    def string(cls) -> str:
-        """Pretty string-representation of hardware."""
-        lines = [
-            f"CPU:     {cls.cpu}",
-            f"Sockets: {cls.sockets}" if cls.sockets else None,
-            f"Threads: {cls.threads:,}" if cls.threads else None,
-            f"RAM:     {cls.memory / 2**30:,.2f} GiB",
-            f"GPU(s):  {cls.gpus[0]}" if cls.gpus else None,
-            *[f"         {gpu}" for gpu in (cls.gpus[1:] if cls.gpus is not None and len(cls.gpus) > 1 else [])],
-        ]
-        return os.linesep.join(line for line in lines if line)
 
 
 # Placed down here to prevent issues with circular imports.
@@ -265,9 +194,7 @@ __all__ = (
     "TT",
     "ArgumentTypes",
     "ConfigError",
-    "EnvVars",
     "Flag",
-    "HardwareInfo",
     "JobDescription",
     "JobParser",
     "LogLevels",
@@ -291,6 +218,7 @@ __all__ = (
     "get_repo",
     "get_timestamp",
     "get_timestamp_for_files",
+    "hardware_info",
     "log",
     "pretty_json",
     "reverse_line_iterator",
