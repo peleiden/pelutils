@@ -109,17 +109,19 @@ class TestInit(UnitTestCollection):
         assert array_ptr(a).value == array_ptr(a.numpy()).value
 
     def test_get_repo(self):
-        if ".git" in os.listdir() and pelutils._has_git:
+        if ".git" in os.listdir() and pelutils.git is not None:
             a, b = get_repo()
             assert isinstance(a, str)
             assert isinstance(b, str)
 
-        pelutils._has_git = False
+        git = pelutils.git
+
+        pelutils.git = None
         a, b = get_repo()
         assert a is None
         assert b is None
 
-        pelutils._has_git = True
+        pelutils.git = git
         if ".git" in os.listdir():
             move(".git", ".gittmp")
             a, b = get_repo()

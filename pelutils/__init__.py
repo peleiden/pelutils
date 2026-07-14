@@ -12,29 +12,19 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, TextIO, TypeVar
 
 import cpuinfo
-
-try:
-    # If git is not installed, this import fails
-    import git
-
-    _has_git = True
-except ImportError:
-    _has_git = False
 import numpy as np
+import numpy.typing as npt
 import psutil
-
-try:
-    import torch
-
-    _has_torch = True
-except ModuleNotFoundError:
-    _has_torch = False
 
 if TYPE_CHECKING:
     from .types import AnyArray
 
 
+from pelutils._misc.conditional_import import import_git, import_torch
 from pelutils._misc.platform import OS, UnsupportedOS, hardware_info
+
+torch = import_torch()
+git = import_git()
 
 _T = TypeVar("_T")
 _V = TypeVar("_V")
@@ -46,7 +36,7 @@ def get_repo(path: str | Path | None = None) -> tuple[str | None, str | None]:
     Searches for repo by searching upwards from given directory (if None: uses working dir).
     If it cannot find a repository, returns (None, None).
     """
-    if not _has_git:
+    if git is None:
         return None, None
     if path is None:
         path = os.getcwd()
@@ -56,21 +46,21 @@ def get_repo(path: str | Path | None = None) -> tuple[str | None, str | None]:
     while cdir != pdir:
         cdir = pdir
         try:  # Check if repository
-            repo = git.Repo(cdir)  # pyright: ignore[reportPossiblyUnboundVariable]
+            repo = git.Repo(cdir)
             return os.path.realpath(cdir), str(repo.head.commit)
-        except git.InvalidGitRepositoryError:  # pyright: ignore[reportPossiblyUnboundVariable]
+        except git.InvalidGitRepositoryError:
             pass
         pdir = os.path.dirname(cdir)
 
     return None, None
 
 
-def array_ptr(arr: "AnyArray | torch.Tensor") -> ctypes.c_void_p:
+def array_ptr(arr: npt.ArrayLike) -> ctypes.c_void_p:
     """Return a pointer to a numpy array or torch tensor which can be used to interact with it in low-level languages like C/C++/Rust.
 
     This function is mostly useful when not using Python's C api and instead interfacing with .so files directly with ctypes.
     """
-    if _has_torch and isinstance(arr, torch.Tensor):  # pyright: ignore[reportPossiblyUnboundVariable]
+    if torch is not None and isinstance(arr, torch.Tensor):
         return ctypes.c_void_p(arr.data_ptr())
     if not isinstance(arr, np.ndarray):
         raise TypeError(f"Array should be of type np.ndarray or torch.Tensor, not {type(arr)}")
