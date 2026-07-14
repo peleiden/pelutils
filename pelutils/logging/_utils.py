@@ -24,11 +24,12 @@ class LevelManager:
 
     Example
     -------
-    ```py
-    with log.level(Levels.WARNING):
-        log.error("This will be logged")
-        log.info("This will not be logged")
-    ```
+
+    .. code-block:: python
+
+        with log.level(Levels.WARNING):
+            log.error("This will be logged")
+            log.info("This will not be logged")
     """
 
     def __init__(self):
@@ -68,14 +69,15 @@ class CollectLogs:
 
     Example
     -------
-    ```
-    def fun():
-        with log.collect:
-            do stuff
 
-    with mp.Pool() as p:
-        p.map(fun, ...)
-    ```
+    .. code-block:: python
+
+        def fun():
+            with log.collect:
+                do_stuff()
+
+        with mp.Pool() as p:
+            p.map(fun, ...)
     """
 
     def __init__(self, logger: "logging_lib.Logger"):

@@ -6,6 +6,8 @@ on:
         - pelutils/**.py
         - tests/**.py
         - setup.py
+        - docs/**
+        - .readthedocs.yaml
         - ruff.toml
         - pyrightconfig.json
         - pytest.ini
@@ -17,6 +19,8 @@ on:
         - pelutils/**.py
         - tests/**.py
         - setup.py
+        - docs/**
+        - .readthedocs.yaml
         - ruff.toml
         - pyrightconfig.json
         - pytest.ini
@@ -60,3 +64,6 @@ jobs:
         run: coveralls --service=github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build documentation
+        run: make --directory docs html

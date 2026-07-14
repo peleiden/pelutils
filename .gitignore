@@ -2,6 +2,7 @@
 *.png
 logs/
 nohup.out
+docs/source/api/
 
 # Files and folders prepended by local_
 **/local_*/

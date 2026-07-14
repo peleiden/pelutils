@@ -24,7 +24,6 @@ from pelutils.tests import UnitTestCollection
 
 
 class TestInit(UnitTestCollection):
-
     @classmethod
     def _setup_lineiter_files(cls) -> list[str]:
         paths = list()
