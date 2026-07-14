@@ -47,7 +47,7 @@ def _get_qualified_type_name(obj: object) -> str:
     return qualname
 
 
-def _pickle_encode(value: object) -> str:
+def pickle_encode(value: object) -> str:
     """Pickle *value*, base64-encode the bytes, and return a prefixed string."""
     if torch is not None and isinstance(value, torch.Tensor):
         # If a view of torch Tensor is given, the whole tensor is pickled, not just the view
@@ -84,10 +84,10 @@ def _make_json_safe(value: Any) -> Any:
         return [_make_json_safe(item) for item in value]
 
     # Non-serialisable → pickle + b64
-    return _pickle_encode(value)
+    return pickle_encode(value)
 
 
-def _make_json_unsafe(value: Any) -> Any:
+def make_json_unsafe(value: Any) -> Any:
     """Recursively convert *value* from a JSON-safe structure.
 
     b64encoded strings are decoded and unpickled. Everything else is passed through.
@@ -96,10 +96,10 @@ def _make_json_unsafe(value: Any) -> Any:
         return _decode_unpickle(value)
 
     if isinstance(value, dict):
-        return {str(k): _make_json_unsafe(v) for k, v in value.items()}
+        return {str(k): make_json_unsafe(v) for k, v in value.items()}
 
     if isinstance(value, (list, tuple)):
-        return [_make_json_unsafe(item) for item in value]
+        return [make_json_unsafe(item) for item in value]
 
     return value
 
@@ -213,16 +213,16 @@ def _format_value(  # noqa: PLR0911, PLR0913
     # The code should be unreachable
 
 
-def _pretty_json(  # pyright: ignore[reportUnusedFunction]
+def universal_pretty_json(
     obj: dict[str, Any] | list[Any],
     *,
     max_line_length: int,
     indent: int,
     safe: bool,
 ) -> str:
-    """Convert the object into a pretty, human-readable JSON file.
+    """Convert an object into a pretty, human-readable JSON file with an optional safe mode.
 
-    See `pelutils/pretty_json.py` for argument details.
+    This is an internal function. See `pretty_json` for argument details.
 
     It is possible to set safe=True. In that case, any value that is not natively JSON-serialisable is pickled,
     base64-encoded, and stored as a "__pickled_b64__:type_name:b64" string.
@@ -237,4 +237,40 @@ def _pretty_json(  # pyright: ignore[reportUnusedFunction]
         max_line_length=max_line_length,
         indent_size=indent,
         force_expand=True,
+    )
+
+
+def pretty_json(
+    obj: dict[str, Any] | list[Any],
+    *,
+    max_line_length: int = 140,
+    indent: int = 2,
+) -> str:
+    """Format a dict or list as a human-friendly JSON string. It is very similar to the built-in json.dumps.
+
+    * The root container is always expanded (one element per line).
+    * Nested containers stay on one line when they fit within
+      *max_line_length*; otherwise they are expanded recursively.
+    * Primitive-only lists are bin-packed: items fill each line up to
+      *max_line_length* before wrapping to the next.
+
+    Parameters
+    ----------
+    obj:
+        A dict or list (may contain arbitrary Python objects).
+    max_line_length:
+        Soft limit for line width.
+    indent:
+        Number of spaces per indentation level.
+
+    Returns
+    -------
+    str
+        A pretty-formatted, valid JSON string.
+    """
+    return universal_pretty_json(
+        obj,
+        max_line_length=max_line_length,
+        indent=indent,
+        safe=False,
     )

@@ -117,7 +117,6 @@ def except_keys(d: dict[_T, _V], except_keys: Iterable[_T]) -> dict[_T, _V]:
 from .__version__ import __version__
 from .job_parser import ArgumentTypes, ConfigError, Flag, JobDescription, JobParser, OptionalArg, ParserError, RequiredArg
 from .logging import Logger, LoggingException, LogLevels, log
-from .pretty_json import pretty_json
 from .serialization import UniversalJsonModel
 
 __all__ = (
@@ -143,7 +142,6 @@ __all__ = (
     "get_repo",
     "hardware_info",
     "log",
-    "pretty_json",
     "reverse_line_iterator",
     "unique",
 )

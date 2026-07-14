@@ -6,7 +6,11 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict
 
-from pelutils.serialization._pretty_json import _make_json_unsafe, _pickle_encode, _pretty_json  # pyright: ignore[reportPrivateUsage]
+from pelutils.serialization._pretty_json import (
+    make_json_unsafe,
+    pickle_encode,
+    universal_pretty_json,
+)
 
 
 class UniversalJsonModel(BaseModel):
@@ -21,12 +25,12 @@ class UniversalJsonModel(BaseModel):
 
     def to_json_dict(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
         """Return a JSON-compatible dictionary, pickle-encoding unsupported values."""
-        return self.model_dump(mode="json", fallback=_pickle_encode)
+        return self.model_dump(mode="json", fallback=pickle_encode)
 
     @classmethod
     def from_json_dict(cls: type[Self], json_dict: dict[str, Any]) -> Self:  # pyright: ignore[reportExplicitAny]
         """Build a model from :meth:`to_json_dict` output. Do not load untrusted data."""
-        self_dict = _make_json_unsafe(json_dict)
+        self_dict = make_json_unsafe(json_dict)
         return cls.model_validate(self_dict)
 
     def save(self, path: str | Path, *, max_line_length: int = 140, indent: int = 2, encoding: str = "utf-8"):
@@ -34,7 +38,7 @@ class UniversalJsonModel(BaseModel):
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
-            _pretty_json(
+            universal_pretty_json(
                 self.to_json_dict(),
                 max_line_length=max_line_length,
                 indent=indent,
