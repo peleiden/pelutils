@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable
+from typing import Any
 
 import matplotlib.colors as mcolour
 import matplotlib.pyplot as plt
@@ -152,7 +153,7 @@ class Figure:
         if self._style:
             plt.style.use(self._style)
 
-        self._rc_context = plt.rc_context(self._rc_params)  # pyright: ignore[reportUninitializedInstanceVariable]
+        self._rc_context = plt.rc_context(self._rc_params)  # pyright: ignore[reportUninitializedInstanceVariable, reportArgumentType]
         self._rc_context.__enter__()
 
     def __exit__(self, et: type[BaseException] | None, ev: BaseException | None, tb: TracebackType | None):

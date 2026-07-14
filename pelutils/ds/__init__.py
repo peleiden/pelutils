@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TypeVar, Union, cast
+from typing import TypeVar, cast
 
 import numpy as np
 import numpy.typing as npt

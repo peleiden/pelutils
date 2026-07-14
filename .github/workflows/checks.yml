@@ -6,6 +6,9 @@ on:
         - pelutils/**.py
         - tests/**.py
         - setup.py
+        - ruff.toml
+        - pyrightconfig.json
+        - pytest.ini
         - .github/workflows
         - .coveragerc
 
@@ -14,6 +17,9 @@ on:
         - pelutils/**.py
         - tests/**.py
         - setup.py
+        - ruff.toml
+        - pyrightconfig.json
+        - pytest.ini
         - .github/workflows
         - .coveragerc
 
@@ -26,9 +32,9 @@ jobs:
           submodules: true
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.9
+          python-version: '3.11'
 
       - name: Set up PyPi dependencies and install package
         run: |

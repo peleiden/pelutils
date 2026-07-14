@@ -104,7 +104,7 @@ def test_fuse():
 
     tt1 = deepcopy(tt2)
     tt1 = TickTock.fuse_multiple(tt1, tt2)
-    for p1, p2 in zip(tt1, tt2):
+    for p1, p2 in zip(tt1, tt2, strict=True):
         assert p1._n == 2 * p2._n
         assert p1._total_time == 2 * p2._total_time
 

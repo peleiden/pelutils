@@ -77,7 +77,7 @@ def _fuse_times(all_times: list[FloatArray]) -> FloatArray:
     times = np.empty(n, dtype=int)
     idcs = [0] * len(all_times)
     for i in range(n):
-        current_times = [time[idx] if idx < len(time) else float("inf") for time, idx in zip(all_times, idcs)]
+        current_times = [time[idx] if idx < len(time) else float("inf") for time, idx in zip(all_times, idcs, strict=True)]
         min_time = np.argmin(current_times)
         times[i] = current_times[min_time]
         idcs[min_time] += 1
@@ -116,7 +116,7 @@ def linecounter(repos: list[str], output: str, extensions: str, date_format: str
 
     with Figure(output):
         repo_name: str | None = None
-        for _i, (repo_name, times, counts) in enumerate(zip(repo_names, all_times, all_counts)):
+        for _i, (repo_name, times, counts) in enumerate(zip(repo_names, all_times, all_counts, strict=True)):
             for ext, line_counts in counts.items():
                 if not line_counts.any():
                     continue

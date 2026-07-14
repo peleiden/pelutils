@@ -2,15 +2,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict
 
 from pelutils.serialization._pretty_json import _make_json_unsafe, _pickle_encode, _pretty_json  # pyright: ignore[reportPrivateUsage]
 
 __all__ = ("UniversalJsonModel",)
-
-_T = TypeVar("_T", bound="UniversalJsonModel")
 
 
 class UniversalJsonModel(BaseModel):
@@ -28,7 +26,7 @@ class UniversalJsonModel(BaseModel):
         return self.model_dump(mode="json", fallback=_pickle_encode)
 
     @classmethod
-    def from_json_dict(cls: type[_T], json_dict: dict[str, Any]) -> _T:  # pyright: ignore[reportExplicitAny]
+    def from_json_dict(cls: type[Self], json_dict: dict[str, Any]) -> Self:  # pyright: ignore[reportExplicitAny]
         """Build a model from :meth:`to_json_dict` output. Do not load untrusted data."""
         self_dict = _make_json_unsafe(json_dict)
         return cls.model_validate(self_dict)
@@ -49,7 +47,7 @@ class UniversalJsonModel(BaseModel):
         return path
 
     @classmethod
-    def load(cls: type[_T], path: str | Path, *, encoding: str = "utf-8") -> _T:
+    def load(cls: type[Self], path: str | Path, *, encoding: str = "utf-8") -> Self:
         """Load a model from ``path``. Do not load untrusted data."""
         with Path(path).open(encoding=encoding) as f:
             self_dict = json.load(f)

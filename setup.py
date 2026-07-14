@@ -20,6 +20,7 @@ requirements = [
     "scipy>=1.6",
     "tqdm>=4.55",
     "pydantic>=2",
+    "typing_extensions>=4.6",
 ]
 requirements_dev = [
     "torch>=2",
@@ -96,14 +97,12 @@ setup_args = dict(
         )
     ],
     license_files=[os.path.join("pelutils", "_c", "hashmap.c", "LICENSE")],
-    python_requires=">=3.9",
+    python_requires=">=3.11",
     classifiers=[
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",

@@ -4,10 +4,11 @@ import multiprocessing as mp
 import os
 import sys
 import tempfile
+from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
 from shutil import rmtree
-from typing import Callable, TypeVar
+from typing import TypeVar
 
 from pelutils import OS
 

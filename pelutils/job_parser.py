@@ -7,12 +7,13 @@ import sys
 from abc import ABC
 from argparse import SUPPRESS, ArgumentParser, Namespace
 from ast import literal_eval
+from collections.abc import Callable
 from configparser import ConfigParser, MissingSectionHeaderError
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 from pprint import pformat
-from typing import Any, Callable, TypeVar, Union
+from typing import Any, TypeVar
 
 from typing_extensions import override
 
@@ -26,7 +27,7 @@ _type = type  # Save `type` under different name to prevent name collisions
 # Support for nargs is limited to 0 (any number of args) and set number
 # As such, not all modes supported by argparse (see documentation) are supported here
 # https://docs.python.org/3/library/argparse.html#nargs
-_NargsTypes = Union[int, None]
+_NargsTypes = int | None
 
 
 def _fixdash(argname: str) -> str:
@@ -75,8 +76,8 @@ class _AbstractArgument(ABC):  # noqa: B024
 
     @staticmethod
     def _validate_nargs(nargs: _NargsTypes):
-        if type(nargs) not in _NargsTypes.__args__:  # pyright: ignore[reportAttributeAccessIssue]
-            raise TypeError(f"`nargs` type must be one of {_NargsTypes.__args__}, not {type(nargs)}")  # pyright: ignore[reportAttributeAccessIssue]
+        if type(nargs) not in _NargsTypes.__args__:
+            raise TypeError(f"`nargs` type must be one of {_NargsTypes.__args__}, not {type(nargs)}")
         if isinstance(nargs, int) and nargs < 0:
             raise ValueError("When expecting a set number of arguments, the number must be at least 0")
 
@@ -269,7 +270,7 @@ class JobDescription(Namespace):
         return pformat(self.given_args_to_dict())
 
 
-ArgumentTypes = Union[RequiredArg, OptionalArg, Flag]
+ArgumentTypes = RequiredArg | OptionalArg | Flag
 
 
 class JobParser:
