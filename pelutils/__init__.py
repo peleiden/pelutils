@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 from pelutils._misc.array import array_bytes, array_ptr, unique
 from pelutils._misc.conditional_import import import_git, import_torch
 from pelutils._misc.platform import OS, UnsupportedOS, hardware_info
+from pelutils._misc.table import Table
 
 torch = import_torch()
 git = import_git()
@@ -114,7 +115,6 @@ def except_keys(d: dict[_T, _V], except_keys: Iterable[_T]) -> dict[_T, _V]:
 
 # Placed down here to prevent issues with circular imports.
 from .__version__ import __version__
-from .format import RichString, Table
 from .job_parser import ArgumentTypes, ConfigError, Flag, JobDescription, JobParser, OptionalArg, ParserError, RequiredArg
 from .logging import Logger, LoggingException, LogLevels, log
 from .pretty_json import pretty_json
@@ -136,7 +136,6 @@ __all__ = (
     "ParserError",
     "Profile",
     "RequiredArg",
-    "RichString",
     "Table",
     "TickTock",
     "TickTockException",

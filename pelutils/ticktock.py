@@ -9,7 +9,7 @@ from types import TracebackType
 
 from typing_extensions import override
 
-from pelutils.format import Table
+from pelutils import Table
 
 __all__ = ("TT", "Profile", "TickTock", "TickTockException", "TimeUnits")
 

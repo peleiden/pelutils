@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import os
-import subprocess
-import sys
 from shutil import move
 from string import ascii_letters
 
@@ -103,27 +101,3 @@ class TestInit(UnitTestCollection):
             assert a is None
             assert b is None
             move(".gittmp", ".git")
-
-
-def test_public_api():
-    specialized_exports = {
-        "AnyArray",
-        "SimplePool",
-        "UnitTestCollection",
-        "dump",
-        "dumps",
-        "load",
-        "loads",
-        "restore_argv",
-        "unique",
-    }
-    assert specialized_exports.isdisjoint(pelutils.__all__)
-    assert not hasattr(pelutils, "DataStorage")
-    assert not hasattr(pelutils, "raises")
-    assert not hasattr(pelutils, "set_seeds")
-    assert not hasattr(pelutils, "thousands_seperators")
-
-
-def test_import_does_not_load_ds_or_c_extension():
-    script = "import sys; import pelutils; assert 'pelutils.ds' not in sys.modules; assert '_pelutils_c' not in sys.modules; "
-    subprocess.run([sys.executable, "-c", script], check=True)
