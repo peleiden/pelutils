@@ -9,8 +9,12 @@ pelutils
 General-purpose utilities for Python projects.
 
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+.. include:: ../../README.md
+   :parser: myst_parser.sphinx_
 
-   api/modules
+
+.. toctree::
+   :maxdepth: 3
+   :caption: # Contents:
+
+   api/pelutils
