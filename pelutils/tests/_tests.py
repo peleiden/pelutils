@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-import multiprocessing as mp
 import os
 import sys
 import tempfile
@@ -12,7 +9,7 @@ from typing import TypeVar
 
 from pelutils import OS
 
-__all__ = ("SimplePool", "UnitTestCollection", "restore_argv")
+__all__ = ("UnitTestCollection", "restore_argv")
 
 _C = TypeVar("_C", bound=Callable)  # pyright: ignore[reportMissingTypeArgument]
 
@@ -43,30 +40,6 @@ def restore_argv(fun: _C) -> _C:
             sys.argv = old_argv
 
     return wrapper  # pyright: ignore[reportReturnType]
-
-
-class SimplePool:
-    """Drop-in replacement for mp.Pool for when using it within a pytest context.
-
-    pytest-cov does not exit properly when using mp.Pool. Using this class instead solves it.
-    For details, see https://github.com/pytest-dev/pytest-cov/issues/250.
-    """
-
-    def __init__(self, processes: int | None = None):
-        self._processes = processes or mp.cpu_count()
-        self._pool = None
-
-    def __enter__(self):
-        """Create the multiprocessing pool."""
-        self._pool = mp.Pool(self._processes)
-        return self._pool
-
-    def __exit__(self, *_):
-        """Close the pool."""
-        assert self._pool is not None
-        self._pool.close()
-        self._pool.join()
-        self._pool = None
 
 
 class UnitTestCollection:
@@ -100,7 +73,7 @@ class UnitTestCollection:
         rmtree(cls.test_dir, onerror=cls.ignore_absentee)
 
     @staticmethod
-    def ignore_absentee(_, __, exc_inf):  # noqa: D102  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
+    def ignore_absentee(_, __, exc_inf):  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
         except_instance = exc_inf[1]
         if isinstance(except_instance, FileNotFoundError):
             return
