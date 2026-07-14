@@ -8,6 +8,9 @@
 - Removed deprecated `Profile.hits`, `TickTock.stringify_time`, `TickTock.measurements_by_profile_name`, and `TickTock.__len__`.
 - Removed moving average functions from `pelutils.ds.plots`.
   These are reasonably well covered by [`scipy.ndimage`](https://docs.scipy.org/doc/scipy/reference/ndimage.html).
+- Removed mandatory `location` argument from `JobParser`.
+- Removed `get_timestamp` and `get_timestamp_for_files` functions.
+- Removed `binary_search` as it is already well-covered by the built-in `bisect` module.
 - Curated the top-level `pelutils` API. JSONL functions, testing helpers, NumPy type aliases, and `unique` must now be imported from
   `pelutils.jsonl`, `pelutils.tests`, `pelutils.types`, and `pelutils.ds`, respectively.
 - Importing `pelutils` no longer imports `pelutils.ds` or requires the compiled `_pelutils_c` extension.
@@ -19,7 +22,6 @@
 - `UniversalJsonModel.save` and `.load` now accept a full file path instead of a directory and optional filename.
 - Renamed parser `abbrv`, `todict`, `reserved_abbrvs`, and `encoding_seperator` to `abbrev`, `to_dict`, `reserved_abbreviations`, and `encoding_separator`.
 - Renamed `Parser`, `Argument`, and `Option` to `JobParser`, `MandatoryArg`, and `OptionalArg`.
-- Removed mandatory `location` argument from `JobParser`.
 - Renamed logger `default_seperator` to `default_separator` and TickTock timer `id` parameters to `key`.
 - Renamed and simplified `tensor_bytes` to `array_bytes`.
 - Renamed `Table.tex` -> `Table.to_latex`.

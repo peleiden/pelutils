@@ -17,7 +17,7 @@ from typing import Any, TypeVar
 
 from typing_extensions import override
 
-from pelutils import OS, except_keys, get_timestamp_for_files
+from pelutils import OS, except_keys
 
 __all__ = ("ArgumentTypes", "ConfigError", "Flag", "JobDescription", "JobParser", "OptionalArg", "ParserError", "RequiredArg")
 
@@ -501,7 +501,7 @@ class JobParser:
 
         if args.config_file is None:
             docfile_content = self._get_docfile_content()
-            name = args.name or get_timestamp_for_files()
+            name = args.name or datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             arg_dict = vars(args)
             for argname, arg in self._arguments.items():
                 if isinstance(arg, RequiredArg) and arg_dict[argname] is None:

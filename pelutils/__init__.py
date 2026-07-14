@@ -65,22 +65,6 @@ def get_repo(path: str | Path | None = None) -> tuple[str | None, str | None]:
     return None, None
 
 
-def get_timestamp(*, with_date: bool = True) -> str:
-    """Return a timestamp formatted as YYYY-MM-DD HH:mm:SS.ms."""
-    tstr = datetime.now().isoformat(sep=" ", timespec="milliseconds")
-    if not with_date:
-        tstr = tstr[11:]
-    return tstr
-
-
-def get_timestamp_for_files(*, with_date: bool = True) -> str:
-    """Return a timestamp formatted as YYYY-MM-DD_HH-mm-SS."""
-    tstr = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    if not with_date:
-        tstr = tstr[11:]
-    return tstr
-
-
 def array_ptr(arr: "AnyArray | torch.Tensor") -> ctypes.c_void_p:
     """Return a pointer to a numpy array or torch tensor which can be used to interact with it in low-level languages like C/C++/Rust.
 
@@ -98,28 +82,6 @@ def array_ptr(arr: "AnyArray | torch.Tensor") -> ctypes.c_void_p:
 def split_path(path: str) -> list[str]:
     """Split a path into components."""
     return os.path.normpath(path).split(os.sep)
-
-
-def binary_search(element: _T, iterable: Sequence[_T], *, _start: int = 0, _end: int = -1) -> int | None:
-    """Get the index of element in sequence using binary search.
-
-    The iterable is assumed to be sorted in ascending order.
-    None is returned if the element is not found.
-    """
-    if _end == -1:  # Entered on first call
-        _end = len(iterable)
-        # Make sure element actually exists in array
-        if not iterable[0] <= element <= iterable[-1]:  # pyright: ignore[reportOperatorIssue]
-            return None
-
-    # Perform bisection
-    index = (_start + _end) // 2
-    if element < iterable[index]:  # pyright: ignore[reportOperatorIssue]
-        return binary_search(element, iterable, _start=_start, _end=index - 1)
-    elif element > iterable[index]:  # pyright: ignore[reportOperatorIssue]
-        return binary_search(element, iterable, _start=index + 1, _end=_end)
-    else:
-        return index
 
 
 def _read_file_chunk(file: TextIO, chunksize: int) -> str:
@@ -213,11 +175,8 @@ __all__ = (
     "UnsupportedOS",
     "__version__",
     "array_ptr",
-    "binary_search",
     "except_keys",
     "get_repo",
-    "get_timestamp",
-    "get_timestamp_for_files",
     "hardware_info",
     "log",
     "pretty_json",

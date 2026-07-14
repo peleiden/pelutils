@@ -16,11 +16,8 @@ from pelutils import (
     OS,
     UnsupportedOS,
     array_ptr,
-    binary_search,
     except_keys,
     get_repo,
-    get_timestamp,
-    get_timestamp_for_files,
     reverse_line_iterator,
     split_path,
 )
@@ -38,15 +35,6 @@ class TestInit(UnitTestCollection):
         assert split_path(absolute + "/") == ["", "home", "senate"]
         relative = "use/pelutils/pls.py"
         assert split_path(relative) == ["use", "pelutils", "pls.py"]
-
-    def test_binary_search(self):
-        data = np.random.randint(0, 100, 100)  # noqa: NPY002
-        data = np.sort(data)
-        for elem in data:
-            assert binary_search(elem, data) is not None
-            assert data[binary_search(elem, data)] == elem
-        assert binary_search(-1, data) is None
-        assert binary_search(100, data) is None
 
     @classmethod
     def _setup_lineiter_files(cls) -> list[str]:
@@ -119,13 +107,6 @@ class TestInit(UnitTestCollection):
         assert isinstance(array_ptr(torch.arange(5)), ctypes.c_void_p)
         a = torch.arange(5)
         assert array_ptr(a).value == array_ptr(a.numpy()).value
-
-    def test_get_timestamp(self):
-        for date in False, True:
-            ts0 = get_timestamp(with_date=date)
-            ts1 = get_timestamp_for_files(with_date=date)
-            assert len(ts0[:-4]) == len(ts1)
-            assert ts1 == ts0[:-4].replace(" ", "_").replace(":", "-")
 
     def test_get_repo(self):
         if ".git" in os.listdir() and pelutils._has_git:
