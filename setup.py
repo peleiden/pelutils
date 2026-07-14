@@ -39,6 +39,7 @@ requirements_docs = [
     "sphinx",
     "sphinx-autobuild",
     "furo",
+    "myst-parser",
 ]
 
 with open("README.md") as readme_file:

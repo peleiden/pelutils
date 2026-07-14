@@ -18,7 +18,8 @@ help:
 .PHONY: help api html Makefile
 
 api:
-	@$(SPHINXAPIDOC) --force --module-first --separate --output-dir "$(APIDIR)" "$(PACKAGEDIR)"
+	$(RM) -rf "$(APIDIR)"
+	@$(SPHINXAPIDOC) --force --no-toc --module-first --separate --output-dir "$(APIDIR)" "$(PACKAGEDIR)"
 
 html: api
 	@$(SPHINXBUILD) --fail-on-warning --keep-going -b html "$(SOURCEDIR)" "$(BUILDDIR)/html" $(SPHINXOPTS) $(O)
