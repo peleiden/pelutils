@@ -9,158 +9,156 @@
 [![image](https://img.shields.io/pypi/l/pelutils.svg)](https://github.com/peleiden/pelutils/blob/master/LICENSE.txt)
 [![readthedocs](https://app.readthedocs.org/projects/pelutils/badge/?version=latest)](https://pelutils.readthedocs.io/en/latest/)
 
-The Swiss army knife of Python projects.
+**Batteries-included utilities for Python projects**
 
-- A simple and powerful logger with colourful printing, stacktraces, and log file rotation.
-- Argument parser which supports both command line arguments and config files and has baked-in auto-documentation.
-- A simple timer inspired by Matlab's `tic` and `toc`.
-- Easy-to-use, near-zero cost performance profiler.
-- An extension to `pydantic.BaseModel` with support for saving any data structure to, and loading from, a human-readable JSON file.
-- Table formatting with built-in LaTeX support.
-- Miscellaneous standalone functions - see `pelutils/__init__.py`.
-- Data-science submodule with extra utilities for statistics, plotting with `matplotlib`, and machine learning using `PyTorch`.
-- `unique` function in the style of `numpy.unique` which runs in linear time, making it significantly faster for large arrays.
+Every project, experiment, or one-off script inevitably ends up reinventing much of
+the same plumbing: some way to time a loop, saving and loading data to and from disk
+in a convenient and human-readable manner, a decent logger, parsing a config file, a readable table.
+`pelutils` bundles the good versions of these so you can get straight to the actual
+work. It has no required dependencies beyond the scientific-Python staples, ships
+type hints (including `py.typed`), and is easy to start using.
 
-`pelutils` supports Python 3.11+.
+📖 **Full documentation: [pelutils.readthedocs.io](https://pelutils.readthedocs.io)**
 
-To install, simply run `pip install pelutils`.
-A small subset of the functionality requires `PyTorch`, which has to be installed separately.
+## Highlights
 
-## Timing and Code Profiling
+- **Logger** — easy-to-use, colourful console output, log files with rotation, automatic
+  stacktrace capture, and safe logging from multiple processes.
+- **Timer & profiler** — a Matlab-style `tick`/`tock` timer and a near-zero-overhead
+  profiler that prints a readable breakdown of where your time goes.
+- **`UniversalJsonModel`** — a `pydantic.BaseModel` that can save *any* attribute to a
+  human-readable JSON file (numpy arrays, tensors, and other unserialisable types are
+  pickled transparently) and load it straight back.
+- **`JobParser`** — one parser that unifies command-line arguments and config files,
+  with support for running many jobs from a single config and auto-documenting them.
+- **`unique`** — a linear-time drop-in for `numpy.unique`, dramatically faster on
+  large arrays (backed by a small C extension).
+- **Data-science helpers** — a `matplotlib` `Figure` context manager, histogram
+  binning, reparametrised scipy distributions, `z_score`, LaTeX-ready tables, and
+  numpy type aliases.
 
-Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
+## Installation
+
+```sh
+pip install pelutils
+```
+
+`pelutils` supports Python 3.11+. A small subset of functionality can additionally
+make use of [`PyTorch`](https://pytorch.org), which must be installed separately.
+
+> **Importing:** every feature lives in its own submodule and must be imported from
+> there — e.g. `from pelutils.logging import log`. Only `__version__` is exported at
+> the top level. See the [docs](https://pelutils.readthedocs.io) for the full API.
+
+## Logging
+
+A simple but feature-rich logger that prints in colour and writes to a log file.
 
 ```py
-from pelutils import TT, TickTock
+from pelutils.logging import log, LogLevels
 
-# Time a task
+# Set up the logger by giving it the file to write to
+# Omit the path to only print, never write a file
+log.configure("run.log")
+
+log.section("Starting run")           # Highlighted section header
+log("Plain info line")                # Logs at INFO level
+log.warning("Something looks off")
+log.debug("Extra detail", "on two lines")
+
+# Log exceptions with their full (chained) stacktrace
+with log.log_errors:
+    risky_operation()
+
+# Temporarily change or silence the log level
+with log.level(LogLevels.ERROR):
+    log.warning("Suppressed")
+
+# Rotate the log file by time or size
+log.configure("run.log", rotation="day")    # or "1 GB", "hour", ...
+```
+
+When using multiprocessing, wrap a worker in `with log.collect:` so its lines are
+written together instead of interleaving with other processes. See the
+[logging docs](https://pelutils.readthedocs.io/en/latest/api/pelutils.logging.html) for input helpers, multiple loggers,
+and more.
+
+## Timing and profiling
+
+Inspired by Matlab's `tic`/`toc`, with a profiler built on top.
+
+```py
+from pelutils.ticktock import TT
+
+# Time a single block
 TT.tick()
-<some task>
-seconds_used = TT.tock()
+do_work()
+seconds = TT.tock()
 
-# Profile a for loop
-for i in range(100):
-    with TT.profile("Repeated code"):
-        <some task>
-    with TT.profile("Subtask"):
-        <some subtask>
-print(TT)  # Print a table view of profiled code sections
+# Profile named sections in a loop, then print a breakdown
+# Nested profiles are fully supported
+for batch in batches:
+    with TT.profile("Load"):
+        x = load(batch)
+    with TT.profile("Forward pass"):
+        model(x)
 
-# When using multiprocessing, it can be useful to simulate multiple hits of the same profile
-with mp.Pool() as p, TT.profile("Processing 100 items on multiple threads", hits=100):
-    p.map(100 items)
-# Similar for very quick loops
-a = 0
-with TT.profile("Adding 1 to a", hits=100):
-    for _ in range(100):
-        a += 1
-
-# To use the TickTock instance as a timer to trigger events, do
-while True:
-    if TT.do_at_interval(60, "task1"):  # Do task 1 every 60 seconds
-        <task 1>
-    if TT.do_at_interval(30, "task2"):  # Do task 2 every 30 seconds
-        <task 2>
-    time.sleep(0.01)
+print(TT)  # Table of hits, total time, and time share per section
 ```
 
-## Data Serialisation
+`with TT.profile("name", hits=n):` records `n` hits at once, which is handy for very
+tight loops or for a block that processes `n` items in parallel. `TT.do_at_interval(...)`
+turns the same instance into a throttle for periodic tasks. The default `TT` is a
+shared instance; construct your own with `TickTock()` when you need isolation.
 
-The `DataStorage2` class is an extension of `pydantic.BaseModel` which adds convenient `safe` and `load` methods for trivial saving to and loading from JSON files.
-It can serialise *any* attribute on the model to JSON by pickling types which `pydantic` cannot natively serialise.
-To get use it, simply inherit from `DataStorage2`, like you would inherit from `BaseModel`.
+## Serialisation
 
-The produced JSON files take advantage of `pelutils.pretty_json(...)` to ensure good and human-readable formatting, almost no matter the data types.
-Very long lists utilise the full allowed line length before splitting.
-This prevents the common JSON issue of having either very long lines (no indents) or excessively many lines with a single, small element on each.
-
-It is possible to get only the serialised JSON objects as dicts instead of saving them directly to a file with the `DataStorage2.model_safe_dump()` method.
-This is practical if you want to nest the objects into another dict or list.
-`DataStorage2.model_safe_load(...)` does the inverse operation by creating a class instance from a JSON-serialised dict.
-
-Because the class inherits from `pydantic.BaseModel`, type checking is built directly into it.
+`UniversalJsonModel` extends `pydantic.BaseModel` with `save`/`load` methods and can
+serialise attributes that pydantic cannot — numpy arrays, tensors, and arbitrary
+objects are base64-pickled inline, everything else stays plain, human-readable JSON.
+Long lists are wrapped to the line-length limit instead of one element per line.
 
 ```py
-class BasederClass(BaseModel):
-    based_string: str
+import numpy as np
+from pydantic import BaseModel
+from pelutils.serialization import UniversalJsonModel
+from pelutils.types import FloatArray
 
-# Define the structure
-class BasedClass(DataStorage2):
-    nice: float
-    long_tuple_of_ints: tuple[int, ...]
-    array: FloatArray
-    baseder: BasederClass
+class Nested(BaseModel):
+    label: str
 
-# Create an instance
-based = BasedClass(
-    nice=69.69,
-    long_tuple_of_ints=tuple(range(500)),
-    array=np.arange(5, dtype=np.float16),
-    baseder=BasederClass(based_string="Hello there")
+class Result(UniversalJsonModel):
+    accuracy: float
+    predictions: FloatArray   # numpy arrays are handled automatically
+    meta: Nested
+
+result = Result(
+    accuracy=0.97,
+    predictions=np.arange(5, dtype=np.float16),
+    meta=Nested(label="run-1"),
 )
-# Save it to a file
-based.save("directory/to/save/in")
 
-# Load it again
-based = BasedClass.load("directory/to/save/in")
-```
-This will produce `directory/to/save/in/BasedClass.json` with the following contents:
-```json
-{
-  "nice": 69.69,
-  "long_tuple_of_ints": [
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
-    37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
-    71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103,
-    104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130,
-    131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157,
-    158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184,
-    185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211,
-    212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238,
-    239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265,
-    266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292,
-    293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319,
-    320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346,
-    347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373,
-    374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400,
-    401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427,
-    428, 429, 430, 431, 432, 433, 434, 435, 436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454,
-    455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474, 475, 476, 477, 478, 479, 480, 481,
-    482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499
-  ],
-  "array": "__pickled_b64__:numpy.ndarray:gAWVfQAAAAAAAACMEm51bXB5LmNvcmUubnVtZXJpY5SMC19mcm9tYnVmZmVylJOUKJYKAAAAAAAAAAAAADwAQABCAESUjAVudW1weZSMBWR0eXBllJOUjAJmMpSJiIeUUpQoSwOMATyUTk5OSv////9K/////0sAdJRiSwWFlIwBQ5R0lFKULg==",
-  "baseder": {"based_string": "Hello there"}
-}
+result.save("results/run-1.json")
+result = Result.load("results/run-1.json")
 ```
 
-## Config and Command-line Argument Parsing
+Use `to_json_dict()` / `from_json_dict(...)` to convert to and from a plain dict
+without touching the filesystem — useful for nesting inside other structures. The
+`pretty_json` helper function is also available on its own. The `serialization`
+module also includes JSONL read/write helpers (`jsonl_dump`, `jsonl_load`, ...)
+with largely the same interface as is provided by the built-in `json` module.
 
-`JobParser` combines typed command-line options with INI configuration files. CLI
-values override configuration values, and configuration values override defaults.
-Use `RequiredArg` for values every job must provide, `OptionalArg` for values with
-defaults, and `Flag` for booleans. Names use `--kebab-case` on the command line
-and are exposed as `snake_case` attributes on the resulting `JobDescription`.
+## Config and command-line argument parsing
 
-For example, `config.ini` can define two experiment jobs:
-```ini
-[DEFAULT]
-; This section is not a job, but sets defaults for other job sections in the file
-; This largely follows Python's configparser convention (https://docs.python.org/3/library/configparser.html)
-data-path = data/train
-learning-rate = 1e-4
-fp16
+`JobParser` combines typed command-line options with INI config files. CLI values
+override config values, which override defaults. Declare `RequiredArg` for values
+every job must provide, `OptionalArg` for values with defaults, and `Flag` for
+booleans. Names are `--kebab-case` on the command line and `snake_case` attributes on
+the resulting job.
 
-[low-lr]
-data-path = data/train
-learning-rate = 1e-5
-fp16 = False
-```
-
-`main.py` can parse and run every configured job:
 ```py
 from pathlib import Path
-
-from pelutils import Flag, JobParser, OptionalArg, RequiredArg
+from pelutils.job_parser import Flag, JobParser, OptionalArg, RequiredArg
 
 parser = JobParser(
     RequiredArg("data-path", help="Training data directory"),
@@ -172,202 +170,99 @@ parser = JobParser(
 for job in parser.parse_jobs():
     print(job.name, job.data_path, job.learning_rate, job.fp16)
     job.write_documentation(Path("runs") / job.name / "arguments.ini")
-    # Run your application with the resolved job values.
+    # ... run your application with the resolved job values
 ```
 
-Run all configured jobs with:
-
-```console
-python main.py --config-file config.ini
-```
-
-Override one value for every selected job with:
+A single config file can define several named jobs (with a shared `[DEFAULT]`
+section), and one CLI override applies to all of them:
 
 ```console
 python main.py --config-file config.ini --learning-rate 5e-5
 ```
 
-For a single command-line job, construct the same parser without
-`multiple_jobs=True` and call `parse_job()` instead. `parse_job()` raises a
-`ConfigError` if the configuration resolves to multiple named jobs. A config path
-can select sections directly, for example `--config-file config.ini:low-lr`.
+For a single job, drop `multiple_jobs=True` and call `parse_job()` instead. A config
+path can target one section directly, e.g. `--config-file config.ini:low-lr`. See the
+[job parser docs](https://pelutils.readthedocs.io/en/latest/api/pelutils.job_parser.html) for auto-documentation details.
 
-# Logging
+## Fast `unique`
 
-The logging submodule contains a simple yet feature-rich logger which fits common needs. Can be imported from `pelutils` directly, e.g. `from pelutils import log`.
+A linear-time alternative to `numpy.unique`, significantly faster on large arrays. It
+also accepts torch tensors and pandas series. The returned elements are unsorted.
 
 ```py
-from pelutils import log, Logger
+import numpy as np
+from pelutils.misc import unique
 
-# Configure logger for the script
-log.configure("path/to/save/log.log")
-
-# Start logging
-for i in range(70):  # Nice
-    log("Execution %i" % i)
-
-# Sections
-log.section("New section in the logfile")
-
-# Adjust logging levels
-log.warning("Will be logged")
-with log.level(LogLevels.ERROR):  # Only log at ERROR level or above
-    log.warning("Will not be logged")
-with log.no_log:
-    log.section("I will not be logged")
-
-# Rotation
-# Start a new log file every hour (or day, month, or year)
-log.configure("path/to/save/log.log", rotation="hour")
-# Start a new log file when the current one reaches a certain size
-log.configure("path/to/save/log.log", rotation="5 MB")
-
-# Error handling
-# The zero-division error and stacktrace is logged
-with log.log_errors:
-    0 / 0
-# Entire chained stacktrace is logged
-with log.log_errors:
-    try:
-        0 / 0
-    except ZeroDivisionError as e:
-        raise ValueError("Denominator must be non-zero") from e
-
-# User input - acts like built-in input but logs both prompt and user input
-inp = log.input("Continue [Y/n]? ")
-# Parse yes/no user input
-cont = log.parse_bool_input(inp, default=True)
-
-# Log all logs from a function at the same time
-# This is especially useful when using multiple threads so logging does not get mixed up
-def fun():
-    with log.collect:
-        log("Hello there")
-        log("General Kenobi!")
-with mp.Pool() as p:
-    p.map(fun, args)
-
-# It is also possible to create multiple loggers by importing the Logger class, e.g.
-log2 = Logger()
-log2.configure("path/to/save/log2.log")
+x = np.random.randint(0, 100, size=10_000_000)
+values = unique(x)
+values, index, inverse, counts = unique(
+    x, return_index=True, return_inverse=True, return_counts=True,
+)
 ```
 
-# Types
+## Data science
 
-A few different numpy types are defined for the convenience of not having to remember what data types your arrays are - and also to satisfy your nasty type checkers.
+### Statistics
+
+Common statistical helpers, plus wrappers around scipy distributions reparametrised
+as in Jim Pitman's *Probability* (rather than scipy's `loc`/`scale`, which are
+unintuitive for many distributions).
+
 ```py
-from pelutils.types import AnyArray, BoolArray, BytesArray, ComplexArray, FloatArray, IntArray, ObjectArray, StringArray
+from pelutils.stats import z_score
+from pelutils.stats import expon
 
+# 95 % confidence interval half-width for a standard normal (defaults give ~1.96)
+half_width = std * z_score()
 
-def function_which_takes_np_types(
-    any_array: AnyArray,  # np.ndarray with arbitrary data type
-    float_array: FloatArray,  # np.ndarray with any floating point data type (e.g. float, np.float16, and np.float64)
-    int_array: IntArray,  # np.ndarray with any integer data type (e.g. int, np.uint8, and np.int32)
-):
-    ...
+# One-sided z value for an Exponential(λ=2) at the 1 % significance level
+zval = z_score(alpha=0.01, two_sided=False, distribution=expon(lambda_=2))
 ```
 
-# Data Science
+### Plotting
 
-This submodule contains various utility functions for data science, statistics, plotting, and machine learning.
-
-## Statistics
-
-Includes various commonly used statistical functions.
-There are also wrappers around a number of scipy distributions reparametrized as in Jim Pitman's "Probability", instead of using scale and loc, which can be quite unintuitive for many distributions.
+The `Figure` context manager fixes common `matplotlib` annoyances — sensible default
+figure and font sizes, easy styling — and saves and closes the figure for you while
+restoring `rcParams` afterwards.
 
 ```py
-from pelutils.ds.stats import z_score
-from pelutils.ds.distributions import expon
+import matplotlib.pyplot as plt
+from pelutils.plots import Figure, histogram, normal_binning
 
-# Get one sided z value for exponential(lambda=2) distribution with a significance level of 1 %
-zval = z_score(alpha=0.01, two_sided=False, distribution=expon(2))
-
-# The most common use case is getting the 95 % confidence interval from a standard normal distribution
-# This is achieved with the default parameters - z_score() returns ~1.96 which should be multiplied on the standard deviation
-mu = 1
-std = 2
-ci_lower = mu - std * z_score()
-ci_upper = mu + std * z_score()
-```
-
-## Plotting
-
-`pelutils` provides plotting utilities based on `matplotlib`.
-Most notable is the `Figure` context class, which attempts to remedy some of the common grievances with `matplotlib`,
-e.g. having to remember the correct `kwargs` and `rcParams` for setting font sizes, legend edge colour etc.
-```py
-from pelutils.ds.plots import Figure
-
-# The following makes a plot and saves it to `plot.png`.
-# The seaborn is style is used for demonstration, but if the `style` argument
-# is not given, the default matplotlib style is used.
-# The figure and font size are also given for demonstration, but their default
-# values are increased compared to matplotlib's default, as these are generally
-# too small for finished plots.
-with Figure("plot.png", figsize=(20, 10), style="seaborn", fontsize=20):
+with Figure("plot.png", figsize=(20, 10), fontsize=20):
     plt.scatter(x, y, label="Data")
     plt.grid()
     plt.title("Very nice plot")
-# The figure is automatically saved to `plot.png` and closed, such that
-# plt.plot can be used again from here.
-# Figure changes `matplotlib.rcParams`, but these changes are also undone
-# after the end of the `with statement`.
+# Saved to plot.png and closed here
+
+# histogram returns x and y coordinates ready for unpacking
+plt.plot(*histogram(data, binning_fn=normal_binning))
 ```
 
-The plotting utilies also include binning functions for creating nice histograms.
-The `histogram` function produces bins based on a binning function, of which three are provided:
+Three binning functions are provided — `linear_binning`, `log_binning`, and
+`normal_binning` (more resolution near the centre of roughly-normal data) — and custom
+binning functions are supported. See the
+[plotting docs](https://pelutils.readthedocs.io/en/latest/api/pelutils.plots.html).
 
-- `linear_binning`: Bins are spaced evenly from the lowest to the largest value of the data.
-- `log_binning`: Bins are log-spaced from the lowest to the largest value of the data, which is assumed to be positive.
-- `normal_binning`: Bins are distributed according to the distribution of the data, such there are more bins closer to the center of the data. This is useful if the data somewhat resembles a normal distribution, as the resolution will be the greatest where there is the most data.
+### Numpy type aliases
 
-It is also possible to provide custom binning functions.
+Type aliases so you (and your type checker) do not have to track array dtypes by hand.
 
-`histogram` provide both `x` and `y` coordinates, making it simple to use with argument unpacking:
 ```py
-import matplotlib.pyplot as plt
-import numpy as np
-from pelutils.ds.plots import histogram, normal_binning
+from pelutils.types import FloatArray, IntArray, BoolArray
 
-# Generate normally distributed data
-x = np.random.randn(100)
-# Plot distribution
-plt.plot(*histogram(x, binning_fn=normal_binning))
+def process(features: FloatArray, labels: IntArray, mask: BoolArray): ...
 ```
 
-Finally, different smoothing functions are provided.
-The two most common are `moving_avg` and `exponential_avg` which smooth the data using a moving average and exponential smoothing, respectively.
+## Also included
 
-The `double_moving_avg` is special in that the number of smoothed data points do not depend on the number of given data points but is instead based on a given number of samples, which allows the resulting smoothed curve to not by jagged as happens with the other smoothing functions.
-It also has two smoothness parameters, which allows a large degree of smoothness control.
+- `pelutils.misc.Table` — build aligned text tables which can also be easily export to LaTeX with `Table.to_latex()`.
+- `pelutils.misc.hardware_info` / `OS` — describe the machine the code runs on.
+- `pelutils.misc.git_repo_info` — the repo and commit the code is executing in.
+- Assorted file and dict helpers (`reverse_line_iterator`, `except_keys`, ...).
 
-Apart from smoothness parameters, all smoothness functions have the same call signature:
-```py
-from pelutils.ds.plots import double_moving_avg
+## Supported platforms
 
-# Generate noisy data
-n = 100
-x = np.linspace(-1, 1, n)
-y = np.random.randn(n)
-
-# Plot data along with smoothed curve
-plt.plot(*double_moving_avg(x, y))
-# If x is not given, it is assumed to go from 0 to n-1 in steps of 1
-plt.plot(*double_moving_avg(y))
-```
-
-Examples of all the plotting utilities are shown in the `examples` directory.
-
-# Supported platforms
-
-Precompiled wheels are provided for most common platforms.
-Notably, they are not provided for 32-bit systems.
-If no wheel is provided, `pip` should attempt a source install - this requires `<Python.h>` to be available.
-On Ubuntu, this can be installed with `sudo apt install python3-dev`, and on Fedora, it is installed with `sudo dnf install python3-devel`.
-
-If all else fails, it is possible to install from source by pointing `pip` to Github directly:
-```
-pip install git+https://github.com/peleiden/pelutils.git@release#egg=pelutils
-```
-It is also possible to install from source using `pip`'s `--no-binary` option.
+Precompiled wheels are provided for most common platforms (not 32-bit systems). If no
+wheel matches, `pip` builds from source which requires `<Python.h>` — install it with
+`sudo apt install python3-dev` (Ubuntu) or `sudo dnf install python3-devel` (Fedora).
