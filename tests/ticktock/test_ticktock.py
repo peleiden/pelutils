@@ -51,21 +51,17 @@ def test_ticktock_id():
 def test_profiling():
     """Test profiling"""
     tt = TickTock()
-    tt.profile("p")
-    tt.end_profile()
+    with tt.profile("p"):
+        pass
 
-    tt.profile("pp")
-    with pytest.raises(NameError):
-        tt.end_profile("p")
-    tt.end_profile("pp")
+    with tt.profile("pp"):
+        pass
 
-    tt.profile("p")
-    tt.profile("pp")
-    tt.profile("ppp")
-    tt.end_profile("ppp")
-    assert len(tt._profile_stack) == 2
-    tt.end_profile()
-    tt.end_profile()
+    with tt.profile("p"):
+        with tt.profile("pp"):
+            with tt.profile("ppp"):
+                pass
+            assert len(tt._profile_stack) == 2
 
 
 def test_context_profiling():
@@ -78,25 +74,20 @@ def test_context_profiling():
             assert len(tt._profile_stack) == 2
     assert len(tt._profile_stack) == 0
 
-    with pytest.raises(NameError):
-        with tt.profile("Hello there"):
-            tt.profile("General Kenobi!")
-
 
 def test_fuse():
     tt1 = TickTock()
     tt2 = TickTock()
 
-    tt1.profile("p")
-    tt2.profile("p")
-    tt2.profile("pp")
-    tt2.end_profile()
-    tt2.end_profile()
+    with tt1.profile("p"):
+        with tt2.profile("p"):
+            with tt2.profile("pp"):
+                pass
+        with pytest.raises(TickTockException):
+            tt1.fuse(tt2)
     with pytest.raises(TickTockException):
         tt1.fuse(tt2)
-    tt1.end_profile()
-    with pytest.raises(TickTockException):
-        tt1.fuse(tt2)
+
     assert len(tt1.profiles) == 1
 
     with pytest.raises(ValueError):
@@ -320,49 +311,30 @@ def test_print(capfd: pytest.CaptureFixture):
 
 def test_exit_in_nested():
     tt = TickTock()
-    with pytest.raises(ZeroDivisionError):
-        tt.profile("adfsadlæfj")
+    with pytest.raises(ZeroDivisionError), tt.profile("aælkjdfæakdjsf"):
         0 / 0  # noqa: B018
-        tt.end_profile()
-    # with tt.profile construct was not used, so expect an unclosed profile
-    assert len(tt._profile_stack) == 1
+    # with tt.profile construct was used, so expect no unclosed profiles
+    assert len(tt._profile_stack) == 0
 
     tt = TickTock()
     with pytest.raises(ZeroDivisionError):
         with tt.profile("sada"):
-            tt.profile("adfsadlæfj")
-            0 / 0  # noqa: B018
-            tt.end_profile()
+            with tt.profile("adfsadlæfj"):
+                0 / 0  # noqa: B018
+
     # with tt.profile construct was used, so expect no unclosed profiles
     assert len(tt._profile_stack) == 0
 
     tt = TickTock()
     with pytest.raises(ZeroDivisionError):
         with tt.profile("adsfad"):
-            tt.profile("asdasd")
-            with tt.profile("sada"):
-                tt.profile("adfsadlæfj")
-                0 / 0  # noqa: B018
-                tt.end_profile()
-            tt.end_profile()
+            with tt.profile("asdasd"):
+                with tt.profile("sada"):
+                    with tt.profile("aæsldfjka"):
+                        0 / 0  # noqa: B018
+
     # with tt.profile construct was used, so expect no unclosed profiles
     assert len(tt._profile_stack) == 0
-
-    tt = TickTock()
-    with pytest.raises(ZeroDivisionError):
-        tt.profile("aslkd")
-        tt.profile("alksjdasd")
-        with tt.profile("adsfad"):
-            tt.profile("asdasd")
-            with tt.profile("sada"):
-                tt.profile("adfsadlæfj")
-                0 / 0  # noqa: B018
-                tt.end_profile()
-            tt.end_profile()
-        tt.end_profile()
-        tt.end_profile()
-    # Two outermost did not using with construct, so expect two unclosed profiles
-    assert len(tt._profile_stack) == 2
 
 
 def test_profile(capfd: pytest.CaptureFixture):
