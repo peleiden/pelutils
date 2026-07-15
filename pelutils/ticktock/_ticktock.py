@@ -56,6 +56,7 @@ class Profile:
         else:
             assert depth == 0
         self.children = list()
+        self.start: float = 0  # Timestamp of when the profile was started, initialised to 0
 
     def sum(self) -> float:
         """Return total runtime, the sum of all registered hits."""
@@ -107,8 +108,8 @@ class _ProfileContext:
             # If an exception occured in deeper profiling sections, make sure to end them
             # before continuing, as a NameError otherwise will be raised due to unclosed profilings.
             while self._tt._profile_stack and self._tt._profile_stack[-1] != self._profile:  # pyright: ignore[reportPrivateUsage]
-                self._tt.end_profile()
-        self._tt.end_profile(self._profile.name)
+                self._tt._end_active_profile()  # pyright: ignore[reportPrivateUsage]
+        self._tt._end_active_profile()  # pyright: ignore[reportPrivateUsage]
 
 
 class TickTockException(RuntimeError):  # noqa: N818
@@ -224,27 +225,19 @@ class TickTock:
         self._profile_stack.append(profile)
         self._nhits.append(hits)
         pc = _ProfileContext(self, profile)
-        profile.start = perf_counter()  # pyright: ignore[reportAttributeAccessIssue]
+        profile.start = perf_counter()
         return pc
 
-    def end_profile(self, name: str | None = None) -> float:
-        """End the active profile.
-
-        If name is given, it is should match the profile start last.
-
-        The time passed since the stopped profile was started is returned.
-        """
+    def _end_active_profile(self):
+        """End the active profile."""
         end = perf_counter()
-        dt = end - self._profile_stack[-1].start  # pyright: ignore[reportAttributeAccessIssue]
-        if name is not None and name != self._profile_stack[-1].name:
-            raise NameError(f"Expected to pop profile '{self._profile_stack[-1].name}', received '{name}'")
+        dt = end - self._profile_stack[-1].start
         nhits = self._nhits.pop()
         if not self._profile_stack[-1]._disable_in_context:  # pyright: ignore[reportPrivateUsage]
             self._profile_stack[-1]._n += nhits  # pyright: ignore[reportPrivateUsage]
             self._profile_stack[-1]._total_time += dt  # pyright: ignore[reportPrivateUsage]
         self._profile_stack[-1]._disable_in_context = False  # pyright: ignore[reportPrivateUsage]
         self._profile_stack.pop()
-        return dt
 
     def reset(self):
         """Stop all timing and profiling and clear all profiles and measurements."""
@@ -292,7 +285,7 @@ class TickTock:
         if name is not None:
             self.profile(name, hits=hits)
             profile = self._profile_stack[-1]
-            self.end_profile()
+            self._end_active_profile()
             profile._total_time += time  # pyright: ignore[reportPrivateUsage]
         else:
             self._profile_stack[-1]._n += hits  # pyright: ignore[reportPrivateUsage]

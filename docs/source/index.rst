@@ -15,6 +15,6 @@ General-purpose utilities for Python projects.
 
 .. toctree::
    :maxdepth: 3
-   :caption: # Contents:
+   :caption: Contents
 
    api/pelutils

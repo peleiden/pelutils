@@ -41,7 +41,7 @@ seconds_used = TT.tock()
 # Profile a for loop
 for i in range(100):
     with TT.profile("Repeated code"):
-    <some task>
+        <some task>
     with TT.profile("Subtask"):
         <some subtask>
 print(TT)  # Print a table view of profiled code sections

@@ -14,7 +14,7 @@ from pelutils.serialization._pretty_json import (
 
 
 class UniversalJsonModel(BaseModel):
-    """Pydantic model with JSON persistence for arbitrary Python values.
+    """Pydantic BaseModel with JSON persistence for arbitrary Python values.
 
     Values unsupported by JSON are pickle-encoded and stored as base64 strings. Do not
     load data from an untrusted source. Custom ``model_config`` values must retain

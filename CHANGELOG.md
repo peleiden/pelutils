@@ -34,6 +34,8 @@ Documentation has also been massively improved and is exposed on the brand new [
   Also moved along with `OS` to new `_misc.platform` submodule.
 - Renamed `z` -> `z_score`.
 - Use `\n` as default line separator instead of `os.linesep`.
+- Made `TickTock.end_profile` private.
+  Profiling can now only be done with context blocks, removing a common source of bugs.
 
 ### Removals
 
