@@ -9,7 +9,7 @@
 [![image](https://img.shields.io/pypi/l/pelutils.svg)](https://github.com/peleiden/pelutils/blob/master/LICENSE.txt)
 [![readthedocs](https://app.readthedocs.org/projects/pelutils/badge/?version=latest)](https://pelutils.readthedocs.io/en/latest/)
 
-**Batteries-included utilities for Python projects**
+**The Swiss army knife of Python projects**
 
 Every project, experiment, or one-off script inevitably ends up reinventing much of
 the same plumbing: some way to time a loop, saving and loading data to and from disk

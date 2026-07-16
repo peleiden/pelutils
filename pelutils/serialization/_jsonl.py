@@ -5,7 +5,7 @@ from collections.abc import Iterable, Iterator
 from typing import Any, TextIO
 
 
-def jsonl_load(f: TextIO) -> Iterator[str]:
+def jsonl_load(f: TextIO) -> Iterator[Any]:  # pyright: ignore[reportExplicitAny]
     """Return a generator of parsed lines in a .jsonl file. Empty lines are ignored."""
     for line in f:
         stripped = line.strip()
@@ -13,7 +13,7 @@ def jsonl_load(f: TextIO) -> Iterator[str]:
             yield json.loads(stripped)
 
 
-def jsonl_loads(string: str) -> Iterator[str]:
+def jsonl_loads(string: str) -> Iterator[Any]:  # pyright: ignore[reportExplicitAny]
     """Return a generator of parsed lines. Empty lines are ignored."""
     for line in string.splitlines():
         stripped = line.strip()
@@ -25,7 +25,7 @@ def jsonl_dump(objects: Iterable[Any], f: TextIO, single_block: bool = True):  #
     """Save an iterable to a .jsonl file.
 
     If single_block is True, objects will be joined to a single block before being written.
-    It can be usefull to set this to False if there is a large amount of lazily generated data.
+    It can be useful to set this to False if there is a large amount of lazily generated data.
     """
     if single_block:
         f.write("\n".join(json.dumps(obj) for obj in objects) + "\n")

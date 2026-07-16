@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import os
 from argparse import ArgumentParser
 
@@ -139,7 +137,7 @@ def run():
     parser = ArgumentParser()
     parser.add_argument("repos", nargs="+")
     parser.add_argument("-o", "--output", default="linecount.png", help="Path to produce output figure to.")
-    parser.add_argument("-e", "--extensions", default=_default_extensions, help="Comma seperated list of file extensions to look for.")
+    parser.add_argument("-e", "--extensions", default=_default_extensions, help="Comma separated list of file extensions to look for.")
     parser.add_argument("-d", "--date-format", default="%y-%m-%d", help="How to format axis labels.")
     parser.add_argument("-n", "--no-repo-name", action="store_true", help="Disable repository name from the produced figure.")
     args = parser.parse_args()

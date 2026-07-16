@@ -30,12 +30,12 @@ def reverse_line_iterator(file: TextIO, chunksize: int = DEFAULT_BUFFER_SIZE, li
     When done, file pointer will be 0. This function is especially useful for large files,
     as it will never take up more memory that size of largest line + chunksize.
     Raises an OSError on Windows, as this function currently is not supported on Windows due
-    to fuckery in how line seperators are read.
+    to fuckery in how line separators are read.
     """
     if OS.is_windows:
         raise UnsupportedOS("reverse_line_iterator is not supported on Windows")
     if len(linesep) != 1:
-        raise ValueError("reverse_line_iterator only supports line seperators of length 1")
+        raise ValueError("reverse_line_iterator only supports line separators of length 1")
 
     # Go to end of file and read first chunk
     file.seek(0, os.SEEK_END)

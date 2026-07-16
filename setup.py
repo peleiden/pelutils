@@ -1,9 +1,9 @@
 import os
 import sys
-from distutils.command.build import build as build_
 from glob import glob as glob  # glob
 
 from setuptools import find_packages, setup
+from setuptools.command.build import build as build_
 from setuptools.extension import Extension
 
 sys.path.append("pelutils")
@@ -74,7 +74,7 @@ class build(build_):
 setup_args = dict(
     name="pelutils",
     version=__version__,
-    description="The Swiss army knife of Python projects.",
+    description="The Swiss army knife of Python projects",
     long_description_content_type="text/markdown",
     long_description=README,
     license="MIT",
@@ -85,12 +85,11 @@ setup_args = dict(
     keywords=["utility", "logger", "parser", "profiling", "plotting"],
     url="https://github.com/peleiden/pelutils",
     download_url="https://pypi.org/project/pelutils/",
-    install_requires=[requirements],
+    install_requires=requirements,
     extras_require={"docs": requirements_docs, "dev": requirements_dev + requirements_docs},
     entry_points={
         "console_scripts": [
             "linecounter = pelutils._entry_points.linecounter:run",
-            "pelexamples = examples.cli:run",
         ]
     },
     cmdclass={"build": build},

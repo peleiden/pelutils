@@ -1,9 +1,7 @@
 """Compact-but-readable JSON formatter with pickle fallback for non-serialisable values."""
+
 # A copious amount of Any is used in this file on purpose, so reportExplicitAny is ignored for the whole file
 # pyright: reportExplicitAny=false
-
-from __future__ import annotations
-
 import base64
 import json
 import pickle
@@ -87,7 +85,7 @@ def _make_json_safe(value: Any) -> Any:
     return pickle_encode(value)
 
 
-def make_json_unsafe(value: Any) -> Any:
+def from_safe_json(value: Any) -> Any:
     """Recursively convert *value* from a JSON-safe structure.
 
     b64encoded strings are decoded and unpickled. Everything else is passed through.
@@ -96,10 +94,10 @@ def make_json_unsafe(value: Any) -> Any:
         return _decode_unpickle(value)
 
     if isinstance(value, dict):
-        return {str(k): make_json_unsafe(v) for k, v in value.items()}
+        return {str(k): from_safe_json(v) for k, v in value.items()}
 
     if isinstance(value, (list, tuple)):
-        return [make_json_unsafe(item) for item in value]
+        return [from_safe_json(item) for item in value]
 
     return value
 
