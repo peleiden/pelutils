@@ -33,9 +33,9 @@ type hints (including `py.typed`), and is easy to start using.
   with support for running many jobs from a single config and auto-documenting them.
 - **`unique`** — a linear-time drop-in for `numpy.unique`, dramatically faster on
   large arrays (backed by a small C extension).
-- **Data-science helpers** — a `matplotlib` `Figure` context manager, histogram
-  binning, reparametrised scipy distributions, `z_score`, LaTeX-ready tables, and
-  numpy type aliases.
+- **Data-science helpers** — a `matplotlib` `Figure` context manager with improved default
+  settings over `matplotlib`, histogram binning, reparametrised scipy distributions,
+  `z_score`, LaTeX-ready tables, and numpy type aliases.
 
 ## Installation
 
