@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
 
-import git
+from pelutils.misc._conditional_import import import_git
+
+git = import_git()
 
 
 def git_repo_info(path: str | Path | None = None) -> tuple[Path, str] | tuple[None, None]:

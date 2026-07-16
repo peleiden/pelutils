@@ -309,7 +309,7 @@ class JobParser:
                         assert all(isinstance(x, argument.type) for x in job[argname])  # pyright: ignore[reportArgumentType]
                         if argument.nargs > 0 and len(job[argname]) != argument.nargs:
                             raise ValueError(
-                                f"Mandatory argument '{argname}' expected {argument.nargs} values but received {len(job[argname])}"
+                                f"Required argument '{argname}' expected {argument.nargs} values but received {len(job[argname])}"
                             )
 
         return job_descriptions
