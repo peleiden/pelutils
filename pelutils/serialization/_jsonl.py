@@ -34,5 +34,5 @@ def jsonl_dump(objects: Iterable[Any], f: TextIO, single_block: bool = True):  #
 
 
 def jsonl_dumps(objects: Iterable[Any]) -> str:  # pyright: ignore[reportExplicitAny]
-    """Return a string representation of an iterable in a string."""
+    """Return the objects as a single .jsonl-formatted string, one JSON object per line."""
     return "\n".join(json.dumps(obj) for obj in objects)
