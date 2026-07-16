@@ -340,6 +340,7 @@ class JobParser:
         return self._parse_jobs()
 
     def _get_docfile_content(self) -> str:
+        """Render the run's documentation: the CLI command, default values, and config file used."""
         buffer = io.StringIO()
         buffer.write(f"# Running job at {datetime.now()}\n")
         lines: list[str] = [
