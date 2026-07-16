@@ -1,7 +1,5 @@
 """Supporting elements to the logger, such as levels, colours, collection of logs, etc."""
 
-from __future__ import annotations
-
 from enum import IntEnum
 from types import TracebackType
 
@@ -35,7 +33,7 @@ class LevelManager:
     def __init__(self):
         self.level: LogLevels | int | None = None
 
-    def with_level(self, level: LogLevels | int) -> LevelManager:
+    def with_level(self, level: LogLevels | int) -> "LevelManager":
         self.level = level
         return self
 

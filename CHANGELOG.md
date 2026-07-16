@@ -51,6 +51,7 @@ Documentation has also been massively improved and is exposed on the brand new [
 - Removed `corr_ci`.
 - Removed `SimplePool` as the issue it solved is [not an issue](https://github.com/pytest-dev/pytest-cov/issues/250) in newer pytest versions.
 - Removed niche and unintuitive features from `TickTock`.
+- Removed `Logger.test_bool_input`
 
 ### Fixes
 
