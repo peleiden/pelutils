@@ -27,10 +27,10 @@ class LoggingException(RuntimeError):  # noqa: N818
 
 
 class Logger:
-    """A simple logger which creates a log file and pushes strings both to stdout and the log file. See .configure for usage details.
+    """A simple logger which creates a log file and pushes strings both to stdout and the log file. See ``configure`` for usage details.
 
-    Main features include automatically logging errors and their stacktrace (see _Logger.log_errors),
-    collecting logs for multiprocessing (see _Logger.collect), and colourful prints.
+    Main features include automatically logging errors and their stacktrace (see ``Logger.log_errors``),
+    collecting logs for multiprocessing (see ``Logger.collect``), and colourful prints.
     """
 
     _selected_logger: str  # pyright: ignore[reportUninitializedInstanceVariable]
