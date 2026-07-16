@@ -52,30 +52,38 @@ make use of [`PyTorch`](https://pytorch.org), which must be installed separately
 
 ## Logging
 
-A simple but feature-rich logger that prints in colour and writes to a log file.
+Python's built-in `logging` is powerful but fiddly to set up, and a bare `print` gives
+you no importance levels, no timestamps, and nothing on disk to look at afterwards. This logger hits
+the sweet spot: one `configure` call and you get colour-coded, timestamped output to both
+the console and a log file, with severity levels, log rotation, one-line exception logging,
+and multiprocessing-safe collection.
 
 ```py
 from pelutils.logging import log, LogLevels
 
 # Set up the logger by giving it the file to write to
 # Omit the path to only print, never write a file
-log.configure("run.log")
+log.configure("train.log")
 
-log.section("Starting run")           # Highlighted section header
-log("Plain info line")                # Logs at INFO level
-log.warning("Something looks off")
-log.debug("Extra detail", "on two lines")
+log.section("Training run")  # Highlighted section header
+log(f"Loaded {len(dataset):,} samples")  # Logs at INFO level
+for epoch in range(epochs):
+    loss = train_one_epoch()
+    log.debug(f"Epoch {epoch}: loss {loss:.4f}")  # Logs at DEBUG level - by default, only saved to the log file, but not printed to the console
+    if loss > 1e3:
+        log.warning("Loss is diverging")  # Logs at WARNING level
+log.debug("Final weights", model.state_dict().keys())
 
-# Log exceptions with their full (chained) stacktrace
+# If an exeption occurs in a piece of code, log it with its full (chained) stacktrace, then re-raise
 with log.log_errors:
-    risky_operation()
+    save_checkpoint(model)
 
 # Temporarily change or silence the log level
 with log.level(LogLevels.ERROR):
     log.warning("Suppressed")
 
 # Rotate the log file by time or size
-log.configure("run.log", rotation="day")    # or "1 GB", "hour", ...
+log.configure("train.log", rotation="day")    # or "1 GB", "hour", ...
 ```
 
 When using multiprocessing, wrap a worker in `with log.collect:` so its lines are
