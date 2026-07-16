@@ -32,7 +32,7 @@ class UniversalJsonModel(BaseModel):
         return cls.model_validate(self_dict)
 
     def save(self, path: str | Path, *, max_line_length: int = 140, indent: int = 2, encoding: str = "utf-8"):
-        """Save the model to ``path``."""
+        """Save the model to ``path`` as human-readable JSON, creating parent directories as needed."""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
