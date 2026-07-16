@@ -85,31 +85,40 @@ and more.
 
 ## Timing and profiling
 
-Inspired by Matlab's `tic`/`toc`, with a profiler built on top.
+When you want to know where a script spends its time, `cProfile` gives you a wall of
+function-level numbers, and manual `time.perf_counter()` calls quickly turn into
+bookkeeping. `TickTock` sits in between: wrap the sections *you* care about in named,
+nestable context managers and print a readable table of totals, hit counts, averages,
+and each section's share of its parent's time. The per-profile overhead is tiny, so it
+happily lives inside hot loops and long-running jobs.
 
 ```py
 from pelutils.ticktock import TT
 
-# Time a single block
+# Time a single block, Matlab style
 TT.tick()
-do_work()
-seconds = TT.tock()
+model = train_model(data)
+print(f"Training took {TT.tock():.1f} s")
 
-# Profile named sections in a loop, then print a breakdown
-# Nested profiles are fully supported
-for batch in batches:
-    with TT.profile("Load"):
-        x = load(batch)
-    with TT.profile("Forward pass"):
-        model(x)
+# Profile named sections across a loop, nesting them however you like
+for image in images:
+    with TT.profile("Process image"):
+        with TT.profile("Load"):
+            img = load(image)
+        with TT.profile("Resize"):
+            img = resize(img, (224, 224))
+        with TT.profile("Inference"):
+            predict(model, img)
 
-print(TT)  # Table of hits, total time, and time share per section
+# Print a table of hits, total time, and average time for each section
+print(TT)
 ```
 
 `with TT.profile("name", hits=n):` records `n` hits at once, which is handy for very
 tight loops or for a block that processes `n` items in parallel. `TT.do_at_interval(...)`
 turns the same instance into a throttle for periodic tasks. The default `TT` is a
-shared instance; construct your own with `TickTock()` when you need isolation.
+shared instance; construct your own with `TickTock()` when you need isolation — most
+importantly one per thread, as profiling is not thread-safe.
 
 ## Serialisation
 
