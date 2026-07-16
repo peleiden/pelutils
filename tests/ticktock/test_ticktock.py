@@ -88,16 +88,15 @@ def test_fuse():
     with pytest.raises(TickTockException):
         tt1.fuse(tt2)
 
-    assert len(tt1.profiles) == 1
+    assert len(tt1._root_profiles) == 1
 
     with pytest.raises(ValueError):
         TickTock.fuse_multiple(tt1, tt1)
 
     tt1 = deepcopy(tt2)
     tt1 = TickTock.fuse_multiple(tt1, tt2)
-    for p1, p2 in zip(tt1, tt2, strict=True):
-        assert p1._n == 2 * p2._n
-        assert p1._total_time == 2 * p2._total_time
+    for p1, p2 in zip(tt1.iter_profiles(), tt2.iter_profiles(), strict=True):
+        assert p1.total_runtime == pytest.approx(2 * p2.total_runtime)
 
 
 def test_global_tt():
@@ -134,12 +133,10 @@ def test_reset():
 
     with tt.profile("p"):
         assert len(tt._profile_stack) == 1
-        assert tt._nhits == [1]
-    assert len(tt.profiles) == 1
+    assert len(tt._root_profiles) == 1
     tt.reset()
-    assert len(tt.profiles) == 0
+    assert len(tt._root_profiles) == 0
     assert len(tt._profile_stack) == 0
-    assert tt._nhits == list()
 
     with tt.profile("pp"):
         with pytest.raises(TickTockException):
@@ -177,26 +174,18 @@ def test_profiles_with_same_name():
     with tt.profile("a"):
         pass
 
-    profiles = list(tt)
-    assert profiles[0].name == "a"
-    assert profiles[0].depth == 0
-    assert len(profiles[0]) == 3
+    root_profiles = list(tt.iter_profiles())
+    assert root_profiles[0].name == "a"
+    assert root_profiles[0].depth == 0
+    assert root_profiles[0].nhits == 3
 
-    assert profiles[1].name == "b"
-    assert profiles[1].depth == 0
-    assert len(profiles[1]) == 2
+    assert root_profiles[1].name == "b"
+    assert root_profiles[1].depth == 0
+    assert root_profiles[1].nhits == 2
 
-    assert profiles[2].name == "a"
-    assert profiles[2].depth == 1
-    assert len(profiles[2]) == 4
-
-    b_n, b_sum = tt.stats_by_profile_name("b")
-    assert b_n == 2
-    assert isinstance(b_sum, float)
-    assert b_sum > 0
-
-    with pytest.raises(KeyError):
-        tt.stats_by_profile_name("c")
+    assert root_profiles[2].name == "a"
+    assert root_profiles[2].depth == 1
+    assert root_profiles[2].nhits == 4
 
 
 def test_disable():
@@ -219,28 +208,17 @@ def test_disable():
             with tt.profile("666", disable=True):
                 pass
 
-    assert tt.stats_by_profile_name("111")[0] == 2
-    assert tt.stats_by_profile_name("222")[0] == 1
-    assert tt.stats_by_profile_name("333")[0] == 1
-    assert tt.stats_by_profile_name("444")[0] == 1
-    assert tt.stats_by_profile_name("555")[0] == 0
-    assert tt.stats_by_profile_name("666")[0] == 0
-
-
-def test_add_external_measurements():
-    tt = TickTock()
-    with tt.profile("a"):
-        tt.add_external_measurements("b", 5, hits=2)
-        with tt.profile("b"):
-            tt.add_external_measurements(None, 3, hits=4)
-        tt.add_external_measurements(None, 5)
-    tt.add_external_measurements("a", 5)
-
-    for profile in tt.profiles:
-        if profile.name == "a":
-            assert len(profile) == 3
-        elif profile.name == "b":
-            assert len(profile) == 7
+    pname_depth_to_profile = {(profile.name, profile.depth): profile for profile in tt.iter_profiles()}
+    assert pname_depth_to_profile["111", 0].nhits == 2
+    assert pname_depth_to_profile["222", 1].nhits == 1
+    assert pname_depth_to_profile["333", 2].nhits == 1
+    assert pname_depth_to_profile["444", 2].nhits == 1
+    with pytest.raises(KeyError):
+        # This has zero hits due to disabled parent, so it shouldn't be present here
+        pname_depth_to_profile["555", 2]
+    with pytest.raises(KeyError):
+        # This has zero hits due to being disabled, so it shouldn't be present here
+        assert pname_depth_to_profile["666", 2].nhits == 0
 
 
 def test_do_at_interval():
@@ -278,7 +256,9 @@ def test_thread_assert():
         nonlocal tt
         tt = TickTock()
 
-    Thread(target=set_tt).start()
+    thread = Thread(target=set_tt)
+    thread.start()
+    thread.join()
 
     with pytest.warns(), tt.profile("abc"):
         pass
@@ -338,18 +318,18 @@ def test_exit_in_nested():
 
 
 def test_profile(capfd: pytest.CaptureFixture):
-    p = Profile("tester", 0, None)
-    assert len(p) == 0
-    assert p.mean() == 0
+    profile = Profile("tester", 0, None)
+    assert profile.nhits == 0
+    assert profile.mean() == 0
 
-    print(p)
+    print(profile)
     stdout, _ = capfd.readouterr()
     assert stdout.strip() == "tester"
 
 
 def test_active():
     tt = TickTock()
-    assert not bool(tt)
+    assert not tt.has_profiles
     with tt.profile("test"):
         pass
-    assert bool(tt)
+    assert tt.has_profiles

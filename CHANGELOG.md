@@ -34,8 +34,8 @@ Documentation has also been massively improved and is exposed on the brand new [
   Also moved along with `OS` to new `_misc.platform` submodule.
 - Renamed `z` -> `z_score`.
 - Use `\n` as default line separator instead of `os.linesep`.
-- Made `TickTock.end_profile` private.
-  Profiling can now only be done with context blocks, removing a common source of bugs.
+- Profiling with `TickTock` can now only be done with context blocks, removing a common bug nest.
+  Made `TickTock.end_profile` has been made private, the context management has received a severely needed cleanup.
 
 ### Removals
 
@@ -50,6 +50,7 @@ Documentation has also been massively improved and is exposed on the brand new [
 - Removed `split_path` which is covered by `Path.parents`.
 - Removed `corr_ci`.
 - Removed `SimplePool` as the issue it solved is [not an issue](https://github.com/pytest-dev/pytest-cov/issues/250) in newer pytest versions.
+- Removed niche and unintuitive features from `TickTock`.
 
 ### Fixes
 

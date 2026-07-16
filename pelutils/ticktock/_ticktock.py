@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 import warnings
-from collections.abc import Generator, Hashable
+from collections.abc import Hashable, Iterator
+from contextlib import contextmanager
 from copy import deepcopy
 from threading import current_thread
 from time import perf_counter
-from types import TracebackType
 
 from typing_extensions import override
 
@@ -13,7 +11,7 @@ from pelutils.misc import Table
 
 _TimeUnit = tuple[str, float]  # Unit suffix, unit value in seconds
 # Time units available for formatting
-# These must be sorted by tiem
+# These must be sorted by time
 _time_units = (
     ("ns", 1e-9),
     ("us", 1e-6),
@@ -32,8 +30,8 @@ def _get_smallest_suitable_unit(duration_s: float) -> tuple[str, float]:
 
 
 class Profile:
-    def __init__(self, name: str, depth: int, parent: Profile | None):
-        """Data for a profiled code section.
+    def __init__(self, name: str, depth: int, parent: "Profile | None"):
+        """Contains data for a profiled code section.
 
         Parameters
         ----------
@@ -43,13 +41,21 @@ class Profile:
             Number of ancestor profiles.
         parent : Profile | None
             Direct ancestor. Can be None if the profile is top-level, in which case depth must also be 0.
-        """  # noqa: D401
-        self._n: int = 0
-        self._total_time: float = 0
+        """
+        # Number of times the profile has been hit
+        self.nhits: int = 0
+        # Total runtime across all hits
+        self.total_runtime: float = 0
+        # Name of the profile
         self.name = name
+        # Depth in the profile tree - 0 means that it is available at the root
         self.depth = depth
+        # Parent profile of the profile
         self.parent = parent
-        self._disable_in_context = False
+        # Whether or not to disable profile
+        # This is set to True when entering a profiling section that is disabled, or if the parent is disabled
+        # It is always set back to False after leaving the profiling context
+        self._disable = False
         if self.parent is not None:
             assert depth > 0
             self.parent.children.append(self)
@@ -60,24 +66,23 @@ class Profile:
 
     def sum(self) -> float:
         """Return total runtime, the sum of all registered hits."""
-        return self._total_time
+        return self.total_runtime
 
     def mean(self) -> float:
         """Return mean runtime lengths. Returns 0 if no hits have been registered."""
-        if self._n == 0:
+        if self.nhits == 0:
             return 0
-        return self._total_time / self._n
+        return self.total_runtime / self.nhits
 
     @override
     def __str__(self) -> str:
         return self.name
 
-    def __len__(self) -> int:
-        """Return the number of times this profile has been triggered."""
-        return self._n
-
-    def __iter__(self) -> Generator[Profile, None, None]:
-        """Return a over this profile followed by all its children, recursively."""
+    def __iter__(self) -> "Iterator[Profile]":
+        """Return a recursive iterator over this profile followed by all its children."""
+        if not self.nhits:
+            # If the profile has had zero hits, which happens when it has run in disabled mode, pretend it is Nikolai Yezhov
+            return
         yield self
         for child in self.children:
             yield from child
@@ -93,23 +98,6 @@ class Profile:
     @override
     def __eq__(self, __value: object) -> bool:
         return isinstance(__value, Profile) and self._hashable == __value._hashable
-
-
-class _ProfileContext:
-    def __init__(self, tt: "TickTock", profile: Profile):
-        self._tt = tt
-        self._profile = profile
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, et: type[BaseException] | None, ev: BaseException | None, tb: TracebackType | None):
-        if et is not None:
-            # If an exception occured in deeper profiling sections, make sure to end them
-            # before continuing, as a NameError otherwise will be raised due to unclosed profilings.
-            while self._tt._profile_stack and self._tt._profile_stack[-1] != self._profile:  # pyright: ignore[reportPrivateUsage]
-                self._tt._end_active_profile()  # pyright: ignore[reportPrivateUsage]
-        self._tt._end_active_profile()  # pyright: ignore[reportPrivateUsage]
 
 
 class TickTockException(RuntimeError):  # noqa: N818
@@ -160,10 +148,12 @@ class TickTock:
 
     def __init__(self):
         self._tick_starts: dict[Hashable, float] = dict()
-        self._id_to_profile: dict[Profile, Profile] = dict()
-        self.profiles: list[Profile] = list()  # Top level profiles
-        self._profile_stack: list[Profile] = list()
-        self._nhits: list[int] = list()
+        # All created profiles are stored in this dictionary
+        # Profiles are used as keys for themselves
+        # This allows lookup for when identical profiles are created and should be appended to an existing profile
+        self._id_to_profile: dict[Hashable, Profile] = dict()
+        self._profile_stack: list[Profile] = list()  # LIFO stack of active profiles
+        self._root_profiles: list[Profile] = list()  # Top level profiles
 
         self._thread_name = current_thread().name
         self._thread_id = id(current_thread())
@@ -179,7 +169,41 @@ class TickTock:
             raise TickTockException(f"A timer for the given key ({key}) has not been started with .tick()")
         return end - self._tick_starts[key]
 
-    def profile(self, name: str, *, hits: int = 1, disable: bool = False) -> _ProfileContext:
+    def _start_profile(self, name: str, *, hits: int, disable: bool):
+        """Start a profile and add it to relevant attributes that keep track of profiles."""
+        profile = Profile(
+            name,
+            len(self._profile_stack),
+            self._profile_stack[-1] if len(self._profile_stack) > 0 else None,
+        )
+
+        if profile in self._id_to_profile:
+            profile = self._id_to_profile[profile]
+            if profile.parent is not None:
+                profile.parent.children.pop()
+        else:
+            self._id_to_profile[profile] = profile
+            if not self._profile_stack:
+                self._root_profiles.append(profile)
+
+        profile._disable = disable or (self._profile_stack[-1]._disable if len(self._profile_stack) > 0 else False)  # pyright: ignore[reportPrivateUsage]
+        if not profile._disable:  # pyright: ignore[reportPrivateUsage]
+            profile.nhits += hits
+
+        self._profile_stack.append(profile)
+        profile.start = perf_counter()
+
+    def _end_profile(self):
+        """End the inner-most active profile."""
+        end = perf_counter()
+        dt = end - self._profile_stack[-1].start
+        if not self._profile_stack[-1]._disable:  # pyright: ignore[reportPrivateUsage]
+            self._profile_stack[-1].total_runtime += dt
+        self._profile_stack[-1]._disable = False  # pyright: ignore[reportPrivateUsage]
+        self._profile_stack.pop()
+
+    @contextmanager
+    def profile(self, name: str, *, hits: int = 1, disable: bool = False):
         """Begin a profile with given name.
 
         Optionally it is possible to register this as several hits that sum to the total time.
@@ -206,38 +230,16 @@ class TickTock:
                 stacklevel=2,
             )
 
-        profile = Profile(
-            name,
-            len(self._profile_stack),
-            self._profile_stack[-1] if self._profile_stack else None,
-        )
-
-        if profile in self._id_to_profile:
-            profile = self._id_to_profile[profile]
-            if profile.parent is not None:
-                profile.parent.children.pop()
-        else:
-            self._id_to_profile[profile] = profile
-            if not self._profile_stack:
-                self.profiles.append(profile)
-        profile._disable_in_context = disable or (self._profile_stack[-1]._disable_in_context if self._profile_stack else False)  # pyright: ignore[reportPrivateUsage]
-
-        self._profile_stack.append(profile)
-        self._nhits.append(hits)
-        pc = _ProfileContext(self, profile)
-        profile.start = perf_counter()
-        return pc
-
-    def _end_active_profile(self):
-        """End the active profile."""
-        end = perf_counter()
-        dt = end - self._profile_stack[-1].start
-        nhits = self._nhits.pop()
-        if not self._profile_stack[-1]._disable_in_context:  # pyright: ignore[reportPrivateUsage]
-            self._profile_stack[-1]._n += nhits  # pyright: ignore[reportPrivateUsage]
-            self._profile_stack[-1]._total_time += dt  # pyright: ignore[reportPrivateUsage]
-        self._profile_stack[-1]._disable_in_context = False  # pyright: ignore[reportPrivateUsage]
-        self._profile_stack.pop()
+        started_profile = False
+        try:
+            self._start_profile(name, hits=hits, disable=disable)
+            started_profile = True
+            yield
+        finally:
+            # Only end the newly started profile if one was succesfully started
+            # If _start_profile fails and _end_profile then runs, that can give some nasty error messages
+            if started_profile:
+                self._end_profile()
 
     def reset(self):
         """Stop all timing and profiling and clear all profiles and measurements."""
@@ -260,10 +262,9 @@ class TickTock:
         .. code-block:: python
 
             while True:
-                produce_telemetry()
-
-            if TT.do_at_interval(60, "telemetry"):
-                collect_telemetry()
+                if TT.do_at_interval(60, "telemetry"):
+                    collect_telemetry()
+                ...
 
         If ``also_first`` is True, ``do_at_interval`` will return True the first time it is called with a given ``key``.
         Otherwise, the interval has to elapse before True is returned the first time.
@@ -277,21 +278,7 @@ class TickTock:
             return True
         return False
 
-    def add_external_measurements(self, name: str | None, time: float, *, hits: int = 1):
-        """Add data to a (new) profile with given time spread over given hits.
-
-        If `name` is a string, it will act like `.profile(name)`. If it is `None`, the current active profile will be used.
-        """
-        if name is not None:
-            self.profile(name, hits=hits)
-            profile = self._profile_stack[-1]
-            self._end_active_profile()
-            profile._total_time += time  # pyright: ignore[reportPrivateUsage]
-        else:
-            self._profile_stack[-1]._n += hits  # pyright: ignore[reportPrivateUsage]
-            self._profile_stack[-1]._total_time += time  # pyright: ignore[reportPrivateUsage]
-
-    def fuse(self, tt: TickTock):
+    def fuse(self, tt: "TickTock"):
         """Fuse a TickTock instance into self."""
         if len(self._profile_stack) or len(tt._profile_stack):
             raise TickTockException("Unable to fuse while some profiles are still unfinished")
@@ -301,11 +288,11 @@ class TickTock:
 
         for key, profile in tt._id_to_profile.items():
             existing = self._id_to_profile[key]
-            existing._n += profile._n  # pyright: ignore[reportPrivateUsage]
-            existing._total_time += profile._total_time  # pyright: ignore[reportPrivateUsage]
+            existing.nhits += profile.nhits
+            existing.total_runtime += profile.total_runtime
 
     @staticmethod
-    def fuse_multiple(*tts: TickTock) -> TickTock:
+    def fuse_multiple(*tts: "TickTock") -> "TickTock":
         """Combine multiple TickTock instances."""
         ticktock = deepcopy(tts[0])
         ids = set(id(tt) for tt in tts)
@@ -321,20 +308,6 @@ class TickTock:
     def _stringify_time_with_alignment(dt: float, unit: tuple[str, float]) -> str:
         return f"{dt / unit[1]:,.2f} {unit[0]:>2}"
 
-    def stats_by_profile_name(self, name: str) -> tuple[int, float]:
-        """Return the number of hits and sum of measurement lengths for a profile with a given name.
-
-        Warning: Since the name does not uniquely identify a profile, this function
-        simply returns the first profile with this name, so be careful to check that
-        you get the correct one if you have multiple profiles with the same name.
-        """
-        try:
-            profile = next(profile for profile in self._id_to_profile.values() if profile.name == name)
-        except StopIteration as e:
-            raise KeyError(f"No profile with name {name}") from e
-
-        return len(profile), profile.sum()
-
     @override
     def __str__(self) -> str:
         """Return a pretty string representation of the profile tree.
@@ -347,8 +320,8 @@ class TickTock:
         table = Table()
         h = ["Profile", "Total time", "Percentage", "Hits", "Average"]
         table.add_header(h)
-        total_time = sum(p.sum() for p in self.profiles)
-        for profile in self:
+        total_time = sum(p.sum() for p in self._root_profiles)
+        for profile in self.iter_profiles():
             psum = profile.sum()
             pmean = profile.mean()
             row = [
@@ -357,21 +330,25 @@ class TickTock:
                 "%.2f" % (100 * psum / (profile.parent.sum() if profile.parent else total_time))
                 + (" <" if profile.depth else "")
                 + "--" * (profile.depth - 1),
-                f"{len(profile):,}",
+                f"{profile.nhits:,}",
                 self._stringify_time_with_alignment(pmean, _get_smallest_suitable_unit(pmean)),
             ]
             table.add_row(row, [True] + [False] * (len(row) - 1))
 
         return str(table)
 
-    def __bool__(self) -> bool:
-        """Return True if any profiling has been performed."""
-        return len(self.profiles) > 0
+    def iter_profiles(self) -> Iterator[Profile]:
+        """Recursively returns all profiles in the tree.
 
-    def __iter__(self) -> Generator[Profile, None, None]:
-        """Recursively returns all profiles in the tree."""
-        for profile in self.profiles:
+        They are ordered in a depth-first manner rather than breadth-first.
+        """
+        for profile in self._root_profiles:
             yield from profile
+
+    @property
+    def has_profiles(self) -> bool:
+        """Return True if any profiling has been performed."""
+        return len(self._root_profiles) > 0
 
 
 TT = TickTock()
