@@ -6,7 +6,23 @@ from typing_extensions import override
 
 
 class Table:
-    """Table for nicely formatting tabular data."""
+    """Build aligned, human-readable text tables that can also be exported to LaTeX.
+
+    Add an optional header, then rows, and render with ``str(table)``; column widths are
+    computed automatically. :meth:`add_hline` inserts a horizontal rule and
+    :meth:`to_latex` produces ``booktabs``-style LaTeX.
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        table = Table()
+        table.add_header(["Name", "Score"])
+        table.add_row(["Alice", 42])
+        table.add_row(["Bob", 17])
+        print(table)
+    """
 
     def __init__(self):
         self._width: int | None = None  # Number of elements in each row - set when first row or header added
