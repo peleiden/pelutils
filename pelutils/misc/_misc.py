@@ -1,4 +1,4 @@
-"""The truly miscellaenous functionality."""
+"""The truly miscellaneous functionality."""
 
 from collections.abc import Iterable
 from typing import TypeVar
