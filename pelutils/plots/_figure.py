@@ -6,7 +6,36 @@ import matplotlib.pyplot as plt
 
 
 class Figure:
-    """Ergonomic plotting with matplotlib.
+    """Context manager that applies plotting defaults and saves the figure on exit.
+
+    On entering the ``with`` block the given ``rcParams`` are applied within a scoped
+    context; on exit the figure is saved to ``savepath`` (creating missing parent
+    directories), the figure is closed, and the previous ``rcParams`` are restored. If
+    the block raises, the figure is closed without saving.
+
+    Parameters
+    ----------
+    savepath : str | Path
+        Where the figure is written on a clean exit.
+    tight_layout : bool, optional
+        Call ``plt.tight_layout()`` before saving.
+    style : str | None, optional
+        Name of a matplotlib style to apply, e.g. ``"seaborn-v0_8"``.
+    figsize : tuple[float, float], optional
+        Figure size in inches.
+    dpi : float, optional
+        Resolution of the saved figure.
+    fontsize : float, optional
+        Base font size. The sizes below are given as fractions of it.
+    title_fontsize, ticksize, labelsize, legend_fontsize : float, optional
+        Title, tick-label, axis-label, and legend font sizes, each as a fraction of
+        ``fontsize``.
+    legend_framealpha : float, optional
+        Opacity of the legend background.
+    legend_edgecolor : tuple[float, float, float, float], optional
+        RGBA colour of the legend border.
+    other_rc_params : dict[str, Any] | None, optional
+        Extra ``rcParams`` merged in last, overriding any of the above.
 
     Example
     -------
