@@ -277,6 +277,7 @@ def process(features: FloatArray, labels: IntArray, mask: BoolArray): ...
 - `pelutils.misc.hardware_info` / `OS` — describe the machine the code runs on.
 - `pelutils.misc.git_repo_info` — the repo and commit the code is executing in.
 - Assorted file and dict helpers (`reverse_line_iterator`, `except_keys`, ...).
+- `pelutils.tests` — pytest helpers: a `UnitTestCollection` base class with a managed temp directory, and a `restore_argv` decorator.
 
 ## Supported platforms
 

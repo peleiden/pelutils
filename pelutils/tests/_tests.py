@@ -43,12 +43,11 @@ def restore_argv(fun: _C) -> _C:
 
 
 class UnitTestCollection:
-    """
-    A convenience class for inheriting from when writing test classes using pytest.
+    """Base class for pytest test classes needing a temporary working directory.
 
-    This class ensures that test directory is automatically created and deleted between tests.
-
-    See this example for usage:
+    Inheriting from this class provides a :attr:`test_dir` that is created before the
+    class's tests run and removed afterwards, so file-writing tests clean up after
+    themselves. Build paths inside it with :meth:`get_test_path`.
 
     .. code-block:: python
 
@@ -81,8 +80,9 @@ class UnitTestCollection:
 
     @classmethod
     def get_test_path(cls, relative_path: str | Path) -> Path:
-        """Return a path inside the test directory.
+        """Return a path inside the managed test directory.
 
-        `path` would often just be a filename which can be written to and is automatically cleaned up after the test.
+        `relative_path` is often just a filename; the resulting path can be written to and
+        is automatically cleaned up after the test class finishes.
         """
         return (cls.test_dir / relative_path).resolve()
