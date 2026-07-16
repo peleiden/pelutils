@@ -163,7 +163,7 @@ class TickTock:
         self._tick_starts[key] = perf_counter()
 
     def tock(self, key: Hashable = None) -> float:
-        """End current the timer."""
+        """End the timer identified by ``key`` and return the elapsed time in seconds."""
         end = perf_counter()
         if key not in self._tick_starts:
             raise TickTockException(f"A timer for the given key ({key}) has not been started with .tick()")
@@ -248,7 +248,7 @@ class TickTock:
         self.__init__()
 
     def reset_profiles(self):
-        """Similar to `reset` but only reset profiles."""
+        """Similar to ``reset`` but only reset profiles, leaving ``tick``/``tock`` timers intact."""
         tick_starts = self._tick_starts
         self.reset()
         self._tick_starts = tick_starts
@@ -310,9 +310,12 @@ class TickTock:
 
     @override
     def __str__(self) -> str:
-        """Return a pretty string representation of the profile tree.
+        """Return a pretty table representation of the profile tree.
 
-        If unit is None, suitable units will be automatically detected.
+        The table lists each profile with its total time, its percentage of the parent's
+        time (or of the overall time for root profiles), the number of hits, and the average
+        time per hit. Profiles are shown depth-first and indented by depth. Suitable time
+        units are detected automatically per value. Raises if profiling is still ongoing.
         """
         if self._profile_stack:
             raise ValueError("TickTock instance cannot be stringified while profiling is still ongoing. Please end all profiles first")
