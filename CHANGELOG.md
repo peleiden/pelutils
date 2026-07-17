@@ -1,6 +1,6 @@
 # History
 
-## Unreleased - 4.0.0 - Breaking changes
+## 4.0.0 - Breaking changes
 
 Version 4 of `pelutils` is largely a cleanup update.
 `pelutils` has accumulated a lot of tech debt over the years, resulting in much functionality being inappropriately named, having bad ergonomics, or already being covered in widely used libraries.
