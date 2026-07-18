@@ -1,5 +1,7 @@
 """Utilities for pelutils C api, including a helpful way of passing numpy arrays and torch tensors to C."""
 
+from __future__ import annotations
+
 from typing import cast
 
 import numpy as np
