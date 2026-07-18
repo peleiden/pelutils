@@ -36,6 +36,8 @@ Documentation has also been massively improved and is exposed on the brand new [
 - Use `\n` as default line separator instead of `os.linesep`.
 - Profiling with `TickTock` can now only be done with context blocks, removing a common bug nest.
   Made `TickTock.end_profile` has been made private, the context management has received a severely needed cleanup.
+- `TickTock.fuse_multiple` now accepts a sequence rather than using argument unpacking.
+  It can also handl empty sequences.
 
 ### Removals
 
