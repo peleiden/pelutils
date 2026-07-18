@@ -1,5 +1,5 @@
 import warnings
-from collections.abc import Hashable, Iterator
+from collections.abc import Hashable, Iterator, Sequence
 from contextlib import contextmanager
 from copy import deepcopy
 from threading import current_thread
@@ -283,7 +283,7 @@ class TickTock:
         if len(self._profile_stack) or len(tt._profile_stack):
             raise TickTockException("Unable to fuse while some profiles are still unfinished")
         # TODO allow one of them to be a subset of the other
-        if tuple(self._id_to_profile) != tuple(tt._id_to_profile):
+        if self._id_to_profile.keys() != tt._id_to_profile.keys():
             raise TickTockException("Ticktocks to be fused do not match")
 
         for key, profile in tt._id_to_profile.items():
@@ -292,8 +292,11 @@ class TickTock:
             existing.total_runtime += profile.total_runtime
 
     @staticmethod
-    def fuse_multiple(*tts: "TickTock") -> "TickTock":
-        """Combine multiple TickTock instances."""
+    def fuse_multiple(tts: "Sequence[TickTock]") -> "TickTock":
+        """Combine the profiles of multiple TickTock instances."""
+        if len(tts) == 0:
+            return TickTock()
+
         ticktock = deepcopy(tts[0])
         ids = set(id(tt) for tt in tts)
         if len(ids) < len(tts):

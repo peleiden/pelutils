@@ -91,12 +91,15 @@ def test_fuse():
     assert len(tt1._root_profiles) == 1
 
     with pytest.raises(ValueError):
-        TickTock.fuse_multiple(tt1, tt1)
+        TickTock.fuse_multiple((tt1, tt1))
 
     tt1 = deepcopy(tt2)
-    tt1 = TickTock.fuse_multiple(tt1, tt2)
+    tt1 = TickTock.fuse_multiple((tt1, tt2))
     for p1, p2 in zip(tt1.iter_profiles(), tt2.iter_profiles(), strict=True):
         assert p1.total_runtime == pytest.approx(2 * p2.total_runtime)
+
+    tt = TickTock.fuse_multiple([])
+    assert len(list(tt.iter_profiles())) == 0
 
 
 def test_global_tt():
