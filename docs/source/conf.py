@@ -10,6 +10,21 @@ version = ".".join(release.split(".")[:2])
 project = "pelutils"
 author = "asgerius"
 
+# Defining this reduces the amount of automatic type expansion in the docs
+# Without this, some function signatures are unreadable
+autodoc_type_aliases = {
+    "npt.ArrayLike": "ArrayLike",
+    "AnyArray": "AnyArray",
+    "BoolArray": "BoolArray",
+    "BytesArray": "BytesArray",
+    "ComplexArray": "ComplexArray",
+    "FloatArray": "FloatArray",
+    "IntArray": "IntArray",
+    "ObjectArray": "ObjectArray",
+    "StringArray": "StringArray",
+    "StructuredArray": "StructuredArray",
+}
+
 extensions = [
     "myst_parser",
     "sphinx.ext.autodoc",
