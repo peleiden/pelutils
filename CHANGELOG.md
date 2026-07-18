@@ -38,6 +38,7 @@ Documentation has also been massively improved and is exposed on the brand new [
   Made `TickTock.end_profile` has been made private, the context management has received a severely needed cleanup.
 - `TickTock.fuse_multiple` now accepts a sequence rather than using argument unpacking.
   It can also handl empty sequences.
+- ARM wheels are now build natively on ARM instead of on emulator.
 
 ### Removals
 
@@ -58,6 +59,7 @@ Documentation has also been massively improved and is exposed on the brand new [
 ### Fixes
 
 - Fixed bug in `Table` where invalid list lengths could be added before being detected.
+- `hardware_info.cpu` no longer raises an unintended KeyError on ARM and instead returns `"unknown"`.
 
 ## 3.9.0
 

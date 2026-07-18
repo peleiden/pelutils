@@ -32,8 +32,8 @@ class _HardwareInfo:
 
     @cached_property
     def cpu(self) -> str:
-        """Name of the CPU."""
-        return cpuinfo.get_cpu_info()["brand_raw"]
+        """Name of the CPU. Note that this is not expected to work on ARM, on which 'unknown' is returned."""
+        return cpuinfo.get_cpu_info().get("brand_raw", "unknown")
 
     @cached_property
     def sockets(self) -> int | None:
