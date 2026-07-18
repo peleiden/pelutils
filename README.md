@@ -284,3 +284,26 @@ def process(features: FloatArray, labels: IntArray, mask: BoolArray): ...
 Precompiled wheels are provided for most common platforms (not 32-bit systems). If no
 wheel matches, `pip` builds from source which requires `<Python.h>` — install it with
 `sudo apt install python3-dev` (Ubuntu) or `sudo dnf install python3-devel` (Fedora).
+
+## Updating and releasing
+
+`pelutils` uses the `master` branch as a stable development branch.
+The `release` branch contains the latest version on PyPI.
+New features should be made in feature branches from `master` that can be merged into `master` once ready.
+When a new release is ready, update `pelutils/__version__.py` and rebase `master` onto `release`.
+Then push a new tag from `release` named `vX.Y.Z`.
+
+When new code is merged into `master`, a number of checks are run.
+These can be tested locally with the following commands.
+```sh
+# Linting and formatting
+ruff format pelutils tests
+ruff check pelutils tests
+# Type checking
+basedpyright pelutils
+# Unit tests
+python -m pytest tests --cov pelutils
+# Build docs
+# Once build, open docs/build/html/index.html in your browser to see them
+make -C docs html
+```
