@@ -15,7 +15,7 @@ Quick start
 
     def process(features: FloatArray, labels: IntArray, mask: BoolArray): ...
 
-Aliases are provided for each common numpy dtype: :data:`AnyArray`, :data:`BoolArray`,
+Aliases are provided for each common numpy dtype class: :data:`AnyArray`, :data:`BoolArray`,
 :data:`BytesArray`, :data:`ComplexArray`, :data:`FloatArray`, :data:`IntArray`,
 :data:`ObjectArray`, :data:`StringArray`, and :data:`StructuredArray`.
 """
