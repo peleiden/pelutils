@@ -44,9 +44,9 @@ uint64_t user_hash(const void *item, uint64_t seed0, uint64_t seed1) {
 
 int main() {
     // create a new hash map where each item is a `struct user`. The second
-    // argument is the initial capacity. The third and fourth arguments are 
+    // argument is the initial capacity. The third and fourth arguments are
     // optional seeds that are passed to the following hash function.
-    struct hashmap *map = hashmap_new(sizeof(struct user), 0, 0, 0, 
+    struct hashmap *map = hashmap_new(sizeof(struct user), 0, 0, 0,
                                      user_hash, user_compare, NULL, NULL);
 
     // Here we'll load some users into the hash map. Each set operation
@@ -55,8 +55,8 @@ int main() {
     hashmap_set(map, &(struct user){ .name="Roger", .age=68 });
     hashmap_set(map, &(struct user){ .name="Jane", .age=47 });
 
-    struct user *user; 
-    
+    struct user *user;
+
     printf("\n-- get some users --\n");
     user = hashmap_get(map, &(struct user){ .name="Jane" });
     printf("%s age=%d\n", user->name, user->age);
@@ -90,7 +90,7 @@ int main() {
 // Roger age=68
 // Dale age=44
 // not exists
-// 
+//
 // -- iterate over all users (hashmap_scan) --
 // Dale (age=44)
 // Roger (age=68)
@@ -120,7 +120,7 @@ hashmap_clear    # clear the hash map
 ### Iteration
 
 ```sh
-hashmap_iter     # loop based iteration over all items in hash map 
+hashmap_iter     # loop based iteration over all items in hash map
 hashmap_scan     # callback based iteration over all items in hash map
 ```
 
@@ -171,28 +171,6 @@ inside the hashmap functions, by the time a pointer is returned to
 the caller, that pointer may have already been rendered invalid.
 You should lock before the call, make the call, copy out the result,
 and unlock.
-
-## Testing and benchmarks
-
-```sh
-$ cc -DHASHMAP_TEST hashmap.c && ./a.out              # run tests
-$ cc -DHASHMAP_TEST -O3 hashmap.c && BENCH=1 ./a.out  # run benchmarks
-```
-
-The following benchmarks were run on my 2019 Macbook Pro (2.4 GHz 8-Core Intel Core i9) using gcc-9.
-The items are simple 4-byte ints. 
-The hash function is MurmurHash3. 
-Testing with 5,000,000 items.
-The `(cap)` results are hashmaps that are created with an inital capacity of 5,000,000.
-
-```
-set            5000000 ops in 0.708 secs, 142 ns/op, 7057960 op/sec, 26.84 bytes/op
-get            5000000 ops in 0.303 secs, 61 ns/op, 16492723 op/sec
-delete         5000000 ops in 0.486 secs, 97 ns/op, 10280873 op/sec
-set (cap)      5000000 ops in 0.429 secs, 86 ns/op, 11641660 op/sec
-get (cap)      5000000 ops in 0.303 secs, 61 ns/op, 16490493 op/sec
-delete (cap)   5000000 ops in 0.410 secs, 82 ns/op, 12200091 op/sec
-```
 
 ## License
 
