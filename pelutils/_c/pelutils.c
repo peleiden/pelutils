@@ -1,10 +1,14 @@
 #include <Python.h>
 
+#include "array/blob.h"
 #include "array/unique.h"
 
 
 /* Module declaration */
 static PyMethodDef _pelutils_c_methods[] = {
+    { "build_lookup_table", build_lookup_table, METH_VARARGS, NULL },
+    { "free_lookup_table", free_lookup_table, METH_VARARGS, NULL },
+    { "find_blob", find_blob, METH_VARARGS, NULL },
     { "unique", unique, METH_VARARGS, NULL },
     { NULL, NULL, 0, NULL }
 };

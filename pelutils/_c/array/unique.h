@@ -5,6 +5,7 @@
 
 #include <inttypes.h>
 #include <string.h>
+
 #include <Python.h>
 
 #include "../hashmap/hashmap.h"

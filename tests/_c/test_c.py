@@ -1,6 +1,7 @@
 import ctypes
 
 import numpy as np
+import pandas as pd
 import pytest
 import torch
 
@@ -24,3 +25,6 @@ def test_get_c_array_args():
             assert d == ctypes.c_uint64.from_address(dims_p + i * itemsize).value
             assert s == ctypes.c_uint64.from_address(strides_p + i * itemsize).value
             s *= d
+
+    with pytest.raises(TypeError):
+        c_utils.get_array_c_args(pd.Series())

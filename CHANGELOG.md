@@ -15,6 +15,7 @@ Documentation has also been massively improved and is exposed on the brand new [
 
 - Added documentation at [pelutils.readthedocs.io](https://pelutils.readthedocs.io).
 - Added explicit public exports to public modules.
+- Added `SparseGridBlobDetection` which implements lightning-fast blob detection in sparse grids.
 
 ### Changes
 
@@ -59,7 +60,7 @@ Documentation has also been massively improved and is exposed on the brand new [
 ### Fixes
 
 - Fixed bug in `Table` where invalid list lengths could be added before being detected.
-- `hardware_info.cpu` no longer raises an unintended KeyError on ARM and instead returns `"unknown"`.
+- `hardware_info.cpu` no longer raises an unintended KeyError on ARM and instead returns `"Unknown"`.
 
 ## 3.9.0
 
