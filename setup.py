@@ -3,7 +3,6 @@ import sys
 from glob import glob as glob  # glob
 
 from setuptools import find_packages, setup
-from setuptools.command.build import build as build_
 from setuptools.extension import Extension
 
 sys.path.append("pelutils")
@@ -48,29 +47,6 @@ c_files = list()
 for root, __, files in os.walk("pelutils/_c"):
     c_files += [os.path.join(root, f) for f in files if f.endswith(".c")]
 
-
-class CExtension(Extension):
-    """See this thread for details: https://stackoverflow.com/a/34830639/13196863."""
-
-
-class build(build_):
-    """Extension of normal build class which handles C extensions."""
-
-    def build_extension(self, ext):  # noqa: D102
-        self._ctypes = isinstance(ext, CExtension)
-        return super().build_extension(ext)
-
-    def get_export_symbols(self, ext):  # noqa: D102
-        if self._ctypes:
-            return ext.export_symbols
-        return super().get_export_symbols(ext)
-
-    def get_ext_filename(self, ext_name):  # noqa: D102
-        if self._ctypes:
-            return ext_name + ".so"
-        return super().get_ext_filename(ext_name)
-
-
 setup_args = dict(
     name="pelutils",
     version=__version__,
@@ -92,15 +68,14 @@ setup_args = dict(
             "linecounter = pelutils._entry_points.linecounter:run",
         ]
     },
-    cmdclass={"build": build},
     ext_modules=[
-        CExtension(
+        Extension(
             name="_pelutils_c",
             sources=c_files,
-            extra_compile_args=["-DMS_WIN64"],
+            extra_compile_args=["-DMS_WIN64"] if sys.platform == "win32" else [],
         )
     ],
-    license_files=[os.path.join("pelutils", "_c", "hashmap.c", "LICENSE")],
+    license_files=[os.path.join("pelutils", "_c", "hashmap", "LICENSE")],
     python_requires=">=3.11",
     classifiers=[
         "Intended Audience :: Developers",
