@@ -35,7 +35,6 @@ jobs:
           # CIBW_ARCHS_LINUX is not set as it is handled automatically by the different specified ubuntu versions
           CIBW_ARCHS_MACOS: arm64
           CIBW_ARCHS_WINDOWS: AMD64
-          CIBW_BEFORE_BUILD: git submodule update --init --recursive
           # Install the CPU version of torch before installing the rest of the package
           # This prevents it from installing the full CUDA version of torch and associated dependencies (default on Linux)
           # This massively speeds up the installation process and requires much less disk space
