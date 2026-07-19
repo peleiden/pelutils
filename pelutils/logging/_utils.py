@@ -17,33 +17,6 @@ class LogLevels(IntEnum):
     DEBUG = 0
 
 
-class LevelManager:
-    """Used for context limiting logging levels.
-
-    Example
-    -------
-
-    .. code-block:: python
-
-        with log.level(Levels.WARNING):
-            log.error("This will be logged")
-            log.info("This will not be logged")
-    """
-
-    def __init__(self):
-        self.level: LogLevels | int | None = None
-
-    def with_level(self, level: LogLevels | int) -> "LevelManager":
-        self.level = level
-        return self
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, *_):
-        self.level = None
-
-
 class LogErrors:
     """Used for catching exceptions with logger and logging them before reraising them."""
 
@@ -71,7 +44,7 @@ class CollectLogs:
     .. code-block:: python
 
         def fun():
-            with log.collect:
+            with log.collect():
                 do_stuff()
 
         with mp.Pool() as p:

@@ -1,5 +1,6 @@
 import traceback as tb
 from collections.abc import Generator, Iterable
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -8,7 +9,7 @@ from pelutils.misc import OS, UnsupportedOS, git_repo_info
 
 from ._rich_string import RichString
 from ._rotate import LogFileRotater
-from ._utils import CollectLogs, LevelManager, LogErrors, LogLevels
+from ._utils import LogErrors, LogLevels
 
 # https://rich.readthedocs.io/en/stable/appendix/colors.html
 TIMESTAMP_COLOR = "#72b9e0"
@@ -46,7 +47,10 @@ class Logger:
         self._collect = False
         self._collected_log: list[RichString] = list()
         self._collected_print: list[RichString] = list()
-        self._level_mgr = LevelManager()
+        # Last element of the stack determines the minimum level at which logs are produced
+        # By default, all logs are produced
+        # None completely disables logging
+        self._log_level_stack: list[LogLevels | None] = [LogLevels.DEBUG]
 
     def configure(
         self,
@@ -103,14 +107,26 @@ class Logger:
         """Check if the logging instance has been configured. If not, use `.configure(...)`."""
         return self._is_configured
 
-    def level(self, level: LogLevels):
-        """Log only at given level and above. Use with a with block."""
-        return self._level_mgr.with_level(level)
-
     @property
+    def _current_log_level(self) -> LogLevels | None:
+        return self._log_level_stack[-1]
+
+    @contextmanager
+    def level(self, level: LogLevels):
+        """Log only at given level and above. Used as a context block."""
+        if self._current_log_level is None:
+            yield
+        else:
+            self._log_level_stack.append(max(level, self._current_log_level))
+            yield
+            self._log_level_stack.pop()
+
+    @contextmanager
     def no_log(self):
-        """Disable logging inside a with block."""
-        return self._level_mgr.with_level(max(LogLevels) + 1)
+        """Disable logging inside a context block."""
+        self._log_level_stack.append(None)
+        yield
+        self._log_level_stack.pop()
 
     @property
     def log_errors(self):
@@ -150,7 +166,7 @@ class Logger:
         """
         if not self._is_configured:
             raise LoggingException("Logger has not been configured. Create a new logger with log = Logger().configure(...)")
-        if self._level_mgr.level is not None and level < self._level_mgr.level:
+        if self._current_log_level is None or self._current_log_level > level:
             return
         sep = sep or self._default_sep
         with_print = level >= self._print_level if with_print is None else with_print
@@ -236,15 +252,18 @@ class Logger:
         if self._collected_print:
             RichString.multiprint(self._collected_print)
 
-    @property
-    def collect(self) -> CollectLogs:
+    @contextmanager
+    def collect(self):
         """Use with a with block to perform all logs within the block at once."""
         if OS.is_windows:
             # Having multiple threads or processes write to the same file is not
             # safe on Windows unlike on Linux or Mac, in the way that log.collect
             # is usually used. See https://stackoverflow.com/a/25924980.
             raise UnsupportedOS("Log collecting is not supported on windows")
-        return CollectLogs(self)
+        self._set_collect_mode(True)
+        yield
+        self._log_collected()
+        self._set_collect_mode(False)
 
     def section(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None, newline: bool = True):  # pyright: ignore[reportExplicitAny]
         """Log at SECTION level. See .log method for argument descriptions."""
