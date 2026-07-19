@@ -86,7 +86,7 @@ with log.level(LogLevels.ERROR):
 log.configure("train.log", rotation="day")    # or "1 GB", "hour", ...
 ```
 
-When using multiprocessing, wrap a worker in `with log.collect:` so its lines are
+When using multiprocessing, wrap a worker in `with log.collect():` so its lines are
 written together instead of interleaving with other processes. See the
 [logging docs](https://pelutils.readthedocs.io/en/latest/api/pelutils.logging.html) for input helpers, multiple loggers,
 and more.

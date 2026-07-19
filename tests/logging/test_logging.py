@@ -12,9 +12,9 @@ from pelutils.misc import OS, UnsupportedOS
 from pelutils.tests import UnitTestCollection
 
 
-def _collect_test_fn(args):
+def _collect_test_fn(args: tuple[Logger, bool]):
     logger, do_fail = args
-    with logger.collect:
+    with logger.collect():
         logger(f"log 1 from {mp.current_process()._identity}")
         logger(f"log 2 from {mp.current_process()._identity}")
         if do_fail:
@@ -68,6 +68,10 @@ class TestLogger(UnitTestCollection):
         test_str = "What LUKE? DaLUKE!"
         for level in LogLevels:
             with log.level(level):
+                assert log._current_log_level == level
+                with log.no_log():
+                    assert log._current_log_level is None
+                assert log._current_log_level == level
                 log.error(test_str)
             with open(self.logfile) as lf:
                 lines = lf.readlines()
@@ -81,11 +85,13 @@ class TestLogger(UnitTestCollection):
 
     def test_no_log(self, capfd: pytest.CaptureFixture):
         test_str = "lev med det"
-        with log.no_log:
+        with log.no_log():
             for level in LogLevels:
                 log(test_str, level=level)
                 out, err = capfd.readouterr()
                 assert not out and not err
+                with log.level(level):
+                    assert log._current_log_level is None
 
     def test_level_methods(self, capfd: pytest.CaptureFixture):
         methods = log.debug, log.info, log.warning, log.error, log.critical, log.section
@@ -129,6 +135,15 @@ class TestLogger(UnitTestCollection):
         assert len(lines) == 3 * reps
         for i, line in enumerate(lines):
             assert f"log {i % 3 + 1}" in line
+
+        logfile = self.test_dir / "collect.log"
+        logger = Logger().configure(self.test_dir / "collect.log")
+        with logger.collect():
+            logger("1234")
+            assert logfile.read_text() == ""
+            logger("1234")
+            assert logfile.read_text() == ""
+        assert logfile.read_text().count("1234") == 2
 
     @pytest.mark.skipif(OS.is_windows, reason="Log collection is not supported on Windows")
     def test_collect_with_errors(self):
@@ -214,7 +229,7 @@ class TestLogger(UnitTestCollection):
         assert "This does not fail" in lines[2]
 
         with pytest.raises(UnsupportedOS if OS.is_windows else LoggingException):
-            with log.collect:
+            with log.collect():
                 log.configure(logfile)
 
     def test_log_error(self):

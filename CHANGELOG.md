@@ -61,6 +61,7 @@ Documentation has also been massively improved and is exposed on the brand new [
 
 - Fixed bug in `Table` where invalid list lengths could be added before being detected.
 - `hardware_info.cpu` no longer raises an unintended KeyError on ARM and instead returns `"Unknown"`.
+- Nested limits with `Logger.level` and `Logger.no_log` now works correctly.
 
 ## 3.9.0
 

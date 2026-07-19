@@ -17,8 +17,11 @@ class TestSparseGridBlobDetection:
     def test_simple_grid(self):
         simple_grid = np.array([0, 0, 1, 1, 1, 0])
         indices = np.column_stack(np.where(simple_grid))
+        print(0)
         detector = SparseGridBlobDetection(indices)
+        print(1)
         blob = detector.find_single_blob(0)
+        print(2)
         assert len(blob) == 3
         assert (simple_grid[indices[blob, 0]] == 1).all()
 
@@ -49,3 +52,4 @@ class TestSparseGridBlobDetection:
             detector.find_all_blobs()
         with pytest.raises(RuntimeError):
             detector.find_single_blob(0)
+TestSparseGridBlobDetection().test_simple_grid()
