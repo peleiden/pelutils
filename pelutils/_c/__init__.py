@@ -2,30 +2,33 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import NamedTuple
 
 import numpy as np
 import numpy.typing as npt
 
 from pelutils.misc._conditional_import import import_torch
-from pelutils.types import AnyArray
+from pelutils.types import AnyArray as AnyArray
 
 torch = import_torch()
 
 
 # Data pointer, num dims, dimensions pointer, strides pointer
-ArrayArgs = tuple[int, int, int, int]
+class ArrayArgs(NamedTuple):
+    array_ptr: int
+    ndim: int
+    dims_ptr: int
+    strides_ptr: int
 
 
 def get_array_c_args(arr: npt.ArrayLike) -> ArrayArgs:
     if torch is not None and isinstance(arr, torch.Tensor):
         arr = arr.numpy()
-    # Tell the type checker that arr for sure is AnyArray
-    # Not applied directly to arr.numpy() above as torch is possibly unbound, making the poor checker confused
-    arr = cast(AnyArray, arr)
+    if not isinstance(arr, np.ndarray):
+        raise TypeError(f"Array cannot be of type {type(arr)}")
 
     dims = np.array(arr.shape, dtype=np.uint)
     ndim = len(dims)
     strides = np.array(arr.strides, dtype=np.uint)
 
-    return arr.ctypes.data, ndim, dims.ctypes.data, strides.ctypes.data
+    return ArrayArgs(arr.ctypes.data, ndim, dims.ctypes.data, strides.ctypes.data)

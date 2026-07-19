@@ -208,7 +208,7 @@ also accepts torch tensors and pandas series. The returned elements are unsorted
 
 ```py
 import numpy as np
-from pelutils.misc import unique
+from pelutils.array import unique
 
 x = np.random.randint(0, 100, size=10_000_000)
 values = unique(x)
