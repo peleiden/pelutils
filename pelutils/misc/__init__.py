@@ -1,36 +1,17 @@
 """Standalone helpers that each solve one small, recurring annoyance.
 
-Every project accumulates the same handful of little utilities — a faster ``unique``, a
-way to pretty-print a table, a check for which OS you are on, the current git commit —
+Every project accumulates the same handful of little utilities —
+a way to pretty-print a table, a check for which OS you are on, the current git commit —
 and rewriting them each time is tedious and error-prone. This module is the grab-bag for
 those: each helper is self-contained and useful on its own, so import only what you need.
 
-The flagship is :func:`unique`, a drop-in for ``numpy.unique`` that runs in linear time
-(rather than sorting), making it dramatically faster on large arrays. It also accepts
-torch tensors and pandas series.
-
-Quick start
------------
-
-.. code-block:: python
-
-    import numpy as np
-    from pelutils.misc import unique
-
-    x = np.random.randint(0, 100, size=10_000_000)
-    values = unique(x)
-    values, index, inverse, counts = unique(
-        x, return_index=True, return_inverse=True, return_counts=True,
-    )
-
-Also included: :class:`Table` for aligned text tables that also export to LaTeX via
+Main inclusions are :class:`Table` for aligned text tables that also export to LaTeX via
 :meth:`Table.to_latex`; :class:`OS` and :data:`hardware_info` for describing the machine
 the code runs on; :func:`git_repo_info` for the repository and commit currently executing;
 :func:`array_bytes`/:func:`array_ptr` for low-level array introspection; and small file
 and dict helpers such as :func:`reverse_line_iterator` and :func:`except_keys`.
 """
 
-from pelutils.misc._array import array_bytes, array_ptr, unique
 from pelutils.misc._files import reverse_line_iterator
 from pelutils.misc._git import git_repo_info
 from pelutils.misc._misc import except_keys
@@ -41,11 +22,8 @@ __all__ = (
     "OS",
     "Table",
     "UnsupportedOS",
-    "array_bytes",
-    "array_ptr",
     "except_keys",
     "git_repo_info",
     "hardware_info",
     "reverse_line_iterator",
-    "unique",
 )
