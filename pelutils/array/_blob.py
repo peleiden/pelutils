@@ -34,12 +34,7 @@ class SparseGridBlobDetection:
         grid, it has shape ``n x d`` where ``n`` is the number of nodes in the grid belonging to any blob.
         Here, a grid is effectively a boolean numpy array, and nodes its entries.
         """
-        if (grid_coords < 0).any():
-            raise ValueError("Indices cannot be negative")
-        if not np.issubdtype(grid_coords.dtype, np.integer):
-            raise TypeError(f"`grid_coords` must have an integer dtype, not {grid_coords.dtype}")
-        if len(grid_coords.shape) != 2:
-            raise ValueError(f"`grid_coords` must have shape n x d but has {len(grid_coords.shape)} axes")
+        self._validate_grid_coords(grid_coords)
 
         # Ensure correct dtype and make a copy to prevent outside changes to the array unintentionally causing a ruckus
         self._grid_coords = grid_coords.astype(np.int64).copy()
@@ -48,6 +43,9 @@ class SparseGridBlobDetection:
         self._visited = np.zeros(len(self._grid_coords), dtype=bool)
         # Next row in _grid_coords from which to start a search
         self._next_index = 0
+        # Set to True when all coordinates have been visited
+        self._done = False
+
         if ctypes.sizeof(ctypes.c_void_p) == 8:
             # The pointers array is used to store pointers from objects allocated in the C code and pass them between calls
             # This is very ugly and hacky but it works and is arguably simpler that using the Python C API correctly in this
@@ -68,11 +66,21 @@ class SparseGridBlobDetection:
             self._grid_coords.shape[1],
         )
 
+    def _validate_grid_coords(self, grid_coords: IntArray):
+        """Raise an exception if given ``grid_coords`` are invalid."""
+        if not np.issubdtype(grid_coords.dtype, np.integer):
+            raise TypeError(f"`grid_coords` must have an integer dtype, not {grid_coords.dtype}")
+        if len(grid_coords.shape) != 2:
+            raise ValueError(f"`grid_coords` must have shape n x d but has {len(grid_coords.shape)} axes")
+        if grid_coords.shape[1] == 0:
+            raise ValueError("Coordinates cannot be 0-dimensional")
+
     def _mark_visited(self, indices: IntArray) -> bool:
         self._visited[indices] = True
         while self._next_index < len(self._visited) and self._visited[self._next_index]:
             self._next_index += 1
-        return self._next_index == len(self._visited)
+        self._done = self._next_index == len(self._visited)
+        return self._done
 
     def find_single_blob(self, init_index: int) -> IntArray:
         """Detect a single blob starting at ``grid_coords[init_index]``.
@@ -100,14 +108,14 @@ class SparseGridBlobDetection:
 
         For each detected blob, an array is returned containing the rows in ``grid_coords`` which are part of that blob.
         """
+        if self._done:
+            raise RuntimeError("Blob detection has already been run")
+
         indices = np.array([], dtype=np.int64)
         blobs: list[IntArray] = list()
         while not self._mark_visited(indices):
             indices = self.find_single_blob(self._next_index)
             blobs.append(indices)
-
-        if indices.size == 0:
-            raise RuntimeError("Blob detection has already been run")
 
         return blobs
 
