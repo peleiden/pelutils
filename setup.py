@@ -32,6 +32,7 @@ requirements_dev = [
     "basedpyright==1.39.0",
     "freezegun>=1.5",
     "pandas>=2.3",
+    "ipdb",
 ]
 requirements_docs = [
     "sphinx",
