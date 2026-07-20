@@ -30,18 +30,19 @@ def _get_smallest_suitable_unit(duration_s: float) -> tuple[str, float]:
 
 
 class Profile:
-    def __init__(self, name: str, depth: int, parent: "Profile | None"):
-        """Contains data for a profiled code section.
+    """Contains data for a profiled code section.
 
-        Parameters
-        ----------
-        name : str
-            Name, or brief description, or the profiled code section.
-        depth : int
-            Number of ancestor profiles.
-        parent : Profile | None
-            Direct ancestor. Can be None if the profile is top-level, in which case depth must also be 0.
-        """
+    Parameters
+    ----------
+    name : str
+        Name, or brief description, or the profiled code section.
+    depth : int
+        Number of ancestor profiles.
+    parent : Profile | None
+        Direct ancestor. Can be None if the profile is top-level, in which case depth must also be 0.
+    """
+
+    def __init__(self, name: str, depth: int, parent: "Profile | None"):
         # Number of times the profile has been hit
         self.nhits: int = 0
         # Total runtime across all hits

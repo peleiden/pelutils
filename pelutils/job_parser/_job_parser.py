@@ -24,6 +24,16 @@ class JobParser:
 
     Use :meth:`parse_job` when exactly one job is expected. Set ``multiple_jobs=True``
     and use :meth:`parse_jobs` when a configuration can select multiple named sections.
+
+    Parameters
+    ----------
+    *arguments : RequiredArg | OptionalArg | Flag
+        Application-specific argument declarations.
+    description : str | None, optional
+        Description displayed by the generated ``--help`` command.
+    multiple_jobs : bool, optional
+        Allow configurations with multiple named sections. Use :meth:`parse_jobs`
+        to retrieve their job descriptions if this is True, otherwise :meth:`parse_job`.
     """
 
     _default_config_job = "DEFAULT"
@@ -58,18 +68,6 @@ class JobParser:
         description: str | None = None,
         multiple_jobs: bool = False,
     ):
-        """Create a parser from typed argument declarations.
-
-        Parameters
-        ----------
-        *arguments : RequiredArg | OptionalArg | Flag
-            Application-specific argument declarations.
-        description : str | None, optional
-            Description displayed by the generated ``--help`` command.
-        multiple_jobs : bool, optional
-            Allow configurations with multiple named sections. Use :meth:`parse_jobs`
-            to retrieve their job descriptions.
-        """
         # Modifications are made to the argument objects, so make a deep copy
         arguments = tuple(deepcopy(arg) for arg in arguments)
 
