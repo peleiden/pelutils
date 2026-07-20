@@ -6,13 +6,22 @@ from pelutils.array import SparseGridBlobDetection
 
 class TestSparseGridBlobDetection:
     def test_error_handling(self):
-        with pytest.raises(ValueError):
-            SparseGridBlobDetection(np.array([[-1]]))
         with pytest.raises(TypeError):
             SparseGridBlobDetection(np.array([[1.0]]))
         with pytest.raises(ValueError):
             SparseGridBlobDetection(np.array([1]))
+        with pytest.raises(ValueError):
+            SparseGridBlobDetection(np.array([[]], dtype=int))
         SparseGridBlobDetection(np.array([[1, 2], [2, 3]], dtype=np.uint8))
+
+    def test_empty_grid(self):
+        detector = SparseGridBlobDetection(np.empty((0, 5), dtype=int))
+        assert len(detector.find_all_blobs()) == 0
+        with pytest.raises(RuntimeError):
+            detector.find_all_blobs()
+        detector = SparseGridBlobDetection(np.empty((0, 5), dtype=int))
+        with pytest.raises(IndexError):
+            detector.find_single_blob(0)
 
     def test_simple_grid(self):
         simple_grid = np.array([0, 0, 1, 1, 1, 0])
@@ -25,6 +34,8 @@ class TestSparseGridBlobDetection:
         # Finding the same blob should cause an error as it has already been detected
         with pytest.raises(RuntimeError):
             detector.find_single_blob(1)
+        with pytest.raises(RuntimeError):
+            detector.find_all_blobs()
 
     def test_fancy_grid(self):
         grid = np.array([
