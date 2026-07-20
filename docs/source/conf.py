@@ -1,3 +1,4 @@
+import re
 import sys
 from pathlib import Path
 
@@ -11,9 +12,10 @@ project = "pelutils"
 author = "asgerius"
 
 # Defining this reduces the amount of automatic type expansion in the docs
-# Without this, some function signatures are unreadable
+# Without this, some function signatures become practically unreadable
 autodoc_type_aliases = {
     "npt.ArrayLike": "ArrayLike",
+    "Callable": "Callable",
     "AnyArray": "AnyArray",
     "BoolArray": "BoolArray",
     "BytesArray": "BytesArray",
@@ -40,6 +42,21 @@ autodoc_default_options = {
 }
 
 
+def fix_type_alias_forward_refs(app, what, name, obj, options, signature, return_annotation):
+    """Remove TypeAliasForwardRef which appears in nested types with type aliases."""
+
+    def fix(value: str | None):
+        if value is None:
+            return None
+        return re.sub(
+            r"TypeAliasForwardRef\(['\"]([A-Za-z_][A-Za-z0-9_]*)['\"]\)",
+            r"\1",
+            value,
+        )
+
+    return fix(signature), fix(return_annotation)
+
+
 def skip_reexported_top_level_members(app, what, name, obj, skip, options):
     """Avoid duplicate API objects from pelutils's convenience re-exports."""
     module = app.env.temp_data.get("autodoc:module")
@@ -51,6 +68,7 @@ def skip_reexported_top_level_members(app, what, name, obj, skip, options):
 def setup(app):
     """Configure autodoc event handlers."""
     app.connect("autodoc-skip-member", skip_reexported_top_level_members)
+    app.connect("autodoc-process-signature", fix_type_alias_forward_refs)
 
 
 html_theme = "furo"
