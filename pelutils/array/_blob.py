@@ -10,7 +10,7 @@ from pelutils.types import IntArray
 
 
 class SparseGridBlobDetection:
-    """Detect blobs (continuous regions) in a sparse grid implemented in C for high performance.
+    """Detect blobs (continuous regions) in a sparse grid, implemented in C for high performance.
 
     The grids can have an arbitrary number of dimensions, but a common usecase might be in image analysis.
     Imaging thresholding an image based on pixel values. This class offers blazingly fast detection of all
@@ -25,26 +25,45 @@ class SparseGridBlobDetection:
 
     Note that this class is stateful, meaning that for each call to either of the afforementioned methods, trying to
     detected an already detected blob will raise a ``RuntimeError``.
+
+    Parameters
+    ----------
+    grid_coords : IntArray
+        Coordinates in the grid that are part of any blob. For an ``d``-dimensional grid, it has shape ``n x d`` where
+        ``n`` is the number of nodes in the grid belonging to any blob. For a grid representated by a boolean numpy
+        array, the coordinates can be gotten with ``np.column_stack(np.where(grid))``.
+
+        Note that even though ``grid_coords`` commonly would represent axis coordinates in a numpy array,
+        negative coordinates are fully supported.
+
+    wrap_axes : dict[int, int] | None, optional
+        A dictionary mapping axis numbers to their corresponding axis lengths
+        in the grid. Values will be wrapped on that axis. Negative axis numbers are supported.
+
+        As an example, if ``wrap_axes = {2: 10}``, the third column in ``grid_coords`` will be wrapped to
+        the range (0, 9), and the coordinates 0 and 9 will be considered next to each other. This is
+        effectively the same as doing ``grid_coords[:, 2] %= 10``, and pretending the ends touch each other.
     """
 
-    def __init__(self, grid_coords: IntArray):
-        """Initialise the blob detection.
-
-        ``grid_coords`` represents the nodes in a grid that are part of a blob. For an ``d``-dimensional
-        grid, it has shape ``n x d`` where ``n`` is the number of nodes in the grid belonging to any blob.
-        Here, a grid is effectively a boolean numpy array, and nodes its entries.
-        """
+    def __init__(self, grid_coords: IntArray, wrap_axes: dict[int, int] | None = None):
+        """Initialise the blob detection by building necessary data structures."""
         self._validate_grid_coords(grid_coords)
 
-        # Ensure correct dtype and make a copy to prevent outside changes to the array unintentionally causing a ruckus
+        # Ensure correct dtype and make a copy to prevent both inside and outside changes to the array unintentionally causing a ruckus
         self._grid_coords = grid_coords.astype(np.int64).copy()
         # Boolean array of visited nodes
         # After each call to `find_blob`, the found indices are set to True
-        self._visited = np.zeros(len(self._grid_coords), dtype=bool)
+        self._visited = np.zeros(self._grid_coords.shape[0], dtype=bool)
         # Next row in _grid_coords from which to start a search
         self._next_index = 0
         # Set to True when all coordinates have been visited
         self._done = False
+        # For each axes that should be wrapped, the size of the axis in the grid is stored
+        # For axes which should not be wrapped, 0 is used
+        self._wrap_axis_sizes = np.zeros(self._grid_coords.shape[1], dtype=np.uint64)
+        wrap_axes = wrap_axes or dict()
+        for axis, axis_size in wrap_axes.items():
+            self._wrap_axis_sizes[axis] = axis_size
 
         if ctypes.sizeof(ctypes.c_void_p) == 8:
             # The pointers array is used to store pointers from objects allocated in the C code and pass them between calls
@@ -59,8 +78,10 @@ class SparseGridBlobDetection:
 
         self._index_args = c_utils.get_array_c_args(self._grid_coords)
         self._pointer_args = c_utils.get_array_c_args(self._pointers)
+        self._wrap_axis_sizes_args = c_utils.get_array_c_args(self._wrap_axis_sizes)
         _c.build_lookup_table(
             self._pointer_args.array_ptr,
+            self._wrap_axis_sizes_args.array_ptr,
             self._index_args.array_ptr,
             self._grid_coords.shape[0],
             self._grid_coords.shape[1],
@@ -92,6 +113,7 @@ class SparseGridBlobDetection:
         blob_indices: list[int] = list()
         _c.find_blob(
             self._pointer_args.array_ptr,
+            self._wrap_axis_sizes_args.array_ptr,
             self._index_args.array_ptr,
             init_index,
             self._grid_coords.shape[0],
