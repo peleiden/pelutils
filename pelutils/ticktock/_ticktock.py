@@ -4,15 +4,16 @@ from contextlib import contextmanager
 from copy import deepcopy
 from threading import current_thread
 from time import perf_counter
+from typing import TypeAlias
 
 from typing_extensions import override
 
 from pelutils.misc import Table
 
-_TimeUnit = tuple[str, float]  # Unit suffix, unit value in seconds
+_TimeUnit: TypeAlias = tuple[str, float]  # Unit suffix, unit value in seconds
 # Time units available for formatting
 # These must be sorted by time
-_time_units = (
+_time_units: tuple[_TimeUnit, ...] = (
     ("ns", 1e-9),
     ("us", 1e-6),
     ("ms", 1e-3),
@@ -21,7 +22,7 @@ _time_units = (
 )
 
 
-def _get_smallest_suitable_unit(duration_s: float) -> tuple[str, float]:
+def _get_smallest_suitable_unit(duration_s: float) -> _TimeUnit:
     """Return the smallest unit for which the duration is at least the same size as the unit."""
     for unit, unit_duration in _time_units[::-1]:
         if duration_s >= unit_duration:
