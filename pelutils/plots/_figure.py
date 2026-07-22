@@ -26,7 +26,7 @@ class Figure:
     dpi : float, optional
         Resolution of the saved figure.
     fontsize : float, optional
-        Base font size. The sizes below are given as fractions of it.
+        Base font size. Specific font sizes are given as a fraction of this value.
     title_fontsize, ticksize, labelsize, legend_fontsize : float, optional
         Title, tick-label, axis-label, and legend font sizes, each as a fraction of
         ``fontsize``.
@@ -61,7 +61,7 @@ class Figure:
         figsize: tuple[float, float] = (15, 10),
         dpi: float = 150,
         fontsize: float = 26,
-        title_fontsize: float = 0.5,  # Relative to fontsize
+        title_fontsize: float = 0.5,  # Fraction of fontsize
         ticksize: float = 0.85,  # Fraction of fontsize
         labelsize: float = 1,  # Fraction of fontsize
         legend_fontsize: float = 0.85,  # Fraction of fontsize

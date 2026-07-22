@@ -27,7 +27,7 @@ def _inline(value: Any) -> str:
 
 def _is_primitive(value: Any) -> bool:
     """Check if a value is a Python primitive."""
-    return value is None or isinstance(value, (bool, int, float, str))
+    return value is None or isinstance(value, (bool, int, float, str, bytes, bytearray))
 
 
 def _all_primitives(items: list[Any]) -> bool:
@@ -220,7 +220,7 @@ def universal_pretty_json(
 ) -> str:
     """Convert an object into a pretty, human-readable JSON file with an optional safe mode.
 
-    This is an internal function. See `pretty_json` for argument details.
+    This is an internal function. See :func:`pretty_json` for argument details.
 
     It is possible to set safe=True. In that case, any value that is not natively JSON-serialisable is pickled,
     base64-encoded, and stored as a "__pickled_b64__:type_name:b64" string.
@@ -244,7 +244,7 @@ def pretty_json(
     max_line_length: int = 140,
     indent: int = 2,
 ) -> str:
-    """Format a dict or list as a human-friendly JSON string. It is very similar to the built-in json.dumps.
+    """Recursively serialise dicts or lists to JSON, similar to ``json.dumps``, but with more readable formatting.
 
     * The root container is always expanded (one element per line).
     * Nested containers stay on one line when they fit within
