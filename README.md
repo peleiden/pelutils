@@ -65,17 +65,17 @@ from pelutils.logging import log, LogLevels
 # Omit the path to only print, never write a file
 log.configure("train.log")
 
-log.section("Training run")  # Highlighted section header
-log(f"Loaded {len(dataset):,} samples")  # Logs at INFO level
-for epoch in range(epochs):
-    loss = train_one_epoch()
-    log.debug(f"Epoch {epoch}: loss {loss:.4f}")  # Logs at DEBUG level - by default, only saved to the log file, but not printed to the console
-    if loss > 1e3:
-        log.warning("Loss is diverging")  # Logs at WARNING level
-log.debug("Final weights", model.state_dict().keys())
-
-# If an exeption occurs in a piece of code, log it with its full (chained) stacktrace, then re-raise
+# If an exeption occurs anywhere in the code inside `log.log_errors`, it is logged with its full, chained stacktrace, then re-raised
 with log.log_errors:
+    log.section("Training run")  # Highlighted section header
+    log(f"Loaded {len(dataset):,} samples")  # Logs at INFO level
+    for epoch in range(epochs):
+        loss = train_one_epoch()
+        log.debug(f"Epoch {epoch}: loss {loss:.4f}")  # Logs at DEBUG level - by default, only saved to the log file, but not printed to the console
+        if loss > 1e3:
+            log.warning("Loss is diverging")  # Logs at WARNING level
+    log.debug("Final weights", model.state_dict().keys())
+
     save_checkpoint(model)
 
 # Temporarily change or silence the log level

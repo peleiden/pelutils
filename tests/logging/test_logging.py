@@ -69,7 +69,7 @@ class TestLogger(UnitTestCollection):
         for level in LogLevels:
             with log.level(level):
                 assert log._current_log_level == level
-                with log.no_log():
+                with log.no_log:
                     assert log._current_log_level is None
                 assert log._current_log_level == level
                 log.error(test_str)
@@ -85,7 +85,7 @@ class TestLogger(UnitTestCollection):
 
     def test_no_log(self, capfd: pytest.CaptureFixture):
         test_str = "lev med det"
-        with log.no_log():
+        with log.no_log:
             for level in LogLevels:
                 log(test_str, level=level)
                 out, err = capfd.readouterr()

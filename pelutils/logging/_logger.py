@@ -2,6 +2,7 @@ import traceback as tb
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from datetime import datetime
+from enum import IntEnum
 from pathlib import Path
 from typing import Any
 
@@ -9,7 +10,18 @@ from pelutils.misc import OS, UnsupportedOS, git_repo_info
 
 from ._rich_string import RichString
 from ._rotate import LogFileRotater
-from ._utils import LogErrors, LogLevels
+
+
+class LogLevels(IntEnum):
+    """Logging levels by priority."""
+
+    SECTION = 5
+    CRITICAL = 4
+    ERROR = 3
+    WARNING = 2
+    INFO = 1
+    DEBUG = 0
+
 
 # https://rich.readthedocs.io/en/stable/appendix/colors.html
 TIMESTAMP_COLOR = "#72b9e0"
@@ -30,19 +42,14 @@ class LoggingException(RuntimeError):  # noqa: N818
 class Logger:
     """A simple logger which creates a log file and pushes strings both to stdout and the log file. See ``configure`` for usage details.
 
-    Main features include automatically logging errors and their stacktrace (see ``Logger.log_errors``),
+    Main features include automatically logging errors with the stacktrace (see ``Logger.log_errors``),
     collecting logs for multiprocessing (see ``Logger.collect``), and colourful prints.
     """
 
-    _selected_logger: str  # pyright: ignore[reportUninitializedInstanceVariable]
     _maxlen = max(len(level.name) for level in LogLevels)
     _spacing = 4 * " "
 
-    _yes = "yes"
-    _no = "no"
-
     def __init__(self):
-        self._log_errors = LogErrors(self)
         self._is_configured = False
         self._collect = False
         self._collected_log: list[RichString] = list()
@@ -121,6 +128,7 @@ class Logger:
             yield
             self._log_level_stack.pop()
 
+    @property
     @contextmanager
     def no_log(self):
         """Disable logging inside a context block."""
@@ -129,9 +137,18 @@ class Logger:
         self._log_level_stack.pop()
 
     @property
+    @contextmanager
     def log_errors(self):
         """Use in a `with` block. Any errors thrown within the block are logged with the full stacktrace."""
-        return self._log_errors
+        try:
+            yield
+        except BaseException as e:
+            log_stacktrace = True
+            if isinstance(e, SystemExit) and e.code == 0:
+                log_stacktrace = False
+            if log_stacktrace:
+                self.log_with_stacktrace(e, level=LogLevels.CRITICAL)
+            raise
 
     def _write_to_log(self, content: str | RichString):
         if self._rotater is not None:
@@ -197,7 +214,7 @@ class Logger:
             if with_print:
                 self._collected_print.append(rs)
 
-    def log_with_stacktrace(self, error: Exception, level: LogLevels = LogLevels.ERROR, with_print: bool = False):
+    def log_with_stacktrace(self, error: BaseException, level: LogLevels = LogLevels.ERROR, with_print: bool = False):
         """Log an exception along with the full stacktrace."""
         self._log(
             f"{type(error)} was thrown with the following stacktrace:",
