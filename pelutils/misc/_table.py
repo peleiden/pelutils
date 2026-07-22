@@ -45,7 +45,7 @@ class Table:
     def add_row(self, row: Sequence[Any], left_align: Sequence[bool] | None = None):  # pyright: ignore[reportExplicitAny]
         """Add a row to the table.
 
-        `left_align` is a boolean iterable of equal length to `row`, indicating whether each element is right or left aligned.
+        ``left_align`` is a boolean iterable of equal length to ``row``, indicating whether each element is right or left aligned.
         If None, the first element is left aligned, and the rest are right aligned.
         """
         self._set_and_check_width(row)

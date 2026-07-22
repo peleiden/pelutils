@@ -19,12 +19,12 @@ class UnsupportedOS(Exception):  # noqa: N818
 
 
 class OS:
-    """Class for checking the current OS."""
+    """Class for checking the current operating system. It is purely for convenience over remembering ``sys.platform`` values."""
 
     # See https://docs.python.org/3/library/sys.html#sys.platform for all platforms
-    is_windows = sys.platform == "win32"
-    is_mac = sys.platform == "darwin"
-    is_linux = sys.platform == "linux"
+    is_windows: bool = sys.platform == "win32"
+    is_mac: bool = sys.platform == "darwin"
+    is_linux: bool = sys.platform == "linux"
 
 
 class _HardwareInfo:

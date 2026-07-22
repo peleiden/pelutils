@@ -6,7 +6,7 @@ calls and manual bookkeeping. ``TickTock`` sits in between: you wrap the code
 sections *you* care about in named, nestable context managers and get back a
 readable, tree-structured table of where the time went — with per-section totals,
 hit counts, averages, and the percentage of the parent's time each section took.
-The overhead per profile is tiny, so it is well suited to hot loops and can be
+The overhead per profiled section is tiny, so it is well suited to hot loops and can be
 left in long-running code.
 
 Quick start
@@ -32,7 +32,7 @@ Quick start
 ``TT`` is a ready-to-use global instance and is all most code needs. When you need
 isolation — most importantly one instance per thread, since profiling is not
 thread-safe — construct your own with :class:`TickTock`. See :class:`TickTock` for
-the full API, including ``hits`` for tight loops, ``do_at_interval`` for throttling
+the full API, including ``hits`` for very tight loops, ``do_at_interval`` for running
 periodic tasks, and ``fuse``/``fuse_multiple`` for combining results across
 processes.
 """

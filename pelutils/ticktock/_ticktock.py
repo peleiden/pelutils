@@ -107,10 +107,10 @@ class TickTockException(RuntimeError):  # noqa: N818
 
 
 class TickTock:
-    """Simple time taker inspired by Matlab Tic, Toc, which also has profiling tooling.
+    """Simple time taker inspired by Matlab Tic, Toc, which also comes with powerful, easy-to-use profiling tooling.
 
     It is possible to import ``TT`` directly as a global instance for convenience, or import ``TickTock`` and create a new instance.
-    For most use cases, importing ``TT`` is recommended, but when using threads (or async), creating a ticktock instance per thread
+    For most use cases, importing ``TT`` is recommended, but when using threads or async, creating a ticktock instance per thread
     is recommended.
 
     Basic use is as follows.
@@ -133,7 +133,7 @@ class TickTock:
         with mp.Pool() as pool, TT.profile("Processing 100 items on multiple threads", hits=100):
             pool.map(process_item, items)
 
-        # Similar for very quick loops.
+        # The same goes for very quick loops.
         a = 0
         with TT.profile("Adding 1 to a", hits=100):
             for _ in range(100):

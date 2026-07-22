@@ -16,7 +16,8 @@ class UniversalJsonModel(BaseModel):
 
     Values unsupported by JSON are pickle-encoded and stored as base64 strings. Do not
     load data from an untrusted source. Custom ``model_config`` values must retain
-    ``arbitrary_types_allowed=True``.
+    ``arbitrary_types_allowed=True`` if any fields on subclasses are not JSON-serialisable
+    by default.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

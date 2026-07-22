@@ -1,13 +1,19 @@
 """JSON persistence for values that plain ``json`` and even ``pydantic`` cannot handle.
 
-Saving experiment results, configs, or checkpoints to JSON usually means one of two
-compromises: manually converting numpy arrays, tensors, and other objects into
-JSON-friendly forms first, or reaching for ``pickle`` and ending up with an opaque binary
-blob. :class:`UniversalJsonModel` removes the choice — it is a ``pydantic.BaseModel`` whose
-``save``/``load`` methods serialise *any* attribute: JSON-native values stay plain and
+Persisting data, whatever it may be, to disk usually usually comes down to a choice between
+human-readable or not. If efficiency is not crucial, human-readable is preferable, but often
+times, the data is not trivially serialisable to human-friendly formats. While ``pydantic``'s
+``BaseModel.model_dump`` takes you some of the way, it falls short as soon as you introduce
+data types which are not JSON-serialisable by default, making pickling the default choice and
+ending up with an unreadable binary blob.
+
+Even if all data is easily serialisable to a readable format, you still have to deal with all
+the boilerplate of ensuring parent directories exist, and opening and closing files.
+
+Enter :class:`UniversalJsonModel` — a ``pydantic.BaseModel`` whose
+``save``/``load`` methods serialise/deserialise *any* attribute: JSON-native values stay plain and
 human-readable, while anything else (numpy arrays, torch tensors, arbitrary objects) is
-pickled and base64-encoded inline. The output stays a single, diffable JSON file you can
-open and read.
+pickled and base64-encoded inline. The output is a single, easily readable JSON file.
 
 Quick start
 -----------
@@ -26,10 +32,12 @@ Quick start
     result.save("results/run-1.json")
     result = Result.load("results/run-1.json")
 
-The module also exposes :func:`pretty_json`, a compact-but-readable formatter that keeps
-short containers on one line and bin-packs long primitive lists, and JSONL helpers
-(:func:`jsonl_dump`, :func:`jsonl_load`, and their string variants) for files where each
-line is its own JSON object.
+The module also exposes :func:`pretty_json`, a function similar to the built-in `json.dumps`,
+but which formats the given object to a pretty JSON string;
+short containers stay on one line, and long primitive lists are packed across both the width and height
+of the file.
+JSONL helpers (:func:`jsonl_dump`, :func:`jsonl_load`, and their string variants) for files where each
+line is its own JSON object are also provided.
 
 .. warning::
 
