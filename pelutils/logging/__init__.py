@@ -33,7 +33,6 @@ full API, including ``log.level``/``log.no_log`` for temporarily changing the le
 the ``rotation`` argument to ``configure``.
 """
 
-from ._logger import LEVEL_FORMAT, TIMESTAMP_COLOR, Logger, LoggingException, log
-from ._utils import LogLevels
+from ._logger import LEVEL_FORMAT, TIMESTAMP_COLOR, Logger, LoggingException, LogLevels, log
 
 __all__ = ("LEVEL_FORMAT", "TIMESTAMP_COLOR", "LogLevels", "Logger", "LoggingException", "log")
