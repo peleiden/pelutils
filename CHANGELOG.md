@@ -40,6 +40,7 @@ Documentation has also been massively improved and is exposed on the brand new [
 - `TickTock.fuse_multiple` now accepts a sequence rather than using argument unpacking.
   It can also handl empty sequences.
 - ARM wheels are now build natively on ARM instead of on emulator.
+- `unique` still accepts `ArrayLike` but always returns numpy arrays.
 
 ### Removals
 

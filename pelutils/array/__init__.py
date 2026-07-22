@@ -1,8 +1,7 @@
 """Utilities and various algorithms for working with numpy arrays.
 
 The flagship is :func:`unique`, a drop-in for ``numpy.unique`` that runs in linear time
-(rather than sorting), making it dramatically faster on large arrays. It also accepts
-torch tensors and pandas series.
+(rather than sorting), making it dramatically faster on large arrays.
 
 Quick start
 -----------

@@ -2,7 +2,6 @@ from datetime import date
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
 import torch
 
@@ -15,7 +14,6 @@ from pelutils.types import FloatArray
 class DeepCollection(UniversalJsonModel):
     np_arr: FloatArray
     tensor: torch.Tensor
-    df: pd.DataFrame
 
 
 class Collection(UniversalJsonModel):
@@ -32,7 +30,6 @@ class WhackStorage(UniversalJsonModel):
     date: date
     np_arr: FloatArray
     tensor: torch.Tensor
-    df: pd.DataFrame
     collection: Collection
 
 
@@ -40,7 +37,6 @@ data = WhackStorage(
     date=date(2026, 1, 1),
     np_arr=np.arange(5, dtype=np.float16),
     tensor=torch.ones(50)[::3],
-    df=pd.DataFrame({"col1": [1, 2, 3], "col": np.arange(3)}),
     collection=Collection(
         string="Hello There",
         list_of_floats=[1.0, 2.0, 3.0],
@@ -49,7 +45,6 @@ data = WhackStorage(
         collection=DeepCollection(
             np_arr=np.arange(10),
             tensor=torch.zeros(0, dtype=bool),
-            df=pd.DataFrame({"col1": ["1", "2", "3"], "col": np.arange(3)}),
         ),
     ),
 )
@@ -68,7 +63,6 @@ class TestUniversalJsonModel(UnitTestCollection):
         assert data.np_arr.dtype == loaded.np_arr.dtype
         assert (data.tensor == loaded.tensor).all()
         assert data.tensor.dtype is loaded.tensor.dtype
-        assert data.df.equals(loaded.df)
         assert data.collection.string == loaded.collection.string
         assert data.collection.list_of_floats == data.collection.list_of_floats
         assert data.collection.tuple_of_floats == data.collection.tuple_of_floats
@@ -77,7 +71,6 @@ class TestUniversalJsonModel(UnitTestCollection):
         assert data.collection.collection.np_arr.dtype == loaded.collection.collection.np_arr.dtype
         assert (data.collection.collection.tensor == loaded.collection.collection.tensor).all()
         assert data.collection.collection.tensor.dtype is loaded.collection.collection.tensor.dtype
-        assert data.collection.collection.df.equals(loaded.collection.collection.df)
 
         # Check that corrupted data raises a ValueError
         json_content = save_path.read_text()

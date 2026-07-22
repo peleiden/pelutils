@@ -203,8 +203,7 @@ path can target one section directly, e.g. `--config-file config.ini:low-lr`. Se
 
 ## Fast `unique`
 
-A linear-time alternative to `numpy.unique`, significantly faster on large arrays. It
-also accepts torch tensors and pandas series. The returned elements are unsorted.
+A linear-time alternative to `numpy.unique`, significantly faster on large arrays. Unlike with `np.unique`, the returned elements are unsorted.
 
 ```py
 import numpy as np
