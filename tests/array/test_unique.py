@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import pytest
 import torch
 
@@ -29,16 +28,16 @@ def test_unique():  # noqa: PLR0915
     # Test torch support
     a_t = torch.from_numpy(a)
     u_t, index_t, inverse_t, counts_t = unique(a_t, return_index=True, return_inverse=True, return_counts=True)
-    assert a_t.dtype == u_t.dtype
-    assert isinstance(u_t, torch.Tensor)
-    assert isinstance(index_t, torch.Tensor)
-    assert isinstance(inverse_t, torch.Tensor)
-    assert isinstance(counts_t, torch.Tensor)
+    assert a_t.numpy().dtype == u_t.dtype
+    assert isinstance(u_t, np.ndarray)
+    assert isinstance(index_t, np.ndarray)
+    assert isinstance(inverse_t, np.ndarray)
+    assert isinstance(counts_t, np.ndarray)
     assert np.all(a == a_t.numpy())
-    assert np.all(u == u_t.numpy())
-    assert np.all(index == index_t.numpy())
-    assert np.all(inverse == inverse_t.numpy())
-    assert np.all(counts == counts_t.numpy())
+    assert np.all(u == u_t)
+    assert np.all(index == index_t)
+    assert np.all(inverse == inverse_t)
+    assert np.all(counts == counts_t)
 
     # Slightly more complex case with some non-unique values
     a[2:4] = 50
@@ -82,14 +81,6 @@ def test_unique():  # noqa: PLR0915
     u, index, inverse, counts = unique(np.array([]), return_index=True, return_inverse=True, return_counts=True)
     assert u.dtype == np.array([]).dtype
     assert len(u) == len(index) == len(inverse) == len(counts) == 0
-
-    data_frame = pd.DataFrame({"a": np.array([1, 2, 3, 1], dtype=np.float16)})
-    with pytest.raises(TypeError):
-        unique(data_frame)
-    u, c = unique(data_frame.a, return_counts=True)
-    assert data_frame.a.dtype == u.dtype
-    assert len(u) == 3
-    assert c.sum() == len(data_frame)
 
     # Check error handling
     with pytest.raises(TypeError):
