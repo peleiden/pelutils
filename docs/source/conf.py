@@ -5,6 +5,9 @@ from pathlib import Path
 # Make pelutils importable for autodoc
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from docutils import nodes
+from sphinx.transforms import SphinxTransform
+
 from pelutils import __version__ as release
 
 version = ".".join(release.split(".")[:2])
@@ -42,6 +45,16 @@ autodoc_default_options = {
 }
 
 
+class RemoveObjectBases(SphinxTransform):
+    default_priority = 500
+
+    def apply(self):
+        for paragraph in list(self.document.findall(nodes.paragraph)):
+            text = paragraph.astext().strip()
+            if text == "Bases: object":
+                paragraph.parent.remove(paragraph)
+
+
 def fix_type_alias_forward_refs(app, what, name, obj, options, signature, return_annotation):
     """Remove TypeAliasForwardRef which appears in nested types with type aliases."""
 
@@ -67,6 +80,7 @@ def skip_reexported_top_level_members(app, what, name, obj, skip, options):
 
 def setup(app):
     """Configure autodoc event handlers."""
+    app.add_post_transform(RemoveObjectBases)
     app.connect("autodoc-skip-member", skip_reexported_top_level_members)
     app.connect("autodoc-process-signature", fix_type_alias_forward_refs)
 
