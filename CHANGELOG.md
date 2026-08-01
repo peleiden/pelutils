@@ -3,7 +3,8 @@
 ## 4.1.0 - Unreleased
 
 - Added `TickTock.profile_elementwise` for convenient elementwise profiling in loops.
-- Added `__repr__` method to `Logger` and made path resolution more robust.
+- Added `__repr__` method to `Logger` and `Table`.
+- Made path resolution in `Logger` more robust.
 
 ## 4.0.0 - Breaking changes
 

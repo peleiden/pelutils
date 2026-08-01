@@ -92,6 +92,10 @@ class Table:
             return " " * (width - len(element)) + element
 
     @override
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(width={self._width}, header={len(self._header) > 0}, rows={len(self._rows)})"
+
+    @override
     def __str__(self) -> str:
         assert self._width is not None
         all_rows = [self._header, *self._rows] if self._header else self._rows

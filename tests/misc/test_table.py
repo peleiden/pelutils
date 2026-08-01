@@ -50,3 +50,12 @@ class TestTable:
         for i in range(3):
             for j in [i * x for x in range(len(ascii_letters))]:
                 assert str(j) in texlines[i + 3]
+
+    def test_repr(self):
+        t = Table()
+        t.add_header((1, 2, 3))
+        t.add_row((3, 4, 5))
+        t.add_row((3, 5, 6))
+        assert "width=3" in repr(t)
+        assert "header=True" in repr(t)
+        assert "rows=2" in repr(t)
