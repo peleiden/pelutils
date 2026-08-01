@@ -224,6 +224,26 @@ def test_disable():
         assert pname_depth_to_profile["666", 2].nhits == 0
 
 
+def test_profile_elementwise():
+    tt = TickTock()
+    try:
+        with tt.profile("123", hits=5):
+            for i in tt.profile_elementwise("outer", range(5), hits_per_element=3):
+                for j in tt.profile_elementwise("inner", range(4), hits_per_element=2):
+                    if i == 3 and j == 2:
+                        raise RuntimeError("Make sure exceptions are handled correctly")
+    except RuntimeError:
+        pass
+
+    for profile in tt.iter_profiles():
+        if profile.name == "123":
+            assert profile.nhits == 5
+        elif profile.name == "outer":
+            assert profile.nhits == 12
+        elif profile.name == "inner":
+            assert profile.nhits == 30
+
+
 def test_do_at_interval():
     tt = TickTock()
     tt.tick()

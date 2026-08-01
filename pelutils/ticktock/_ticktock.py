@@ -1,10 +1,10 @@
 import warnings
-from collections.abc import Hashable, Iterator, Sequence
+from collections.abc import Hashable, Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from copy import deepcopy
 from threading import current_thread
 from time import perf_counter
-from typing import TypeAlias
+from typing import TypeAlias, TypeVar
 
 from typing_extensions import override
 
@@ -20,6 +20,8 @@ _time_units: tuple[_TimeUnit, ...] = (
     ("s", 1),
     ("h", 3600),
 )
+
+T = TypeVar("T")
 
 
 def _get_smallest_suitable_unit(duration_s: float) -> _TimeUnit:
@@ -214,12 +216,12 @@ class TickTock:
 
         .. code-block:: python
 
-            with TT.profile("Op", hits=5):
-                for i in range(5):
+            for i in range(5):
+                with TT.profile("Operation"):
                     ...
 
-            for i in range(5):
-                with TT.profile("Op"):
+            with TT.profile("Operation", hits=5):
+                for i in range(5):
                     ...
 
         If ``disable`` is True, the profile, as well as all child profiles will not be counted.
@@ -242,6 +244,34 @@ class TickTock:
             # If _start_profile fails and _end_profile then runs, that can give some nasty error messages
             if started_profile:
                 self._end_profile()
+
+    def profile_elementwise(self, name: str, iterable: Iterable[T], *, hits_per_element: int = 1, disable: bool = False) -> Iterator[T]:
+        """Wrap an iterable in this to profile the time it takes to iterate over each element.
+
+        Arguments correspond to those given to :meth:`profile`.
+
+        This method makes profiling over lazy iterators much more convenient. Instead of
+
+        .. code-block:: python
+
+            while True:
+                try:
+                    with TT.profile("Get element"):
+                        element = next(dataloader)
+                except StopIteration:
+                    break
+                ...
+
+        it is possible to instead write
+
+        .. code-block:: python
+
+            for element in TT.profile_elementwise(dataloader):
+                ...
+        """
+        for element in iterable:
+            with self.profile(name, hits=hits_per_element, disable=disable):
+                yield element
 
     def reset(self):
         """Stop all timing and profiling and clear all profiles and measurements."""
