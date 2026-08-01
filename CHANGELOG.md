@@ -1,5 +1,9 @@
 # History
 
+## 4.1.0 - Unreleased
+
+- Added `TickTock.profile_elementwise` for convenient elementwise profiling in loops.
+
 ## 4.0.0 - Breaking changes
 
 Version 4 of `pelutils` is largely a cleanup update.
