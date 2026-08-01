@@ -308,3 +308,9 @@ class TestLogger(UnitTestCollection):
                 == logged_lines[i].index(string)
                 == logged_lines[i + 1].index(string)
             )
+
+    def test_repr(self):
+        fpath = (self.test_dir / "joemama.log").expanduser().resolve()
+        logger = Logger().configure(fpath, print_level=LogLevels.ERROR)
+        assert f"fpath={fpath}" in repr(logger)
+        assert f"print_level={logger._print_level.name}" in repr(logger)
