@@ -6,6 +6,8 @@ from enum import IntEnum
 from pathlib import Path
 from typing import Any
 
+from typing_extensions import override
+
 from pelutils.misc import OS, UnsupportedOS, git_repo_info
 
 from ._rich_string import RichString
@@ -318,6 +320,12 @@ class Logger:
     ):
         """Shorthand for specific logging methods where level is specified as an argument."""
         self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
+
+    @override
+    def __repr__(self) -> str:
+        fpath = self._rotater.base_file if self._rotater is not None else None
+        print_level = self._print_level.name if isinstance(self._print_level, LogLevels) else f"{self._print_level}"
+        return f"{self.__class__.__name__}(fpath={fpath}, print_level={print_level})"
 
 
 log = Logger()

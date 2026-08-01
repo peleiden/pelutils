@@ -11,7 +11,7 @@ class LogFileRotater:
 
     def __init__(self, rotate_cmd: str | None, base_file: Path):
         self.rotate_cmd = rotate_cmd
-        self.base_file = base_file
+        self.base_file = base_file.expanduser().resolve()
         self.value: float | int | None = None
         self.unit = None
         if self.rotate_cmd is not None:
