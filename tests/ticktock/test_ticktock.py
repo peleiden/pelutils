@@ -224,24 +224,76 @@ def test_disable():
         assert pname_depth_to_profile["666", 2].nhits == 0
 
 
-def test_profile_elementwise():
+def test_profile_loop():
     tt = TickTock()
-    try:
-        with tt.profile("123", hits=5):
-            for i in tt.profile_elementwise("outer", range(5), hits_per_element=3):
-                for j in tt.profile_elementwise("inner", range(4), hits_per_element=2):
-                    if i == 3 and j == 2:
-                        raise RuntimeError("Make sure exceptions are handled correctly")
-    except RuntimeError:
-        pass
+    for _i in tt.profile_loop("outer", range(5), hits_per_element=3):
+        for _ in tt.profile_loop("inner", range(4), hits_per_element=2):
+            pass
 
-    for profile in tt.iter_profiles():
-        if profile.name == "123":
-            assert profile.nhits == 5
-        elif profile.name == "outer":
-            assert profile.nhits == 12
-        elif profile.name == "inner":
-            assert profile.nhits == 30
+    profiles = {profile.name: profile for profile in tt.iter_profiles()}
+    assert profiles["outer"].nhits == 15
+    assert profiles["inner"].nhits == 40
+    assert len(tt._profile_stack) == 0
+
+
+def test_profile_loop_generator_close():
+    tt = TickTock()
+    profiled = tt.profile_loop("loop", range(5))
+    assert next(profiled) == 0
+    assert len(tt._profile_stack) == 1
+
+    profiled.close()
+    assert len(tt._profile_stack) == 0
+
+
+def test_profile_next():
+    tt = TickTock()
+    assert list(tt.profile_next("fetch", iter(range(5)), hits_per_element=3)) == list(range(5))
+
+    profile = next(tt.iter_profiles())
+    assert profile.nhits == 15
+    assert profile.total_runtime > 0
+    assert len(tt._profile_stack) == 0
+
+
+def test_profile_next_empty_and_nested_iterator():
+    tt = TickTock()
+    assert list(tt.profile_next("empty", iter(()))) == []
+    assert not tt.has_profiles
+
+    with tt.profile("parent"):
+        assert list(tt.profile_next("child", iter(()))) == []
+
+    parent = next(tt.iter_profiles())
+    assert parent.children == []
+
+
+def test_profile_next_disabled_exhaustion_does_not_change_profile():
+    tt = TickTock()
+    with tt.profile("fetch"):
+        pass
+    profile = next(tt.iter_profiles())
+    nhits = profile.nhits
+    total_runtime = profile.total_runtime
+
+    assert list(tt.profile_next("fetch", iter(()), disable=True)) == []
+    assert profile.nhits == nhits
+    assert profile.total_runtime == total_runtime
+
+    disabled = TickTock()
+    assert list(disabled.profile_next("fetch", iter(()), disable=True)) == []
+    assert not disabled.has_profiles
+
+
+def test_profile_next_iterator_exception():
+    class ExplodingIterator:
+        def __next__(self):
+            raise RuntimeError("iterator failed")
+
+    tt = TickTock()
+    with pytest.raises(RuntimeError, match="iterator failed"):
+        list(tt.profile_next("fetch", ExplodingIterator()))
+    assert len(tt._profile_stack) == 0
 
 
 def test_do_at_interval():
