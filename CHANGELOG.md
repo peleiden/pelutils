@@ -1,6 +1,6 @@
 # History
 
-## 4.1.0 - Unreleased
+## 4.1.0
 
 - Added `TickTock.profile_loop` for profiling work performed for each loop element.
 - Added `TickTock.profile_next` for profiling iterator element retrieval.
