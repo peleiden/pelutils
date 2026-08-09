@@ -118,6 +118,14 @@ for image in images:
         with TT.profile("Inference"):
             predict(model, img)
 
+# Profile loop-body work element by element without manual context managers
+for image in TT.profile_loop("Process image", images):
+    process(image)
+
+# Or profile the time spent fetching elements from a lazy iterator
+for batch in TT.profile_next("Load batch", iter(dataloader)):
+    train_on(batch)
+
 # Print a table of hits, total time, and average time for each section
 print(TT)
 ```

@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from threading import current_thread
 from time import perf_counter
-from typing import TypeAlias, TypeVar
+from typing import TypeAlias, TypeVar, cast
 
 from typing_extensions import override
 
@@ -65,8 +65,9 @@ class Profile:
             self.parent.children.append(self)
         else:
             assert depth == 0
-        self.children = list()
+        self.children: list[Profile] = list()
         self.start: float = 0  # Timestamp of when the profile was started, initialised to 0
+        self._latest_measurement: float = 0
 
     def sum(self) -> float:
         """Return total runtime, the sum of all registered hits."""
@@ -173,19 +174,25 @@ class TickTock:
             raise TickTockException(f"A timer for the given key ({key}) has not been started with .tick()")
         return end - self._tick_starts[key]
 
-    def _start_profile(self, name: str, *, hits: int, disable: bool):
-        """Start a profile and add it to relevant attributes that keep track of profiles."""
-        profile = Profile(
+    def _create_profile(self, name: str) -> Profile:
+        """Create a new profile with the given ``name``."""
+        return Profile(
             name,
             len(self._profile_stack),
             self._profile_stack[-1] if len(self._profile_stack) > 0 else None,
         )
 
+    def _start_profile(self, name: str, *, hits: int, disable: bool) -> tuple[Profile, bool]:
+        """Start a profile and add it to relevant attributes that keep track of profiles."""
+        profile = self._create_profile(name)
+
         if profile in self._id_to_profile:
             profile = self._id_to_profile[profile]
+            profile_was_new = False
             if profile.parent is not None:
                 profile.parent.children.pop()
         else:
+            profile_was_new = True
             self._id_to_profile[profile] = profile
             if not self._profile_stack:
                 self._root_profiles.append(profile)
@@ -196,6 +203,7 @@ class TickTock:
 
         self._profile_stack.append(profile)
         profile.start = perf_counter()
+        return profile, profile_was_new
 
     def _end_profile(self):
         """End the inner-most active profile."""
@@ -203,12 +211,13 @@ class TickTock:
         dt = end - self._profile_stack[-1].start
         if not self._profile_stack[-1]._disable:  # pyright: ignore[reportPrivateUsage]
             self._profile_stack[-1].total_runtime += dt
+            self._profile_stack[-1]._latest_measurement = dt  # pyright: ignore[reportPrivateUsage]
         self._profile_stack[-1]._disable = False  # pyright: ignore[reportPrivateUsage]
         self._profile_stack.pop()
 
     @contextmanager
     def profile(self, name: str, *, hits: int = 1, disable: bool = False):
-        """Begin a profile with given name.
+        """Start a profile with given name.
 
         Optionally it is possible to register this as several hits that sum to the total time.
         This is useful when profiling a very large number of quick operations.
@@ -226,31 +235,47 @@ class TickTock:
 
         If ``disable`` is True, the profile, as well as all child profiles will not be counted.
         """
+        self._warn_if_wrong_thread(stacklevel=3)
+
+        self._start_profile(name, hits=hits, disable=disable)
+        try:
+            yield
+        finally:
+            self._end_profile()
+
+    def _warn_if_wrong_thread(self, *, stacklevel: int):
         if self._thread_id != id(current_thread()):
             warnings.warn(
                 f"This TickTock instance was created in the {self._thread_name} thread but profiling was started in "
                 + f"{current_thread().name}. Profiling is NOT designed to deal with multiple threads. Instead, create a "
                 + "TickTock instance for each thread requiring profiling.",
-                stacklevel=2,
+                stacklevel=stacklevel,
             )
 
-        started_profile = False
-        try:
-            self._start_profile(name, hits=hits, disable=disable)
-            started_profile = True
-            yield
-        finally:
-            # Only end the newly started profile if one was succesfully started
-            # If _start_profile fails and _end_profile then runs, that can give some nasty error messages
-            if started_profile:
-                self._end_profile()
+    def profile_loop(self, name: str, iterable: Iterable[T], *, hits_per_element: int = 1, disable: bool = False) -> Iterator[T]:
+        """Wrap an iterable and profile the time spent processing each yielded element.
 
-    def profile_elementwise(self, name: str, iterable: Iterable[T], *, hits_per_element: int = 1, disable: bool = False) -> Iterator[T]:
-        """Wrap an iterable in this to profile the time it takes to iterate over each element.
+        The profile remains active while the caller processes the yielded element.
+        Conceptually, this method is quite similar to ``tqdm``, just with elementwise profiling instead of a progress bar.
+        It allows the example in :meth:`profile` to be replaced with
 
-        Arguments correspond to those given to :meth:`profile`.
+        .. code-block:: python
 
-        This method makes profiling over lazy iterators much more convenient. Instead of
+            for i in TT.profile_loop("Operation", range(5)):
+                ...
+        """
+        for element in iterable:
+            with self.profile(name, hits=hits_per_element, disable=disable):
+                yield element
+
+    def profile_next(self, name: str, iterator: Iterator[T], *, hits_per_element: int = 1, disable: bool = False) -> Iterator[T]:
+        """Wrap an iterator and profile the time it takes to retrieve each element.
+
+        The profile covers each call to ``next(iterator)`` and ends before the element
+        is yielded to the caller. The call that raises ``StopIteration`` is not counted.
+        Pass an iterator explicitly, for example with ``iter(iterable)``.
+
+        This method makes profiling lazy iterators much more convenient. Instead of
 
         .. code-block:: python
 
@@ -266,12 +291,45 @@ class TickTock:
 
         .. code-block:: python
 
-            for element in TT.profile_elementwise(dataloader):
+            for element in TT.profile_next("Get element", iter(dataloader)):
                 ...
         """
-        for element in iterable:
-            with self.profile(name, hits=hits_per_element, disable=disable):
-                yield element
+        while True:
+            self._warn_if_wrong_thread(stacklevel=2)
+            profile, profile_was_new = self._start_profile(name, hits=hits_per_element, disable=disable)
+            was_counted = not profile._disable  # pyright: ignore[reportPrivateUsage]
+            previous_measurement = profile._latest_measurement  # pyright: ignore[reportPrivateUsage]
+            element: T | None = None
+            try:
+                try:
+                    element = next(iterator)
+                except StopIteration:
+                    exhausted = True
+                else:
+                    exhausted = False
+            finally:
+                self._end_profile()
+
+            if exhausted:
+                # The exhaustion check starts a profile but does not produce an element.
+                # Undo that one attempted hit without creating a temporary tree node.
+                if was_counted:
+                    profile.nhits -= hits_per_element
+                    profile.total_runtime -= profile._latest_measurement  # pyright: ignore[reportPrivateUsage]
+                    profile._latest_measurement = previous_measurement  # pyright: ignore[reportPrivateUsage]
+                if profile_was_new:
+                    self._remove_profile(profile)
+                return
+
+            yield cast(T, element)
+
+    def _remove_profile(self, profile: Profile):
+        """Remove a profile from the profile tree and lookup table."""
+        self._id_to_profile.pop(profile)
+        if profile.parent is None:
+            self._root_profiles.remove(profile)
+        else:
+            profile.parent.children.remove(profile)
 
     def reset(self):
         """Stop all timing and profiling and clear all profiles and measurements."""
@@ -376,7 +434,7 @@ class TickTock:
         return str(table)
 
     def iter_profiles(self) -> Iterator[Profile]:
-        """Recursively returns all profiles in the tree.
+        """Recursively return all profiles in the tree.
 
         They are ordered in a depth-first manner rather than breadth-first.
         """
