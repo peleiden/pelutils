@@ -6,7 +6,7 @@ import _pelutils_c as _c
 import numpy as np
 
 import pelutils._c as c_utils
-from pelutils.types import IntArray
+from pelutils.types import BoolArray, IntArray
 
 
 class SparseGridBlobDetection:
@@ -18,7 +18,8 @@ class SparseGridBlobDetection:
 
     While images are a prime use case, this class works for any dimensionality of arrays.
     It provides two methods: ``find_all_blobs`` and ``find_single_blob``. The first, as demonstrated above, detects,
-    for each blobs, all pixels belonging to that blob. The second finds only a single blob and requires a starting pixel.
+    for each blobs, all pixels belonging to that blob. The second finds only a single blob and optionally accepts a
+    starting pixel.
 
     Adjacency is defined by a plus-shaped kernel (generalised to the dimensions of the array), not a solid square-shaped
     kernel. To get the behaviour of a square-shaped kernel, run a dilation with a square kernel over the array first.
@@ -87,6 +88,24 @@ class SparseGridBlobDetection:
             self._grid_coords.shape[1],
         )
 
+    @property
+    def next_index(self) -> int:
+        """Return the index of the first unvisited coordinate.
+
+        This starts at ``0`` and advances as blobs are detected, whether by :meth:`find_single_blob` or :meth:`find_all_blobs`.
+        It reaches ``len(grid_coords)`` when all coordinates have been visited, and there are no more blobs to be found.
+        When a blob is detected, if the current value is part of that blob, it will increase to the index of the first coordinate
+        which has not been visited.
+        """
+        return self._next_index
+
+    @property
+    def visited_coords(self) -> BoolArray:
+        """Return 1D boolean array of length ``len(grid_coords)`` indicating which grid coordinates have been visited."""
+        visited_coords = self._visited.view()
+        visited_coords.flags.writeable = False
+        return visited_coords
+
     def _validate_grid_coords(self, grid_coords: IntArray):
         """Raise an exception if given ``grid_coords`` are invalid."""
         if not np.issubdtype(grid_coords.dtype, np.integer):
@@ -103,11 +122,13 @@ class SparseGridBlobDetection:
         self._done = self._next_index == len(self._visited)
         return self._done
 
-    def find_single_blob(self, init_index: int) -> IntArray:
-        """Detect a single blob starting at ``grid_coords[init_index]``.
+    def find_single_blob(self, init_index: int | None = None) -> IntArray:
+        """Detect one blob starting at ``grid_coords[init_index]``, or ``grid_coords[self.next_index]`` if ``init_index`` is not provided.
 
         Return the index of each row in ``grid_coords`` which is part of the blob.
         """
+        if init_index is None:
+            init_index = self.next_index
         if self._visited[init_index]:
             raise RuntimeError(f"Blob at index {init_index} ({self._grid_coords[init_index]}) has already been visited")
         blob_indices: list[int] = list()
@@ -136,7 +157,7 @@ class SparseGridBlobDetection:
         indices = np.array([], dtype=np.int64)
         blobs: list[IntArray] = list()
         while not self._mark_visited(indices):
-            indices = self.find_single_blob(self._next_index)
+            indices = self.find_single_blob()
             blobs.append(indices)
 
         return blobs

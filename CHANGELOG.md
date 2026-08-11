@@ -3,6 +3,8 @@
 ## 4.2.0 - Unreleased
 
 - Clarify behaviour of `nargs` in `RequiredArg` and `OptionalArg`, and remove inappropriate assert.
+- Added read-only state properties to `SparseGridBlobDetection` for inspecting blob detection progress.
+- Added automatic start index selection to `SparseGridBlobDetection.find_single_blob`.
 
 ## 4.1.0
 

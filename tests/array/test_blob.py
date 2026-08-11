@@ -47,6 +47,34 @@ class TestSparseGridBlobDetection:
         with pytest.raises(RuntimeError):
             detector.find_all_blobs()
 
+    def test_state_properties(self):
+        coords = np.array([[0], [1], [3], [4]])
+        detector = SparseGridBlobDetection(coords)
+        visited_coords = detector.visited_coords
+
+        assert detector.next_index == 0
+        assert visited_coords.dtype == bool
+        assert np.array_equal(visited_coords, [False, False, False, False])
+        assert not visited_coords.flags.writeable
+        with pytest.raises(ValueError):
+            visited_coords[0] = True
+
+        assert np.array_equal(detector.find_single_blob(), [0, 1])
+        assert detector.next_index == 2
+        assert np.array_equal(visited_coords, [True, True, False, False])
+
+        assert np.array_equal(detector.find_single_blob(), [2, 3])
+        assert detector.next_index == 4
+        assert np.array_equal(visited_coords, [True, True, True, True])
+
+        coords = np.array([[0, 1], [2, 3], [1, 1], [3, 3], [-5, -5]])
+        detector = SparseGridBlobDetection(coords)
+        assert np.array_equal(detector.find_single_blob(3), [3, 1])
+        assert detector.next_index == 0
+        assert np.array_equal(detector.visited_coords, [False, True, False, True, False])
+        detector.find_single_blob()
+        assert detector.next_index == 4
+
     def test_fancy_grid(self):
         indices = np.column_stack(np.where(self.fancy_grid))
         detector = SparseGridBlobDetection(indices)
