@@ -1,5 +1,9 @@
 # History
 
+## 4.2.0 - Unreleased
+
+- Clarify behaviour of `nargs` in `RequiredArg` and `OptionalArg`, and remove inappropriate assert.
+
 ## 4.1.0
 
 - Added `TickTock.profile_loop` for profiling work performed for each loop element.

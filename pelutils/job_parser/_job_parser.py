@@ -302,9 +302,9 @@ class JobParser:
                 elif isinstance(argument, (RequiredArg, OptionalArg)) and argument.nargs is not None:
                     if job[argname] is None and isinstance(argument, RequiredArg):
                         raise JobParserError(f"Argument '{argname}' has not been given in job '{job.name}'")
-                    assert isinstance(job[argname], list) or job[argname] is None
+                    if not (isinstance(job[argname], list) or job[argname] is None):
+                        raise TypeError(f"Since `nargs` is set, {argname} default must be a list or None, not {type(job[argname])}")
                     if job[argname] is not None:
-                        assert all(isinstance(x, argument.type) for x in job[argname])  # pyright: ignore[reportArgumentType]
                         if argument.nargs > 0 and len(job[argname]) != argument.nargs:
                             raise ValueError(
                                 f"Required argument '{argname}' expected {argument.nargs} values but received {len(job[argname])}"
