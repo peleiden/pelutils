@@ -1,6 +1,6 @@
 # History
 
-## 4.2.0 - Unreleased
+## 4.2.0
 
 - Clarify behaviour of `nargs` in `RequiredArg` and `OptionalArg`, and remove inappropriate assert.
 - Added read-only state properties to `SparseGridBlobDetection` for inspecting blob detection progress.
