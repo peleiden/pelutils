@@ -371,6 +371,19 @@ class TestParser(UnitTestCollection):
         args = parser.parse_job()
         assert args.foo == [3, 4]
 
+        # Callable converters are valid even when they are not types.
+        sys.argv = [*_argv_template, "--foo", "1", "2"]
+        parser = JobParser(RequiredArg("foo", nargs=2, type=lambda x: 2 * int(x)))
+        args = parser.parse_job()
+        assert args.foo == [2, 4]
+
+    @restore_argv
+    def test_default_type_check_with_nargs(self):
+        sys.argv = ["prog"]
+        parser = JobParser(OptionalArg("x", nargs=2, default=1, type=int))
+        with pytest.raises(TypeError):
+            parser.parse_job()
+
     @restore_argv
     def test_no_unknown_args(self):
         # Test with command line argument

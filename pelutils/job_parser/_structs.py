@@ -91,7 +91,8 @@ class RequiredArg(_AbstractArgument):
         Long option name without leading dashes. Dashes are converted to underscores
         in the resulting :class:`JobDescription` attribute.
     type : Callable[[str], _T], optional
-        Function used to convert command-line and configuration values.
+        Function used to convert supplied values.
+        If ``nargs`` is set, it refers to the type of each element.
     abbrev : str | None, optional
         Optional single-letter short option, without its leading dash.
     help : str | None, optional
@@ -99,7 +100,9 @@ class RequiredArg(_AbstractArgument):
     metavar : str | tuple[str, ...] | None, optional
         Value label displayed in command-line help.
     nargs : int | None, optional
-        Exact number of values required. Set to ``0`` to accept any number of values.
+        Exact number of values required. Set to ``0`` to accept any number of values. If set,
+        arguments should be given as space-separated values. Each element is converted from a
+        string to the correct type using the ``type`` callable.
     """
 
     def __init__(  # noqa: PLR0913
@@ -134,8 +137,10 @@ class OptionalArg(_AbstractArgument):
         Long option name without leading dashes.
     default : _T | None, optional
         Value used when the option is absent from both the CLI and configuration.
+        If ``nargs`` is set, this must be a tuple or list.
     type : Callable[[str], _T] | None, optional
-        Function used to convert supplied values. Inferred from ``default`` when omitted.
+        Function used to convert supplied values. Inferred as the type of ``default`` when omitted.
+        If ``nargs`` is set, it refers to the type of each element.
     abbrev : str | None, optional
         Optional single-letter short option, without its leading dash.
     help : str | None, optional
@@ -143,7 +148,10 @@ class OptionalArg(_AbstractArgument):
     metavar : str | tuple[str, ...] | None, optional
         Value label displayed in command-line help.
     nargs : int | None, optional
-        Exact number of values required. Set to ``0`` to accept any number of values.
+        Exact number of values required. Set to ``0`` to accept any number of values. If set,
+        arguments should be given as space-separated values. Each element is converted from a
+        string to the correct type using the ``type`` callable. ``default`` should either be
+        None or a list or tuple.
     """
 
     def __init__(  # noqa: PLR0913
