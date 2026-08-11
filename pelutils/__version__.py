@@ -1,2 +1,2 @@
 # Do not put anything else in this file
-__version__ = "4.1.0"
+__version__ = "4.2.0"
