@@ -3,7 +3,9 @@
 ## 4.2.1 - Unreleased
 
 - Expose `SparseGridBlobDetection.done` and improve behaviour on empty grids.
-- Provide builds ARM builds for Windows.
+- Provide wheels ARM builds for Windows.
+- Provide (experimental) wheels for Python 3.15.
+- Provide wheels for free-threaded Python.
 
 ## 4.2.0
 

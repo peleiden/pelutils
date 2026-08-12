@@ -47,8 +47,12 @@ def unique(
     inverse = np.empty(len(array), dtype=np.int64) if return_inverse else None
     counts = np.empty(len(array), dtype=np.int64) if return_counts else None
 
+    array_args = c_utils.ArrayArgs(array)
     c = _c.unique(
-        *c_utils.get_array_c_args(array),
+        array_args.array_ptr,
+        array_args.ndim,
+        array_args.dims_ptr,
+        array_args.strides_ptr,
         index.ctypes.data,
         inverse.ctypes.data if inverse is not None else 0,
         counts.ctypes.data if counts is not None else 0,

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import NamedTuple
-
 import numpy as np
 import numpy.typing as npt
 
@@ -14,21 +12,18 @@ torch = import_torch()
 
 
 # Data pointer, num dims, dimensions pointer, strides pointer
-class ArrayArgs(NamedTuple):
-    array_ptr: int
-    ndim: int
-    dims_ptr: int
-    strides_ptr: int
+class ArrayArgs:
+    def __init__(self, arr: npt.ArrayLike):
+        if torch is not None and isinstance(arr, torch.Tensor):
+            arr = arr.numpy()
+        if not isinstance(arr, np.ndarray):
+            raise TypeError(f"Array cannot be of type {type(arr)}")
+        # Store attributes on self to prevent garbage collector cleaning them up until the object no longer exists
+        self._arr = arr
+        self._dims = np.array(self._arr.shape, dtype=np.uint64)
+        self._strides = np.array(self._arr.strides, dtype=np.uint64)
 
-
-def get_array_c_args(arr: npt.ArrayLike) -> ArrayArgs:
-    if torch is not None and isinstance(arr, torch.Tensor):
-        arr = arr.numpy()
-    if not isinstance(arr, np.ndarray):
-        raise TypeError(f"Array cannot be of type {type(arr)}")
-
-    dims = np.array(arr.shape, dtype=np.uint)
-    ndim = len(dims)
-    strides = np.array(arr.strides, dtype=np.uint)
-
-    return ArrayArgs(arr.ctypes.data, ndim, dims.ctypes.data, strides.ctypes.data)
+        self.array_ptr = self._arr.ctypes.data
+        self.ndim = len(self._dims)
+        self.dims_ptr = self._dims.ctypes.data
+        self.strides_ptr = self._strides.ctypes.data

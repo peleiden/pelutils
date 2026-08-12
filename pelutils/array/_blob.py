@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import ctypes
-
 import _pelutils_c as _c
 import numpy as np
 
@@ -64,20 +62,15 @@ class SparseGridBlobDetection:
         for axis, axis_size in wrap_axes.items():
             self._wrap_axis_sizes[axis] = axis_size
 
-        if ctypes.sizeof(ctypes.c_void_p) == 8:
-            # The pointers array is used to store pointers from objects allocated in the C code and pass them between calls
-            # This is very ugly and hacky but it works and is arguably simpler that using the Python C API correctly in this
-            # use case - at least I'm lazy enough to assume so
-            # This first element is the pointer to the coord-to-index hashmap
-            self._pointers = np.empty(1, dtype=np.uint64)
-        else:
-            # If pointers are not eight bytes, it is probably a thirty-two bit system, so uint32 is used to store pointers
-            # 32-bit systems are not officially supported, but this probably works
-            self._pointers = np.empty(1, dtype=np.uint32)
+        # The pointers array is used to store pointers from objects allocated in the C code and pass them between calls
+        # This is very ugly and hacky but it works and is arguably simpler that using the Python C API correctly in this
+        # use case - at least I'm lazy enough to assume so
+        # This first element is the pointer to the coord-to-index hashmap
+        self._pointers = np.empty(1, dtype=np.uint64)
 
-        self._index_args = c_utils.get_array_c_args(self._grid_coords)
-        self._pointer_args = c_utils.get_array_c_args(self._pointers)
-        self._wrap_axis_sizes_args = c_utils.get_array_c_args(self._wrap_axis_sizes)
+        self._index_args = c_utils.ArrayArgs(self._grid_coords)
+        self._pointer_args = c_utils.ArrayArgs(self._pointers)
+        self._wrap_axis_sizes_args = c_utils.ArrayArgs(self._wrap_axis_sizes)
         _c.build_lookup_table(
             self._pointer_args.array_ptr,
             self._wrap_axis_sizes_args.array_ptr,

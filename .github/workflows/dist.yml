@@ -9,56 +9,69 @@ on:
 
 jobs:
   build_wheels:
-    name: Build wheels for ${{ matrix.python }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Build wheels for ${{ matrix.python }} on ${{ matrix.target.os }}
+    runs-on: ${{ matrix.target.os }}
     strategy:
       matrix:
-        # Operating systems for which pre-built wheels are provided
-        os: [ ubuntu-latest, ubuntu-26.04-arm, windows-latest, windows-11-arm, macos-latest ]
+        target:
+        # Linux
+        - os: ubuntu-latest
+          arch: x86_64
+        - os: ubuntu-26.04-arm
+          arch: aarch64
+
+        # Windows
+        - os: windows-latest
+          arch: AMD64
+        - os: windows-11-arm
+          arch: ARM64
+
+        # MacOS
+        - os: macos-latest
+          arch: arm64
         # Python versions for which pre-built wheels are provided
         # See supported versions at https://cibuildwheel.pypa.io/en/stable/#what-does-it-do
         # Be aware that all versions need to be supported by the used version of cibuildwheel
         # https://github.com/pypa/cibuildwheel/releases
-        python: [ 'cp311', 'cp312', 'cp313', 'cp314' ]
+        python: [ cp311, cp312, cp313, cp313, cp314, cp314t, cp315, cp315t ]
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.1
+        uses: pypa/cibuildwheel@v4.2.0
         env:
           CIBW_BUILD: "${{ matrix.python }}-*"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
-          CIBW_SKIP: "*musllinux*"
+          CIBW_SKIP: "*musllinux* *win32"
           CIBW_BUILD_VERBOSITY: 1
-          # CIBW_ARCHS_LINUX is not set as it is handled automatically by the different specified ubuntu versions
-          CIBW_ARCHS_MACOS: arm64
-          CIBW_ARCHS_WINDOWS: AMD64
           # Install the CPU version of torch before installing the rest of the package
           # This prevents it from installing the full CUDA version of torch and associated dependencies (default on Linux)
           # This massively speeds up the installation process and requires much less disk space
-          CIBW_BEFORE_TEST: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install .[dev]
+          CIBW_BEFORE_TEST: pip install torch --index-url https://download.pytorch.org/whl/cpu
+          CIBW_TEST_EXTRAS: dev
           # Tests are much more platform dependant than linting and type checking, so only unit tests are carried out per-platform
           CIBW_TEST_COMMAND: pytest {project}/tests
+          # torch has no 3.15 wheels yet; skip tests there so the build still produces artifacts
+          # Windows 11 arm builds are being a bitch with installing torch for testing, so that is skipped as well
+          CIBW_TEST_SKIP: "cp315-* cp315t-* *-win_arm64"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
-          name: wheels-${{ matrix.os }}-${{ matrix.python }}
+          name: wheels-${{ matrix.target.os }}-${{ matrix.python }}
           path: ./wheelhouse/*.whl
 
   make_sdist:
     name: Make source dist
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
+    - uses: actions/checkout@v7
 
     - name: Build source dist
       run: python setup.py sdist
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         path: dist/*.tar.gz
 
@@ -68,7 +81,7 @@ jobs:
     # Upload to PyPI when pushing new version tag
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         pattern: '*'
         path: dist

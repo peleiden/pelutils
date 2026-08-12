@@ -20,5 +20,8 @@ static struct PyModuleDef _pelutils_c_module = {
 
 PyMODINIT_FUNC PyInit__pelutils_c(void) {
     PyObject *module = PyModule_Create(&_pelutils_c_module);
+    #ifdef Py_GIL_DISABLED
+        PyUnstable_Module_SetGIL(module, Py_MOD_GIL_NOT_USED);
+    #endif
     return module;
 }
