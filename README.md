@@ -288,9 +288,13 @@ def process(features: FloatArray, labels: IntArray, mask: BoolArray): ...
 
 ## Supported platforms
 
-Precompiled wheels are provided for most common platforms (not 32-bit systems). If no
-wheel matches, `pip` builds from source which requires `<Python.h>` — install it with
+Precompiled wheels are provided for most common platforms.
+If no wheel matches, `pip` builds from source which requires `<Python.h>` — install it with
 `sudo apt install python3-dev` (Ubuntu) or `sudo dnf install python3-devel` (Fedora).
+
+32-bit systems are not officially supported, but `pelutils` should still mostly work.
+C-dependent functionality (namely `unique` and `SparseGridBlobDetection`) may work, but there is no guarantee that the code will not immediately segfault.
+Wheels are not provided for 32-bit systems.
 
 ## Updating and releasing
 
