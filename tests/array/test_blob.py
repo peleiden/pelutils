@@ -5,16 +5,19 @@ from pelutils.array import SparseGridBlobDetection
 
 
 class TestSparseGridBlobDetection:
-    simple_grid = np.array([0, 0, 1, 1, 1, 0])
-    fancy_grid = np.array([
-        [1, 0, 0, 1, 1, 0],
-        [1, 0, 1, 0, 1, 0],
-        [1, 1, 0, 1, 1, 0],
-        [0, 0, 0, 1, 0, 0],
-        [1, 0, 0, 1, 0, 0],
-        [1, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0],
-    ])
+    simple_grid = np.array([0, 0, 1, 1, 1, 0], dtype=bool)
+    fancy_grid = np.array(
+        [
+            [1, 0, 0, 1, 1, 0],
+            [1, 0, 1, 0, 1, 0],
+            [1, 1, 0, 1, 1, 0],
+            [0, 0, 0, 1, 0, 0],
+            [1, 0, 0, 1, 0, 0],
+            [1, 0, 0, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0],
+        ],
+        dtype=bool,
+    )
 
     def test_error_handling(self):
         with pytest.raises(TypeError):
@@ -27,9 +30,10 @@ class TestSparseGridBlobDetection:
 
     def test_empty_grid(self):
         detector = SparseGridBlobDetection(np.empty((0, 5), dtype=int))
+        assert detector.done
         assert len(detector.find_all_blobs()) == 0
-        with pytest.raises(RuntimeError):
-            detector.find_all_blobs()
+        assert detector.done
+        assert len(detector.find_all_blobs()) == 0
         detector = SparseGridBlobDetection(np.empty((0, 5), dtype=int))
         with pytest.raises(IndexError):
             detector.find_single_blob(0)
@@ -37,7 +41,9 @@ class TestSparseGridBlobDetection:
     def test_simple_grid(self):
         indices = np.column_stack(np.where(self.simple_grid))
         detector = SparseGridBlobDetection(indices)
+        assert not detector.done
         blob = detector.find_single_blob(0)
+        assert detector.done
         assert len(blob) == 3
         assert (self.simple_grid[indices[blob, 0]] == 1).all()
 
@@ -78,7 +84,9 @@ class TestSparseGridBlobDetection:
     def test_fancy_grid(self):
         indices = np.column_stack(np.where(self.fancy_grid))
         detector = SparseGridBlobDetection(indices)
+        assert not detector.done
         blobs = detector.find_all_blobs()
+        assert detector.done
         assert detector._visited.all()
         assert len(blobs) == 4
         assert sorted([len(blob) for blob in blobs]) == [1, 2, 4, 10]
@@ -102,7 +110,9 @@ class TestSparseGridBlobDetection:
     def test_wrapping(self):
         indices = np.column_stack(np.where(self.fancy_grid))
         detector = SparseGridBlobDetection(indices, wrap_axes={1: self.fancy_grid.shape[1]})
+        assert not detector.done
         blobs = detector.find_all_blobs()
+        assert detector.done
         assert detector._visited.all()
         assert len(blobs) == 3
         assert sorted([len(blob) for blob in blobs]) == [1, 4, 12]
