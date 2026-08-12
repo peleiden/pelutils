@@ -3,6 +3,7 @@
 ## 4.2.1 - Unreleased
 
 - Expose `SparseGridBlobDetection.done` and improve behaviour on empty grids.
+- Provide builds ARM builds for Windows.
 
 ## 4.2.0
 

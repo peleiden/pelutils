@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         # Operating systems for which pre-built wheels are provided
-        os: [ ubuntu-24.04, ubuntu-24.04-arm, windows-latest, macos-latest ]
+        os: [ ubuntu-latest, ubuntu-26.04-arm, windows-latest, windows-11-arm, macos-latest ]
         # Python versions for which pre-built wheels are provided
         # See supported versions at https://cibuildwheel.pypa.io/en/stable/#what-does-it-do
         # Be aware that all versions need to be supported by the used version of cibuildwheel
