@@ -1,5 +1,9 @@
 # History
 
+## 4.2.1 - Unreleased
+
+- Expose `SparseGridBlobDetection.done` and improve behaviour on empty grids.
+
 ## 4.2.0
 
 - Clarify behaviour of `nargs` in `RequiredArg` and `OptionalArg`, and remove inappropriate assert.

@@ -57,8 +57,6 @@ class SparseGridBlobDetection:
         self._visited = np.zeros(self._grid_coords.shape[0], dtype=bool)
         # Next row in _grid_coords from which to start a search
         self._next_index = 0
-        # Set to True when all coordinates have been visited
-        self._done = False
         # For each axes that should be wrapped, the size of the axis in the grid is stored
         # For axes which should not be wrapped, 0 is used
         self._wrap_axis_sizes = np.zeros(self._grid_coords.shape[1], dtype=np.uint64)
@@ -89,11 +87,18 @@ class SparseGridBlobDetection:
         )
 
     @property
+    def done(self) -> bool:
+        """True if all coordinates have been explored and there are no more blobs to discover."""
+        return self._next_index == len(self._grid_coords)
+
+    @property
     def next_index(self) -> int:
         """Return the index of the first unvisited coordinate.
 
         This starts at ``0`` and advances as blobs are detected, whether by :meth:`find_single_blob` or :meth:`find_all_blobs`.
         It reaches ``len(grid_coords)`` when all coordinates have been visited, and there are no more blobs to be found.
+        This is equivalent to :meth:`done` being ``True``.
+
         When a blob is detected, if the current value is part of that blob, it will increase to the index of the first coordinate
         which has not been visited.
         """
@@ -115,12 +120,10 @@ class SparseGridBlobDetection:
         if grid_coords.shape[1] == 0:
             raise ValueError("Coordinates cannot be 0-dimensional")
 
-    def _mark_visited(self, indices: IntArray) -> bool:
+    def _mark_visited(self, indices: IntArray):
         self._visited[indices] = True
         while self._next_index < len(self._visited) and self._visited[self._next_index]:
             self._next_index += 1
-        self._done = self._next_index == len(self._visited)
-        return self._done
 
     def find_single_blob(self, init_index: int | None = None) -> IntArray:
         """Detect one blob starting at ``grid_coords[init_index]``, or ``grid_coords[self.next_index]`` if ``init_index`` is not provided.
@@ -129,6 +132,8 @@ class SparseGridBlobDetection:
         """
         if init_index is None:
             init_index = self.next_index
+        if init_index >= len(self._grid_coords):
+            raise IndexError(f"Cannot start blob search from index {init_index} as there are only {len(self._grid_coords)} coordinates")
         if self._visited[init_index]:
             raise RuntimeError(f"Blob at index {init_index} ({self._grid_coords[init_index]}) has already been visited")
         blob_indices: list[int] = list()
@@ -151,14 +156,17 @@ class SparseGridBlobDetection:
 
         For each detected blob, an array is returned containing the rows in ``grid_coords`` which are part of that blob.
         """
-        if self._done:
+        if len(self._grid_coords) == 0:
+            return list()
+        if self.done:
             raise RuntimeError("Blob detection has already been run")
 
         indices = np.array([], dtype=np.int64)
         blobs: list[IntArray] = list()
-        while not self._mark_visited(indices):
+        while not self.done:
             indices = self.find_single_blob()
             blobs.append(indices)
+            self._mark_visited(indices)
 
         return blobs
 
