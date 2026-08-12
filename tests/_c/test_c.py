@@ -13,14 +13,14 @@ def test_get_c_array_args():
     for dtype in int, float, np.float16, np.int32:
         shape = (2, 4, 3)
         np_arr = np.empty(shape, dtype=dtype)
-        arr_p, ndim, dims_p, strides_p = c_utils.get_array_c_args(torch.from_numpy(np_arr))
-        assert arr_p == np_arr.ctypes.data
-        assert ndim == len(shape)
+        args = c_utils.ArrayArgs(torch.from_numpy(np_arr))
+        assert args.array_ptr == np_arr.ctypes.data
+        assert args.ndim == len(shape)
 
         itemsize = np.dtype(np.uint).itemsize
         s = np_arr.dtype.itemsize
         for i, d in enumerate(shape[::-1]):
             i = len(shape) - i - 1  # noqa: PLW2901
-            assert d == ctypes.c_uint64.from_address(dims_p + i * itemsize).value
-            assert s == ctypes.c_uint64.from_address(strides_p + i * itemsize).value
+            assert d == ctypes.c_uint64.from_address(args.dims_ptr + i * itemsize).value
+            assert s == ctypes.c_uint64.from_address(args.strides_ptr + i * itemsize).value
             s *= d

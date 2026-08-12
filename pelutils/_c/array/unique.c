@@ -20,15 +20,12 @@ static int compare(const void *elem1, const void *elem2, void *udata) {
 }
 
 PyObject *unique(PyObject *self, PyObject *args) {
-    /* Do NOT use int, long, size_t etc., as these can cause cross-platform issues.
-    See https://stackoverflow.com/questions/7456902/long-vs-int-c-c-whats-the-point.
-    */
     void *array;
-    long long ndim;
-    i64 *dimensions, *strides;
+    u64 ndim;
+    u64 *dimensions, *strides;
     i64 *index, *inverse, *counts;
     // See format specifiers at https://docs.python.org/3.11/c-api/arg.html#strings-and-buffers
-    if (!PyArg_ParseTuple(args, "LLLLLLL", &array, &ndim, &dimensions, &strides, &index, &inverse, &counts))
+    if (!PyArg_ParseTuple(args, "KKKKKKK", &array, &ndim, &dimensions, &strides, &index, &inverse, &counts))
         return NULL;
 
     u64 n = dimensions[0];

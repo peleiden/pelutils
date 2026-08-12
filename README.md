@@ -292,9 +292,8 @@ Precompiled wheels are provided for most common platforms.
 If no wheel matches, `pip` builds from source which requires `<Python.h>` — install it with
 `sudo apt install python3-dev` (Ubuntu) or `sudo dnf install python3-devel` (Fedora).
 
-32-bit systems are not officially supported, but `pelutils` should still mostly work.
-C-dependent functionality (namely `unique` and `SparseGridBlobDetection`) may work, but there is no guarantee that the code will not immediately segfault.
-Wheels are not provided for 32-bit systems.
+32-bit systems are not fully supported.
+Most of the library is Python-only and should work but using any C-dependent code (namely `unique` and `SparseGridBlobDetection`) is likely to end in a segfault.
 
 ## Updating and releasing
 

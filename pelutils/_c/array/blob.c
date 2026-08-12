@@ -32,7 +32,7 @@ PyObject *build_lookup_table(PyObject *self, PyObject *args) {
     long long num_indices;
     long long ndim;
 
-    if (!PyArg_ParseTuple(args, "LLLLL", &pointers, &wrap_axis_sizes, &index_array, &num_indices, &ndim))
+    if (!PyArg_ParseTuple(args, "KKKKK", &pointers, &wrap_axis_sizes, &index_array, &num_indices, &ndim))
         return NULL;
 
 
@@ -51,7 +51,7 @@ PyObject *build_lookup_table(PyObject *self, PyObject *args) {
 PyObject *free_lookup_table(PyObject *self, PyObject *args) {
     void **pointers;
 
-    if (!PyArg_ParseTuple(args, "L", &pointers))
+    if (!PyArg_ParseTuple(args, "K", &pointers))
         return NULL;
 
     hashmap *map = (hashmap *)pointers[0];
@@ -73,7 +73,7 @@ PyObject *find_blob(PyObject *self, PyObject *args) {
     // Rows in index_array belonging to the blob are stored here
     PyObject *blob_indices_list;
     // See format specifiers at https://docs.python.org/3.11/c-api/arg.html#strings-and-buffers
-    if (!PyArg_ParseTuple(args, "LLLLLLO!", &pointers, &wrap_axis_sizes, &index_array, &start_index, &num_indices, &ndim, &PyList_Type, &blob_indices_list))
+    if (!PyArg_ParseTuple(args, "KKKKKKO!", &pointers, &wrap_axis_sizes, &index_array, &start_index, &num_indices, &ndim, &PyList_Type, &blob_indices_list))
         return NULL;
 
     hashmap *coord_to_index = pointers[0];
