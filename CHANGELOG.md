@@ -1,6 +1,6 @@
 # History
 
-## 4.2.1 - Unreleased
+## 4.2.1
 
 - Expose `SparseGridBlobDetection.done` and improve behaviour on empty grids.
 - Provide wheels ARM builds for Windows.
