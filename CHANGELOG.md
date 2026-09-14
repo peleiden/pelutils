@@ -3,6 +3,8 @@
 ## 4.3.1
 
 - Improve `serialization` documentation.
+- Improve `stats` documentation.
+- Make `SparseGridBlobDetection` uncopiable and unpickleable.
 
 ## 4.3.0
 
