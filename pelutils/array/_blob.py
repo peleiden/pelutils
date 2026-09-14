@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from typing import SupportsIndex
+
 import _pelutils_c as _c
 import numpy as np
+from typing_extensions import override
 
 import pelutils._c as c_utils
 from pelutils.types import BoolArray, IntArray
@@ -171,3 +174,21 @@ class SparseGridBlobDetection:
             # If the error happens early in init (e.g. wrong call to __init__), _pointer_args has not yet been defined,
             # and the hashmap has not been created
             pass
+
+    def __copy__(self):
+        """Prevent shallow copies of the C-backed detector."""
+        raise TypeError("SparseGridBlobDetection instances cannot be copied or pickled")
+
+    def __deepcopy__(self, memo: dict[int, object]):
+        """Prevent deep copies of the C-backed detector."""
+        raise TypeError("SparseGridBlobDetection instances cannot be copied or pickled")
+
+    @override
+    def __reduce__(self):
+        """Prevent pickling of the C-backed detector."""
+        raise TypeError("SparseGridBlobDetection instances cannot be copied or pickled")
+
+    @override
+    def __reduce_ex__(self, protocol: SupportsIndex):
+        """Prevent protocol-specific pickling of the C-backed detector."""
+        raise TypeError("SparseGridBlobDetection instances cannot be copied or pickled")
