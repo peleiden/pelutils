@@ -228,18 +228,18 @@ values, index, inverse, counts = unique(
 
 ### Statistics
 
-Common statistical helpers, plus wrappers around scipy distributions reparametrised
-as in Jim Pitman's *Probability* (rather than scipy's `loc`/`scale`, which are
+Common statistical helpers, plus wrappers around SciPy distributions reparametrised
+as in Jim Pitman's *Probability* (rather than SciPy's `loc`/`scale`, which are
 unintuitive for many distributions).
 
 ```py
-from pelutils.stats import z_score
 from pelutils.stats import expon
+from pelutils.stats import z_score
 
-# 95 % confidence interval half-width for a standard normal (defaults give ~1.96)
-half_width = std * z_score()
+# 95 % confidence interval half-width for a standard normal
+half_width = z_score()  # standard deviation is 1
 
-# One-sided z value for an Exponential(λ=2) at the 1 % significance level
+# Upper 1 % critical value for an Exponential(lambda=2)
 zval = z_score(alpha=0.01, two_sided=False, distribution=expon(lambda_=2))
 ```
 
