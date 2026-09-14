@@ -1,3 +1,6 @@
+import copy
+import pickle
+
 import numpy as np
 import pytest
 
@@ -27,6 +30,16 @@ class TestSparseGridBlobDetection:
         with pytest.raises(ValueError):
             SparseGridBlobDetection(np.array([[]], dtype=int))
         SparseGridBlobDetection(np.array([[1, 2], [2, 3]], dtype=np.uint8))
+
+    def test_cannot_copy_or_pickle(self):
+        detector = SparseGridBlobDetection(np.array([[0], [1]]))
+
+        with pytest.raises(TypeError, match="cannot be copied or pickled"):
+            copy.copy(detector)
+        with pytest.raises(TypeError, match="cannot be copied or pickled"):
+            copy.deepcopy(detector)
+        with pytest.raises(TypeError, match="cannot be copied or pickled"):
+            pickle.dumps(detector)
 
     def test_empty_grid(self):
         detector = SparseGridBlobDetection(np.empty((0, 5), dtype=int))
