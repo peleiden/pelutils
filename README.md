@@ -138,10 +138,15 @@ importantly one per thread, as profiling is not thread-safe.
 
 ## Serialisation
 
-`UniversalJsonModel` extends `pydantic.BaseModel` with `save`/`load` methods and can
-serialise attributes that pydantic cannot — numpy arrays, tensors, and arbitrary
-objects are base64-pickled inline, everything else stays plain, human-readable JSON.
-Long lists are wrapped to the line-length limit instead of one element per line.
+`UniversalJsonModel` is for storing Pydantic models that contain a mixture of ordinary JSON
+values and Python-specific values. Ordinary values remain JSON, so the file structure can be
+inspected and diffed. Values that JSON cannot represent, such as NumPy arrays, tensors, and
+other Python objects, are stored as base64-encoded pickle payloads.
+
+The `save()` and `load()` methods support convient file-based workflows.
+`save()` serialises the model to a JSON file, while `load()` reconstructs the model from one.
+Use `to_json_dict()` and `from_json_dict(...)` when the serialized representation belongs inside
+another structure or is handled by another storage layer.
 
 ```py
 import numpy as np
@@ -167,11 +172,14 @@ result.save("results/run-1.json")
 result = Result.load("results/run-1.json")
 ```
 
-Use `to_json_dict()` / `from_json_dict(...)` to convert to and from a plain dict
-without touching the filesystem — useful for nesting inside other structures. The
-`pretty_json` helper function is also available on its own. The `serialization`
-module also includes JSONL read/write helpers (`jsonl_dump`, `jsonl_load`, ...)
-with largely the same interface as is provided by the built-in `json` module.
+`pretty_json` is a string-returning formatter for standalone dictionaries and lists. It fills the
+same role as `json.dumps`, with compact nested containers and wrapped primitive lists; write the
+returned string to a file when needed. The module also includes JSONL read/write helpers
+(`jsonl_dump`, `jsonl_load`, ...) for newline-delimited records.
+
+This format is intended for trusted configuration objects, application state, experiment results, etc., not as a
+language-neutral interchange format. Pickle payloads are Python-specific and loading them can
+execute arbitrary code. Do not load files from untrusted sources.
 
 ## Config and command-line argument parsing
 

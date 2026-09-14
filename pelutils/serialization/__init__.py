@@ -1,19 +1,20 @@
-"""JSON persistence for values that plain ``json`` and even ``pydantic`` cannot handle.
+"""JSON persistence for Pydantic models containing non-JSON values.
 
-Persisting data, whatever it may be, to disk usually usually comes down to a choice between
-human-readable or not. If efficiency is not crucial, human-readable is preferable, but often
-times, the data is not trivially serialisable to human-friendly formats. While ``pydantic``'s
-``BaseModel.model_dump`` takes you some of the way, it falls short as soon as you introduce
-data types which are not JSON-serialisable by default, making pickling the default choice and
-ending up with an unreadable binary blob.
+JSON is useful when the structure of a file should remain inspectable, but it does not represent
+values such as NumPy arrays, tensors, or arbitrary Python objects. ``UniversalJsonModel``
+keeps JSON-native values in the document and stores unsupported field values as base64-encoded
+pickle payloads. This preserves a readable JSON envelope without requiring callers to write
+converters for every field type.
 
-Even if all data is easily serialisable to a readable format, you still have to deal with all
-the boilerplate of ensuring parent directories exist, and opening and closing files.
+The usual interface is :meth:`UniversalJsonModel.save` and
+:meth:`UniversalJsonModel.load`. ``save`` creates missing parent directories and writes the model to a JSON
+file; ``load`` reconstructs the model from that file. Use :meth:`UniversalJsonModel.to_json_dict`
+and :meth:`UniversalJsonModel.from_json_dict` when the serialized representation should be nested
+inside another structure or handled by another storage layer.
 
-Enter :class:`UniversalJsonModel` — a ``pydantic.BaseModel`` whose
-``save``/``load`` methods serialise/deserialise *any* attribute: JSON-native values stay plain and
-human-readable, while anything else (numpy arrays, torch tensors, arbitrary objects) is
-pickled and base64-encoded inline. The output is a single, easily readable JSON file.
+For standalone dictionaries and lists, ``pretty_json`` converts Python objects to pretty-formatted JSON,
+filling the same role as ``json.dumps``, but often making the resulting JSON more readable.
+JSONL helpers handle files containing multiple JSON records separated by newlines.
 
 Quick start
 -----------
@@ -32,16 +33,15 @@ Quick start
     result.save("results/run-1.json")
     result = Result.load("results/run-1.json")
 
-The module also exposes :func:`pretty_json`, a function similar to the built-in `json.dumps`,
-but which formats the given object to a pretty JSON string;
-short containers stay on one line, and long primitive lists are packed across both the width and height
-of the file.
-JSONL helpers (:func:`jsonl_dump`, :func:`jsonl_load`, and their string variants) for files where each
-line is its own JSON object are also provided.
+This format is intended for trusted application data such as experiment results and cached state,
+not as a language-neutral interchange format. Pickle payloads are Python-specific, and loading
+them can execute arbitrary code. Use a format with an explicit schema and safe decoder when data
+comes from outside the application.
 
 .. warning::
 
-    Loading pickles executes arbitrary code, so never ``load`` data from an untrusted source.
+    ``UniversalJsonModel.load`` and the pickle fallback execute code while loading. Never load
+    files from an untrusted source.
 """
 
 from ._jsonl import jsonl_dump, jsonl_dumps, jsonl_load, jsonl_loads
