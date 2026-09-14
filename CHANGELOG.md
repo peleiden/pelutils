@@ -1,5 +1,9 @@
 # History
 
+## 4.3.1
+
+- Improve `serialization` documentation.
+
 ## 4.3.0
 
 - Added legacy module for exposing old functionality which is very hard to upgrade.
