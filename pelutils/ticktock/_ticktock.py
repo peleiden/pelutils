@@ -1,8 +1,9 @@
+import itertools
+import threading
 import warnings
 from collections.abc import Hashable, Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from copy import deepcopy
-from threading import current_thread
 from time import perf_counter
 from typing import TypeAlias, TypeVar, cast
 
@@ -22,6 +23,20 @@ _time_units: tuple[_TimeUnit, ...] = (
 )
 
 T = TypeVar("T")
+
+_lock = threading.RLock()
+_active_ticktocks: "dict[int, TickTock]" = dict()
+_ids = itertools.count()
+_ids_lock = threading.RLock()
+_local_thread = threading.local()
+
+
+def _get_thread_uid() -> int:
+    """Return a stable, program-lifetime-unique ID for the calling thread."""
+    if not hasattr(_local_thread, "__ticktock_uid__"):
+        with _ids_lock:
+            _local_thread.__ticktock_uid__ = next(_ids)
+    return _local_thread.__ticktock_uid__
 
 
 def _get_smallest_suitable_unit(duration_s: float) -> _TimeUnit:
@@ -160,8 +175,8 @@ class TickTock:
         self._profile_stack: list[Profile] = list()  # LIFO stack of active profiles
         self._root_profiles: list[Profile] = list()  # Top level profiles
 
-        self._thread_name = current_thread().name
-        self._thread_id = id(current_thread())
+        self._thread_name = threading.current_thread().name
+        self._thread_id = _get_thread_uid()
 
     def tick(self, key: Hashable = None):
         """Start a timer identified by an optional hashable key."""
@@ -244,10 +259,10 @@ class TickTock:
             self._end_profile()
 
     def _warn_if_wrong_thread(self, *, stacklevel: int):
-        if self._thread_id != id(current_thread()):
+        if self._thread_id != _get_thread_uid():
             warnings.warn(
                 f"This TickTock instance was created in the {self._thread_name} thread but profiling was started in "
-                + f"{current_thread().name}. Profiling is NOT designed to deal with multiple threads. Instead, create a "
+                + f"{threading.current_thread().name}. Profiling is NOT designed to deal with multiple threads. Instead, create a "
                 + "TickTock instance for each thread requiring profiling.",
                 stacklevel=stacklevel,
             )
@@ -393,8 +408,8 @@ class TickTock:
             raise ValueError("Some TickTocks are the same instance, which is not allowed")
         for tt in tts[1:]:
             ticktock.fuse(tt)
-        ticktock._thread_name = current_thread().name
-        ticktock._thread_id = id(current_thread())
+        ticktock._thread_name = threading.current_thread().name
+        ticktock._thread_id = _get_thread_uid()
         return ticktock
 
     @staticmethod
@@ -446,5 +461,35 @@ class TickTock:
         """Return True if any profiling has been performed."""
         return len(self._root_profiles) > 0
 
+    @contextmanager
+    def as_active(self):
+        """Set the ``TickTock`` instance as the active instance in the current thread.
 
+        It can then be retrieved with :func:`get_active_ticktock`.
+        """
+        current_thread_id = _get_thread_uid()
+        with _lock:
+            if current_thread_id in _active_ticktocks:
+                raise TickTockException(f"An active TickTock instance has already been set in thread {threading.current_thread().name}")
+            _active_ticktocks[current_thread_id] = self
+        try:
+            yield
+        finally:
+            with _lock:
+                del _active_ticktocks[current_thread_id]
+
+
+def get_active_ticktock() -> TickTock:
+    """Return the active ``TickTock`` instance in the current thread (as set by :meth:`TickTock.as_active`).
+
+    If no active ``TickTock`` is set, a new ``TickTock`` instance is returned.
+    This allows normal profiling usage without having to care if it's actually used or not.
+    """
+    with _lock:
+        ticktock = _active_ticktocks.get(_get_thread_uid())
+    return ticktock if ticktock is not None else TickTock()
+
+
+# Globally accessible default instance
+# It suffices to use this for most cases
 TT = TickTock()

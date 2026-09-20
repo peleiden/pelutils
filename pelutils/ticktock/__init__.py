@@ -37,6 +37,6 @@ periodic tasks, and ``fuse``/``fuse_multiple`` for combining results across
 processes.
 """
 
-from ._ticktock import TT, Profile, TickTock, TickTockException
+from ._ticktock import TT, Profile, TickTock, TickTockException, get_active_ticktock
 
-__all__ = ("TT", "Profile", "TickTock", "TickTockException")
+__all__ = ("TT", "Profile", "TickTock", "TickTockException", "get_active_ticktock")
