@@ -1,9 +1,9 @@
 from copy import deepcopy
-from threading import Thread
+from threading import Event, Thread
 
 import pytest
 
-from pelutils.ticktock import TT, Profile, TickTock, TickTockException
+from pelutils.ticktock import TT, Profile, TickTock, TickTockException, get_active_ticktock
 from pelutils.ticktock._ticktock import _get_smallest_suitable_unit
 
 
@@ -408,3 +408,50 @@ def test_active():
     with tt.profile("test"):
         pass
     assert tt.has_profiles
+
+
+def test_active_ticktock():
+    first = get_active_ticktock()
+    second = get_active_ticktock()
+    assert isinstance(first, TickTock)
+    assert first is not second
+
+    tt = TickTock()
+    other = TickTock()
+    with tt.as_active():
+        assert get_active_ticktock() is tt
+        with pytest.raises(TickTockException):
+            with other.as_active():
+                pass
+        assert get_active_ticktock() is tt
+    assert get_active_ticktock() is not tt
+
+
+def test_active_ticktock_cleanup_on_exception():
+    tt = TickTock()
+    with pytest.raises(RuntimeError, match="failed"):
+        with tt.as_active():
+            raise RuntimeError("failed")
+
+    assert get_active_ticktock() is not tt
+    with tt.as_active():
+        assert get_active_ticktock() is tt
+
+
+def test_active_ticktock_is_thread_local():
+    active = Event()
+    release = Event()
+    tt = TickTock()
+
+    def activate():
+        with tt.as_active():
+            active.set()
+            release.wait()
+
+    thread = Thread(target=activate)
+    thread.start()
+    assert active.wait(timeout=1)
+    assert get_active_ticktock() is not tt
+    release.set()
+    thread.join(timeout=1)
+    assert not thread.is_alive()

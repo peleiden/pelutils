@@ -1,5 +1,9 @@
 # History
 
+## 4.4.0
+
+- Add `TickTock.as_active` context manager and corresponding `get_active_ticktock`.
+
 ## 4.3.1
 
 - Improve `serialization` documentation.
