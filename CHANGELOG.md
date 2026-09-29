@@ -1,5 +1,9 @@
 # History
 
+## 4.4.1 (Unreleased)
+
+- Allow passing Pydantic serialization and validation options to `UniversalJsonModel` JSON-dictionary methods.
+
 ## 4.4.0
 
 - Add `TickTock.as_active` context manager and corresponding `get_active_ticktock`.
