@@ -22,9 +22,15 @@ class UniversalJsonModel(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    def to_json_dict(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
-        """Return a JSON-compatible dictionary, pickle-encoding unsupported values."""
-        return self.model_dump(mode="json", fallback=pickle_encode)
+    def to_json_dict(self, **model_dump_kwargs: Any) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
+        """Return a JSON-compatible dictionary, pickle-encoding unsupported values.
+
+        Keyword arguments are forwarded to :meth:`pydantic.BaseModel.model_dump`, except
+        ``mode`` and ``fallback``, which are fixed to preserve this method's JSON format.
+        """
+        if {"mode", "fallback"} & model_dump_kwargs.keys():
+            raise TypeError("'mode' and 'fallback' are fixed by to_json_dict()")
+        return self.model_dump(mode="json", fallback=pickle_encode, **model_dump_kwargs)
 
     @classmethod
     def from_json_dict(cls: type[Self], json_dict: dict[str, Any]) -> Self:  # pyright: ignore[reportExplicitAny]
