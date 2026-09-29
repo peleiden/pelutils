@@ -33,9 +33,7 @@ class UniversalJsonModel(BaseModel):
         return self.model_dump(mode="json", fallback=pickle_encode, **model_dump_kwargs)
 
     @classmethod
-    def from_json_dict(
-        cls: type[Self], json_dict: dict[str, Any], **model_validate_kwargs: Any
-    ) -> Self:  # pyright: ignore[reportExplicitAny]
+    def from_json_dict(cls: type[Self], json_dict: dict[str, Any], **model_validate_kwargs: Any) -> Self:  # pyright: ignore[reportExplicitAny]
         """Build a model from :meth:`to_json_dict` output. Do not load untrusted data.
 
         Keyword arguments are forwarded to :meth:`pydantic.BaseModel.model_validate`.
