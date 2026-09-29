@@ -51,6 +51,12 @@ data = WhackStorage(
 
 
 class TestUniversalJsonModel(UnitTestCollection):
+    def test_to_json_dict_forwards_model_dump_kwargs(self):
+        json_dict = data.to_json_dict(exclude={"date"})
+
+        assert "date" not in json_dict
+        assert json_dict["np_arr"].startswith(f"{_PICKLE_PREFIX}:")
+
     def test_save_load(self):
         # Test save and load with custom file name
         save_path = Path(self.test_dir) / "subdir 1" / "subdir 2" / "bollocks.json"
