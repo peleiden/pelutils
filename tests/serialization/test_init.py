@@ -4,6 +4,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 import torch
+from pydantic import ValidationError, field_serializer
+from pydantic_core import PydanticSerializationError
 
 from pelutils.serialization import UniversalJsonModel
 from pelutils.serialization._pretty_json import _PICKLE_PREFIX
@@ -33,6 +35,18 @@ class WhackStorage(UniversalJsonModel):
     collection: Collection
 
 
+class IntegerModel(UniversalJsonModel):
+    value: int
+
+
+class SerializerWarningModel(UniversalJsonModel):
+    value: int
+
+    @field_serializer("value", return_type=int)
+    def serialize_value(self, value: int) -> str:
+        return str(value)
+
+
 data = WhackStorage(
     date=date(2026, 1, 1),
     np_arr=np.arange(5, dtype=np.float16),
@@ -56,6 +70,18 @@ class TestUniversalJsonModel(UnitTestCollection):
 
         assert "date" not in json_dict
         assert json_dict["np_arr"].startswith(f"{_PICKLE_PREFIX}:")
+
+    def test_to_json_dict_forwards_model_dump_warnings(self):
+        model = SerializerWarningModel(value=1)
+
+        with pytest.raises(PydanticSerializationError, match="serializer warnings"):
+            model.to_json_dict(warnings="error")
+
+    def test_from_json_dict_forwards_model_validate_kwargs(self):
+        assert IntegerModel.from_json_dict({"value": "1"}).value == 1
+
+        with pytest.raises(ValidationError):
+            IntegerModel.from_json_dict({"value": "1"}, strict=True)
 
     def test_save_load(self):
         # Test save and load with custom file name
