@@ -3,6 +3,7 @@
 ## 4.4.1 (Unreleased)
 
 - Allow passing Pydantic serialization and validation options to `UniversalJsonModel` JSON-dictionary methods.
+- Add `AGENTS.md` and skills.
 
 ## 4.4.0
 
