@@ -24,23 +24,23 @@
 Run commands from the repository root. Use `uv` for dependency installation, builds,
 and invoking development tools; do not use `pip` or invoke project tools outside `uv run`.
 Install development dependencies and build the C extension with
-`uv sync --python 3.11 --group dev --locked` (requires a compiler and Python headers).
+`uv sync --python 3.11 --group dev` (requires a compiler and Python headers).
 The uv configuration selects the CPU-only PyTorch index. After changing C sources,
-rebuild with `uv sync --python 3.11 --group dev --reinstall-package pelutils --locked`.
+rebuild with `uv sync --python 3.11 --group dev --reinstall-package pelutils`.
 
 Run focused tests while iterating, e.g.
-`uv run --python 3.11 --locked pytest tests/array/test_unique.py`.
+`uv run --python 3.11 pytest tests/array/test_unique.py`.
 For code changes, use the checks from CI:
 
 ```sh
-uv run --python 3.11 --locked ruff check pelutils tests
-uv run --python 3.11 --locked ruff format --check pelutils tests
-uv run --python 3.11 --locked basedpyright pelutils
-uv run --python 3.11 --locked pytest tests --cov=pelutils
+uv run --python 3.11 ruff check pelutils tests
+uv run --python 3.11 ruff format --check pelutils tests
+uv run --python 3.11 basedpyright pelutils
+uv run --python 3.11 pytest tests --cov=pelutils
 ```
 
-Use `uv run --python 3.11 --locked ruff format` on changed Python files to format them.
-For documentation changes, run `uv run --python 3.11 --locked make -C docs html`.
+Use `uv run --python 3.11 ruff format` on changed Python files to format them.
+For documentation changes, run `uv run --python 3.11 make -C docs html`.
 Report checks that failed or could not be run.
 
 The distribution workflow uses cibuildwheel to build wheels and tests the installed
@@ -53,7 +53,7 @@ Ignore untracked local files, unless created as part current work.
 ## Miscellaneous
 
 - Add feature changes to the unreleased section of `CHANGELOG.md`. If none exists, create
-  the next version's section, mark it unreleased, and update `pelutils/__version__.py` to match.
+  the next version's section, mark it unreleased, and update `pyproject.toml`'s version to match.
   Semantic versioning should be followed.
 - Before committing nontrivial changes, request a subagent review. Typo-only and
   formatting-only changes are exempt. If delegation is unavailable, report that limitation.

@@ -15,15 +15,15 @@ Paths and commands below are relative to the repository root. Follow `AGENTS.md`
 3. For Python or C code changes, run the repository checks:
 
    ```sh
-   uv run --python 3.11 --locked ruff check pelutils tests
-   uv run --python 3.11 --locked ruff format --check pelutils tests
-   uv run --python 3.11 --locked basedpyright pelutils
-   uv run --python 3.11 --locked pytest tests --cov=pelutils
+   uv run --python 3.11 ruff check pelutils tests
+   uv run --python 3.11 ruff format --check pelutils tests
+   uv run --python 3.11 basedpyright pelutils
+   uv run --python 3.11 pytest tests --cov=pelutils
    ```
 
-   Install/sync dependencies with `uv sync --python 3.11 --group dev --locked` first.
-   Format only changed Python files when needed using `uv run --python 3.11 --locked ruff format`.
-   For documentation changes, run `uv run --python 3.11 --locked make -C docs html`.
+   Install/sync dependencies with `uv sync --python 3.11 --group dev` first.
+   Format only changed Python files when needed using `uv run --python 3.11 ruff format`.
+   For documentation changes, run `uv run --python 3.11 make -C docs html`.
    Guidance-only changes need content and whitespace review, not the code test suite.
    For wheel-build workflow changes, confirm cibuildwheel installs the built wheel
    after syncing the locked `dev` group and runs its tests through uv.

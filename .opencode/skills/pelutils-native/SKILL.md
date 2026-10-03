@@ -24,13 +24,13 @@ Paths and commands below are relative to the repository root. Follow `AGENTS.md`
 5. Rebuild the extension after C changes:
 
    ```sh
-   uv sync --python 3.11 --group dev --reinstall-package pelutils --locked
+   uv sync --python 3.11 --group dev --reinstall-package pelutils
    ```
 
    If rebuilding fails, report the blocker; an old extension does not validate
    new C sources. Do not commit generated binaries.
 6. Run affected tests through uv, then
-   `uv run --python 3.11 --locked pytest tests/_c tests/array` for shared native
+   `uv run --python 3.11 pytest tests/_c tests/array` for shared native
    changes. Distribution tests in `.github/workflows/dist.yml` use cibuildwheel to
    test the built wheel after syncing the locked `dev` group with uv. Use
    `pelutils-validate` for final checks and review.

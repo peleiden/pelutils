@@ -310,7 +310,7 @@ development tools. Install uv, then from the repository root sync the developmen
 environment (a C compiler and Python headers are required to build the native extension):
 
 ```sh
-uv sync --python 3.11 --group dev --locked
+uv sync --python 3.11 --group dev
 ```
 
 The `dev` dependency group includes CPU-only PyTorch and documentation tools.
@@ -319,19 +319,19 @@ Run checks and tools through `uv run`:
 
 ```sh
 # Linting and formatting
-uv run --python 3.11 --locked ruff format pelutils tests
-uv run --python 3.11 --locked ruff check pelutils tests
+uv run --python 3.11 ruff format pelutils tests
+uv run --python 3.11 ruff check pelutils tests
 # Type checking
-uv run --python 3.11 --locked basedpyright pelutils
+uv run --python 3.11 basedpyright pelutils
 # Unit tests
-uv run --python 3.11 --locked pytest tests --cov pelutils
+uv run --python 3.11 pytest tests --cov pelutils
 # Build docs
-uv run --python 3.11 --locked make -C docs html
+uv run --python 3.11 make -C docs html
 # Preview at docs/build/html/index.html
 ```
 
 After changing C sources, rebuild the extension with
-`uv sync --python 3.11 --group dev --reinstall-package pelutils --locked`.
+`uv sync --python 3.11 --group dev --reinstall-package pelutils`.
 
 The wheel-build CI tests each built wheel in a cibuildwheel environment provisioned
 from the locked `dev` group with uv; pytest runs against the installed wheel. Read the
@@ -342,7 +342,7 @@ Docs also syncs that group through uv.
 `pelutils` uses the `master` branch as a stable development branch.
 The `release` branch contains the latest version on PyPI.
 New features should be made in feature branches from `master` that can be merged into `master` once ready.
-When a new release is ready, update `pelutils/__version__.py` and rebase `master` onto `release`.
+When a new release is ready, update `pyproject.toml` and rebase `master` onto `release`.
 Then push a new tag from `release` named `vX.Y.Z`.
 
 When new code is merged into `master`, the checks listed above are run.
