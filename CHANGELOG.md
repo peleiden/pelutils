@@ -2,6 +2,7 @@
 
 ## 4.4.1 (Unreleased)
 
+- Clarify `TickTock` reset behavior while active.
 - Allow passing Pydantic serialization and validation options to `UniversalJsonModel` JSON-dictionary methods.
 - Add `AGENTS.md` and skills.
 
