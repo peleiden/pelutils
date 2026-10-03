@@ -11,7 +11,8 @@
 - Keep docstrings concise; add detail where needed to explain non-obvious behavior or constraints.
 - Add regression tests in the corresponding `tests/` directory for behavior changes.
   Update relevant docstrings and optionally `README.md` when changing documented behavior.
-- Native code lives in `pelutils/_c/` and builds as `_pelutils_c` via `setup.py`.
+- Native code lives in `pelutils/_c/` and builds as `_pelutils_c` through the
+  setuptools PEP 517 backend. Use `uv` for project builds and development commands.
   Rebuild after C changes; do not edit or commit compiled artifacts.
 - Keep Python tests focused on main use cases, relevant edge cases, and regressions.
   Test C changes more thoroughly, especially boundary conditions and invalid inputs.
@@ -20,24 +21,34 @@
 
 ## Setup and checks
 
-Run commands from the repository root. Install development dependencies and build the
-C extension with `python -m pip install -e '.[dev]'` (requires a compiler and Python headers).
-Repeat the install after changing C sources.
-For CPU-only development, first install PyTorch with
-`python -m pip install torch --index-url https://download.pytorch.org/whl/cpu`.
+Run commands from the repository root. Use `uv` for dependency installation, builds,
+and invoking development tools; do not use `pip` or invoke project tools outside `uv run`.
+Install development dependencies and build the C extension with
+`uv sync --python 3.11 --group dev --locked` (requires a compiler and Python headers).
+The uv configuration selects the CPU-only PyTorch index. After changing C sources,
+rebuild with `uv sync --python 3.11 --group dev --reinstall-package pelutils --locked`.
 
-Run focused tests while iterating, e.g. `python -m pytest tests/array/test_unique.py`.
+Run focused tests while iterating, e.g.
+`uv run --python 3.11 --locked pytest tests/array/test_unique.py`.
 For code changes, use the checks from CI:
 
 ```sh
-ruff check pelutils tests
-ruff format --check pelutils tests
-basedpyright pelutils
-python -m pytest tests --cov=pelutils
+uv run --python 3.11 --locked ruff check pelutils tests
+uv run --python 3.11 --locked ruff format --check pelutils tests
+uv run --python 3.11 --locked basedpyright pelutils
+uv run --python 3.11 --locked pytest tests --cov=pelutils
 ```
 
-Use `ruff format` on changed Python files to format them. For documentation changes,
-run `make -C docs html`. Report checks that failed or could not be run.
+Use `uv run --python 3.11 --locked ruff format` on changed Python files to format them.
+For documentation changes, run `uv run --python 3.11 --locked make -C docs html`.
+Report checks that failed or could not be run.
+
+The distribution workflow uses cibuildwheel to build wheels and tests the installed
+wheel with uv. Its test environment is synced from the locked `dev` group without
+installing the source project. Read the Docs also syncs the `dev` group with uv.
+
+Do not check `uv.lock` for updates.
+Ignore untracked local files, unless created as part current work.
 
 ## Miscellaneous
 

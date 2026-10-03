@@ -303,6 +303,40 @@ If no wheel matches, `pip` builds from source which requires `<Python.h>` — in
 32-bit systems are not fully supported.
 Most of the library is Python-only and should work but using any C-dependent code (namely `unique` and `SparseGridBlobDetection`) is likely to end in a segfault.
 
+## Development
+
+Use [uv](https://docs.astral.sh/uv/) for dependency management, builds, and running
+development tools. Install uv, then from the repository root sync the development
+environment (a C compiler and Python headers are required to build the native extension):
+
+```sh
+uv sync --python 3.11 --group dev --locked
+```
+
+The `dev` dependency group includes CPU-only PyTorch and documentation tools.
+
+Run checks and tools through `uv run`:
+
+```sh
+# Linting and formatting
+uv run --python 3.11 --locked ruff format pelutils tests
+uv run --python 3.11 --locked ruff check pelutils tests
+# Type checking
+uv run --python 3.11 --locked basedpyright pelutils
+# Unit tests
+uv run --python 3.11 --locked pytest tests --cov pelutils
+# Build docs
+uv run --python 3.11 --locked make -C docs html
+# Preview at docs/build/html/index.html
+```
+
+After changing C sources, rebuild the extension with
+`uv sync --python 3.11 --group dev --reinstall-package pelutils --locked`.
+
+The wheel-build CI tests each built wheel in a cibuildwheel environment provisioned
+from the locked `dev` group with uv; pytest runs against the installed wheel. Read the
+Docs also syncs that group through uv.
+
 ## Updating and releasing
 
 `pelutils` uses the `master` branch as a stable development branch.
@@ -311,17 +345,5 @@ New features should be made in feature branches from `master` that can be merged
 When a new release is ready, update `pelutils/__version__.py` and rebase `master` onto `release`.
 Then push a new tag from `release` named `vX.Y.Z`.
 
-When new code is merged into `master`, a number of checks are run.
-These can be tested locally with the following commands.
-```sh
-# Linting and formatting
-ruff format pelutils tests
-ruff check pelutils tests
-# Type checking
-basedpyright pelutils
-# Unit tests
-python -m pytest tests --cov pelutils
-# Build docs
-# Once build, open docs/build/html/index.html in your browser to see them
-make -C docs html
-```
+When new code is merged into `master`, the checks listed above are run.
+To build distribution artifacts locally, use `uv build --python 3.11`.

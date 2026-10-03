@@ -15,15 +15,19 @@ Paths and commands below are relative to the repository root. Follow `AGENTS.md`
 3. For Python or C code changes, run the repository checks:
 
    ```sh
-   ruff check pelutils tests
-   ruff format --check pelutils tests
-   basedpyright pelutils
-   python -m pytest tests --cov=pelutils
+   uv run --python 3.11 --locked ruff check pelutils tests
+   uv run --python 3.11 --locked ruff format --check pelutils tests
+   uv run --python 3.11 --locked basedpyright pelutils
+   uv run --python 3.11 --locked pytest tests --cov=pelutils
    ```
 
-   Format only changed Python files when needed. For documentation changes,
-   run `make -C docs html`. Guidance-only changes need content and whitespace
-   review, not the code test suite.
+   Install/sync dependencies with `uv sync --python 3.11 --group dev --locked` first.
+   Format only changed Python files when needed using `uv run --python 3.11 --locked ruff format`.
+   For documentation changes, run `uv run --python 3.11 --locked make -C docs html`.
+   Guidance-only changes need content and whitespace review, not the code test suite.
+   For wheel-build workflow changes, confirm cibuildwheel installs the built wheel
+   after syncing the locked `dev` group and runs its tests through uv.
+   Read the Docs should install documentation tools by syncing that same uv group.
 4. Check public submodule exports, type hints, API compatibility, and optional
    PyTorch behavior where affected. Confirm documentation describes current
    behavior, not development history.

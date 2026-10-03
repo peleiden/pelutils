@@ -1,0 +1,89 @@
+# uv_build does not support the native C extension; uv uses this PEP 517 backend.
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pelutils"
+dynamic = ["version"]
+description = "The Swiss army knife of Python projects"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE.txt", "pelutils/_c/hashmap/LICENSE"]
+authors = [
+    { name = "Asger Laurits Schultz", email = "asger.s@protonmail.com" },
+    { name = "Søren Winkel Holm", email = "swholm@protonmail.com" },
+]
+keywords = ["utility", "logger", "parser", "profiling", "plotting"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Free Threading :: 3 - Stable",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+]
+dependencies = [
+    "numpy>=2.0",
+    "gitpython>=3.1.0",
+    "rich>=10.0.0",
+    "py-cpuinfo>=8.0.0",
+    "psutil>=5.8.0",
+    "matplotlib>=3.3",
+    "scipy>=1.6",
+    "tqdm>=4.55",
+    "pydantic>=2",
+    "typing_extensions>=4.6",
+]
+
+[dependency-groups]
+dev = [
+    "torch>=2",
+    "pytest==8.4.2",
+    "pytest-cov==7.0.0",
+    "coveralls>=4.0.0",
+    "coverage==7.10.7",
+    "wheel",
+    "setuptools>=60.0.0",
+    "ruff==0.15.8",
+    "basedpyright==1.39.0",
+    "freezegun>=1.5",
+    "ipdb",
+    "sphinx",
+    "sphinx-autobuild",
+    "furo",
+    "myst-parser",
+]
+
+[project.scripts]
+linecounter = "pelutils._entry_points.linecounter:run"
+
+[project.urls]
+Homepage = "https://github.com/peleiden/pelutils"
+Download = "https://pypi.org/project/pelutils/"
+
+[tool.setuptools.dynamic]
+version = { attr = "pelutils.__version__.__version__" }
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+exclude = ["tests", "tests.*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+pelutils = ["py.typed"]
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch" }

@@ -2,6 +2,7 @@
 
 ## 4.4.1 (Unreleased)
 
+- Move project metadata and dependencies to `pyproject.toml`; build distributions with uv.
 - Clarify `TickTock` reset behavior while active.
 - Allow passing Pydantic serialization and validation options to `UniversalJsonModel` JSON-dictionary methods.
 - Add `AGENTS.md` and skills.

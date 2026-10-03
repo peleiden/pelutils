@@ -6,6 +6,12 @@ on:
         - pelutils/**.py
         - tests/**.py
         - setup.py
+        - pyproject.toml
+        - uv.lock
+        - MANIFEST.in
+        - README.md
+        - AGENTS.md
+        - .opencode/skills/**
         - docs/**
         - .readthedocs.yaml
         - ruff.toml
@@ -19,6 +25,12 @@ on:
         - pelutils/**.py
         - tests/**.py
         - setup.py
+        - pyproject.toml
+        - uv.lock
+        - MANIFEST.in
+        - README.md
+        - AGENTS.md
+        - .opencode/skills/**
         - docs/**
         - .readthedocs.yaml
         - ruff.toml
@@ -38,30 +50,32 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Set up PyPi dependencies and install package
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Sync development environment with uv
         run: |
-          pip install --upgrade setuptools wheel
-          pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install -e .[dev]
+          uv sync --python 3.11 --group dev --locked
 
       - name: Lint
-        run: ruff check pelutils tests
+        run: uv run --python 3.11 --locked ruff check pelutils tests
 
       - name: Format
-        run: ruff format --check pelutils tests
+        run: uv run --python 3.11 --locked ruff format --check pelutils tests
 
       - name: Type check
         # Not checking types on tests
         # Tests often explicitly check behaviour with wrong types, so it would cause many false positives
-        run: basedpyright pelutils
+        run: uv run --python 3.11 --locked basedpyright pelutils
 
       - name: Run test
-        run: pytest tests --cov=pelutils
+        run: uv run --python 3.11 --locked pytest tests --cov=pelutils
 
       - name: Upload coverage data to coveralls.io
-        run: coveralls --service=github
+        run: uv run --python 3.11 --locked coveralls --service=github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build documentation
-        run: make --directory docs html
+        run: uv run --python 3.11 --locked make --directory docs html
