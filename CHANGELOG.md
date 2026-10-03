@@ -1,6 +1,6 @@
 # History
 
-## 4.5.0 (Unreleased)
+## 4.5.0
 
 - Escape literal Rich markup in logged text and align table columns containing wide Unicode characters.
 - Add `Table.to_markdown` for exporting tables as Markdown pipe tables.
