@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pelutils"
-dynamic = ["version"]
+version = "4.5.0"
 description = "The Swiss army knife of Python projects"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -66,9 +66,6 @@ linecounter = "pelutils._entry_points.linecounter:run"
 [project.urls]
 Homepage = "https://github.com/peleiden/pelutils"
 Download = "https://pypi.org/project/pelutils/"
-
-[tool.setuptools.dynamic]
-version = { attr = "pelutils.__version__.__version__" }
 
 [tool.setuptools]
 include-package-data = true
