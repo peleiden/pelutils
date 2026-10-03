@@ -1,4 +1,3 @@
-import re
 from collections.abc import Sequence
 from typing import Any
 
@@ -6,11 +5,12 @@ from typing_extensions import override
 
 
 class Table:
-    """Build aligned, human-readable text tables that can also be exported to LaTeX.
+    """Build aligned, human-readable text tables that can also be exported to LaTeX and Markdown.
 
     Add an optional header, then rows, and render with ``str(table)``; column widths are
     computed automatically. :meth:`add_hline` inserts a horizontal rule and
-    :meth:`to_latex` produces ``booktabs``-style LaTeX.
+    :meth:`to_latex` produces ``booktabs``-style LaTeX, and :meth:`to_markdown`
+    produces a Markdown pipe table.
 
     Example
     -------
@@ -67,22 +67,50 @@ class Table:
         self._hlines.add(len(self._rows) - 1)
 
     def to_latex(self) -> str:
-        """Produce LaTeX code for the table to included in a tabular environment.
+        """Produce LaTeX code for the table to include in a tabular environment.
 
         It assumes the booktabs package is used.
         """
-        formatted = str(self)
-        lines = formatted.splitlines()
-        lines.insert(0, r"\toprule")
+        assert self._width is not None
+        all_rows = [self._header, *self._rows] if self._header else self._rows
+        widths = [max(len(row[j]) for row in all_rows) for j in range(self._width)]
+
+        lines = [r"\toprule"]
+        if self._header:
+            header = (self._format_element(cell, width, True) for cell, width in zip(self._header, widths, strict=True))
+            lines.append(" & ".join(header) + r" \\")
+            lines.append(r"\midrule")
+
+        for i, (row, left_align) in enumerate(zip(self._rows, self._left_aligns, strict=True)):
+            cells = (self._format_element(cell, width, align) for cell, width, align in zip(row, widths, left_align, strict=True))
+            lines.append(" & ".join(cells) + r" \\")
+            if i in self._hlines:
+                lines.append(r"\midrule")
+
         lines.append(r"\bottomrule")
-
-        for i, line in enumerate(lines):
-            if re.match(r"^(-+\+)+-+$", line):
-                lines[i] = r"\midrule"
-            elif re.match(r"^(.+\|)+.+$", line):
-                lines[i] = line.replace("|", "&") + r" \\"
-
         return "\n".join(lines)
+
+    def to_markdown(self) -> str:
+        """Produce a Markdown pipe table.
+
+        Markdown requires a header row, so a table without an explicit header gets a
+        blank one. Column alignment follows the first data row (or is left-aligned
+        when there are no data rows). Markdown has no syntax for horizontal rules
+        between body rows, so markers added with :meth:`add_hline` are omitted.
+        """
+        assert self._width is not None
+        header = self._header or ("",) * self._width
+        aligns = self._left_aligns[0] if self._left_aligns else (True,) * self._width
+        lines = [
+            "| " + " | ".join(self._escape_markdown_cell(cell) for cell in header) + " |",
+            "| " + " | ".join(":---" if align else "---:" for align in aligns) + " |",
+        ]
+        lines.extend("| " + " | ".join(self._escape_markdown_cell(cell) for cell in row) + " |" for row in self._rows)
+        return "\n".join(lines)
+
+    @staticmethod
+    def _escape_markdown_cell(cell: str) -> str:
+        return cell.replace("\\", "\\\\").replace("|", r"\|").replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>")
 
     @staticmethod
     def _format_element(element: str, width: int, left_align: bool) -> str:

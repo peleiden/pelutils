@@ -1,7 +1,9 @@
 # History
 
-## 4.4.1 (Unreleased)
+## 4.5.0 (Unreleased)
 
+- Add `Table.to_markdown` for exporting tables as Markdown pipe tables.
+- Render `Table.to_latex` directly from table data so cell contents cannot be mistaken for table formatting.
 - Move project metadata and dependencies to `pyproject.toml`; build distributions with uv.
 - Clarify `TickTock` reset behavior while active.
 - Allow passing Pydantic serialization and validation options to `UniversalJsonModel` JSON-dictionary methods.

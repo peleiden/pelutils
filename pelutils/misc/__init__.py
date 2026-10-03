@@ -6,7 +6,7 @@ and rewriting them each time is tedious and error-prone. This module is the grab
 those: each helper is self-contained and useful on its own, so import only what you need.
 
 Main inclusions are :class:`Table` for aligned text tables that also export to LaTeX via
-:meth:`Table.to_latex`; :class:`OS` and :data:`hardware_info` for describing the machine
+:meth:`Table.to_latex` and Markdown via :meth:`Table.to_markdown`; :class:`OS` and :data:`hardware_info` for describing the machine
 the code runs on; :func:`git_repo_info` for the repository and commit currently executing;
 :func:`array_bytes`/:func:`array_ptr` for low-level array introspection; and small file
 and dict helpers such as :func:`reverse_line_iterator` and :func:`except_keys`.
