@@ -2,6 +2,7 @@
 
 ## 4.5.0 (Unreleased)
 
+- Escape literal Rich markup in logged text and align table columns containing wide Unicode characters.
 - Add `Table.to_markdown` for exporting tables as Markdown pipe tables.
 - Render `Table.to_latex` directly from table data so cell contents cannot be mistaken for table formatting.
 - Move project metadata and dependencies to `pyproject.toml`; build distributions with uv.

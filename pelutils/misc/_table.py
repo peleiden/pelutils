@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from typing import Any
 
+from rich.cells import cell_len
 from typing_extensions import override
 
 
@@ -73,7 +74,7 @@ class Table:
         """
         assert self._width is not None
         all_rows = [self._header, *self._rows] if self._header else self._rows
-        widths = [max(len(row[j]) for row in all_rows) for j in range(self._width)]
+        widths = [max(cell_len(row[j]) for row in all_rows) for j in range(self._width)]
 
         lines = [r"\toprule"]
         if self._header:
@@ -114,10 +115,11 @@ class Table:
 
     @staticmethod
     def _format_element(element: str, width: int, left_align: bool) -> str:
+        padding = width - cell_len(element)
         if left_align:
-            return element + " " * (width - len(element))
+            return element + " " * padding
         else:
-            return " " * (width - len(element)) + element
+            return " " * padding + element
 
     @override
     def __repr__(self) -> str:
@@ -127,7 +129,7 @@ class Table:
     def __str__(self) -> str:
         assert self._width is not None
         all_rows = [self._header, *self._rows] if self._header else self._rows
-        widths = [max(len(all_rows[i][j]) for i in range(len(all_rows))) for j in range(self._width)]
+        widths = [max(cell_len(all_rows[i][j]) for i in range(len(all_rows))) for j in range(self._width)]
         hline = "+".join("-" * (width + 1 + (0 < i < self._width - 1)) for i, width in enumerate(widths))
         strs = list()
         if self._header:
