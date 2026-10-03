@@ -288,7 +288,7 @@ def process(features: FloatArray, labels: IntArray, mask: BoolArray): ...
 
 ## Also included
 
-- `pelutils.misc.Table` — build aligned text tables which can also be easily export to LaTeX with `Table.to_latex()`.
+- `pelutils.misc.Table` — build aligned text tables which can be exported to LaTeX with `Table.to_latex()` or Markdown with `Table.to_markdown()`.
 - `pelutils.misc.hardware_info` / `OS` — describe the machine the code runs on.
 - `pelutils.misc.git_repo_info` — the repo and commit the code is executing in.
 - Assorted file and dict helpers (`reverse_line_iterator`, `except_keys`, ...).

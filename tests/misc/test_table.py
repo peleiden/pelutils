@@ -51,6 +51,45 @@ class TestTable:
             for j in [i * x for x in range(len(ascii_letters))]:
                 assert str(j) in texlines[i + 3]
 
+    def test_to_latex_cell_content_is_not_parsed_as_formatting(self):
+        t = Table()
+        t.add_header(["label", "value"])
+        t.add_row(["left | right", "---+---"])
+        t.add_hline()
+
+        tex = t.to_latex()
+
+        assert "left | right & ---+--- \\\\" in tex
+        assert tex.splitlines().count(r"\midrule") == 2
+
+        one_column = Table()
+        one_column.add_row(["---+---"])
+        assert "---+--- \\\\" in one_column.to_latex()
+
+    def test_to_markdown(self):
+        t = Table()
+        t.add_header(["Name", "Score"])
+        t.add_row(["A | B", 42])
+        t.add_row(["Alice", 17])
+        t.add_hline()
+
+        assert t.to_markdown() == "\n".join([
+            "| Name | Score |",
+            "| :--- | ---: |",
+            r"| A \| B | 42 |",
+            "| Alice | 17 |",
+        ])
+
+    def test_to_markdown_without_header(self):
+        t = Table()
+        t.add_row(["a", "b"])
+
+        assert t.to_markdown() == "\n".join([
+            "|  |  |",
+            "| :--- | ---: |",
+            "| a | b |",
+        ])
+
     def test_repr(self):
         t = Table()
         t.add_header((1, 2, 3))
