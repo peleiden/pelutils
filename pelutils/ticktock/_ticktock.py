@@ -347,13 +347,23 @@ class TickTock:
             profile.parent.children.remove(profile)
 
     def reset(self):
-        """Stop all timing and profiling and clear all profiles and measurements."""
+        """Stop all timing and profiling and clear all profiles and measurements.
+
+        Resetting is allowed while this instance is registered by :meth:`as_active`; the
+        active registration remains until that context exits. Resetting while a profile
+        context is in progress raises :class:`TickTockException` without changing state.
+        """
         if self._profile_stack:
             raise TickTockException("Cannot reset TickTock while profiling is active")
         self.__init__()
 
     def reset_profiles(self):
-        """Similar to ``reset`` but only reset profiles, leaving ``tick``/``tock`` timers intact."""
+        """Reset profiles while leaving ``tick``/``tock`` timers intact.
+
+        The same restrictions as :meth:`reset` apply: this is allowed while registered
+        by :meth:`as_active`, but raises :class:`TickTockException` during a profile
+        context.
+        """
         tick_starts = self._tick_starts
         self.reset()
         self._tick_starts = tick_starts
@@ -466,6 +476,9 @@ class TickTock:
         """Set the ``TickTock`` instance as the active instance in the current thread.
 
         It can then be retrieved with :func:`get_active_ticktock`.
+        Calling :meth:`reset` or :meth:`reset_profiles` inside this context does not
+        unset the active instance. Those methods still raise if a profile context is
+        currently in progress.
         """
         current_thread_id = _get_thread_uid()
         with _lock:

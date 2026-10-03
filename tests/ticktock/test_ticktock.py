@@ -141,9 +141,14 @@ def test_reset():
     assert len(tt._root_profiles) == 0
     assert len(tt._profile_stack) == 0
 
+    tt.tick("active reset guard")
     with tt.profile("pp"):
         with pytest.raises(TickTockException):
             tt.reset()
+        with pytest.raises(TickTockException):
+            tt.reset_profiles()
+    assert [profile.name for profile in tt.iter_profiles()] == ["pp"]
+    tt.tock("active reset guard")
 
     tt.tick("abc")
     tt.tick("abc2")
@@ -152,6 +157,53 @@ def test_reset():
     tt.tock("abc2")
     with pytest.raises(TickTockException):
         tt.tock("abc3")
+
+
+def test_reset_while_as_active():
+    tt = TickTock()
+    with tt.as_active():
+        with tt.profile("before reset"):
+            pass
+        with tt.profile("reset rejected during profile"):
+            with pytest.raises(TickTockException):
+                tt.reset()
+            with pytest.raises(TickTockException):
+                tt.reset_profiles()
+            assert get_active_ticktock() is tt
+
+        tt.tick("timer")
+        tt.reset()
+
+        assert get_active_ticktock() is tt
+        assert not tt.has_profiles
+        with pytest.raises(TickTockException):
+            tt.tock("timer")
+
+        with tt.profile("after reset"):
+            pass
+        assert [profile.name for profile in tt.iter_profiles()] == ["after reset"]
+
+    assert get_active_ticktock() is not tt
+
+
+def test_reset_profiles_while_as_active():
+    tt = TickTock()
+    tt.tick("timer")
+    with tt.profile("before reset"):
+        pass
+
+    with tt.as_active():
+        tt.reset_profiles()
+
+        assert get_active_ticktock() is tt
+        assert not tt.has_profiles
+        assert tt.tock("timer") >= 0
+
+        with tt.profile("after reset"):
+            pass
+        assert [profile.name for profile in tt.iter_profiles()] == ["after reset"]
+
+    assert get_active_ticktock() is not tt
 
 
 def test_profiles_with_same_name():
