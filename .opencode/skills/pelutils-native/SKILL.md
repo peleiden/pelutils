@@ -8,7 +8,8 @@ description: Use when changing pelutils C sources, native array algorithms, or P
 Paths and commands below are relative to the repository root. Follow `AGENTS.md`.
 
 1. Read the affected sources in `pelutils/_c/`, their Python wrappers, and matching
-   tests in `tests/_c/` and `tests/array/`. Check `setup.py` for build configuration.
+   tests in `tests/_c/` and `tests/array/`. Check `setup.py` and `pyproject.toml` for
+   native build configuration.
 2. Trace the Python/C interface before editing: pointer ownership and lifetime,
    argument sizes, dtype and layout assumptions, strides, and result buffers.
    Keep Python-side validation and C-side expectations consistent.
@@ -23,12 +24,15 @@ Paths and commands below are relative to the repository root. Follow `AGENTS.md`
 5. Rebuild the extension after C changes:
 
    ```sh
-   python -m pip install -e '.[dev]'
+   uv sync --python 3.11 --group dev --reinstall-package pelutils --locked
    ```
 
    If rebuilding fails, report the blocker; an old extension does not validate
    new C sources. Do not commit generated binaries.
-6. Run the affected tests, then `python -m pytest tests/_c tests/array` for shared
-   native changes. Use `pelutils-validate` for final checks and review.
+6. Run affected tests through uv, then
+   `uv run --python 3.11 --locked pytest tests/_c tests/array` for shared native
+   changes. Distribution tests in `.github/workflows/dist.yml` use cibuildwheel to
+   test the built wheel after syncing the locked `dev` group with uv. Use
+   `pelutils-validate` for final checks and review.
 
 Summarize the interface changes, boundary cases tested, and any remaining risks.
