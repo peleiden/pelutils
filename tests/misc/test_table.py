@@ -34,6 +34,17 @@ class TestTable:
         t.add_row([3, 4, 5])
         assert str(t).count("+") == 4
 
+    def test_table_aligns_wide_characters(self):
+        t = Table()
+        t.add_header(["name", "value"])
+        t.add_row(["😀", "😀"])
+
+        assert str(t).splitlines() == [
+            "name | value",
+            "-----+------",
+            "😀   |    😀",
+        ]
+
     def test_to_latex(self):
         t = Table()
         t.add_header(list(ascii_letters))

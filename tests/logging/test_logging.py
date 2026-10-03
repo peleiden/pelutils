@@ -309,6 +309,16 @@ class TestLogger(UnitTestCollection):
                 == logged_lines[i + 1].index(string)
             )
 
+    def test_literal_rich_markup(self, capfd: pytest.CaptureFixture):
+        message = "Table cell: [...] [bold]literal[/bold]"
+        logger = Logger().configure(None, print_level=LogLevels.DEBUG)
+
+        logger.info(message, with_info=False)
+
+        stdout, stderr = capfd.readouterr()
+        assert message in stdout
+        assert not stderr
+
     def test_repr(self):
         fpath = (self.test_dir / "joemama.log").expanduser().resolve()
         logger = Logger().configure(fpath, print_level=LogLevels.ERROR)

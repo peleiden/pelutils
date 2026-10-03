@@ -1,7 +1,5 @@
-import re
-
-from rich.color import ANSI_COLOR_NAMES
 from rich.console import Console
+from rich.markup import escape
 from typing_extensions import override
 
 _stdout_console = Console(highlight=False)
@@ -14,10 +12,6 @@ class RichString:
     This allows for printing and logging without rich syntax causing issues.
     """
 
-    _open_tag_regex = re.compile("(%s)" % "|".join(r"\[" + c + r"\]" for c in ANSI_COLOR_NAMES))  # noqa: UP031
-    _close_tag_regex_1 = re.compile(r"\\(\[\/.*\])")
-    _close_tag_regex_2 = re.compile(r"(\[\/.*\])")
-
     def __init__(self, stderr: bool = False):
         self.strings: list[str] = list()  # Normal strings
         self.riches: list[str] = list()  # Corresponding strings with rich syntax
@@ -26,10 +20,8 @@ class RichString:
     def add_string(self, s: str, rich: str | None = None):
         """Add a new string and optionally a rich string equivalent."""
         if rich is None:
-            # Escape beginning brackets to prevent accidental formatting when printing
-            rich = re.sub(self._open_tag_regex, r"\\\1", s)
-            rich = re.sub(self._close_tag_regex_1, r"\1", rich)
-            rich = re.sub(self._close_tag_regex_2, r"\\\1", rich)
+            # Escape all markup so plain text cannot be mistaken for Rich formatting.
+            rich = escape(s)
         self.strings.append(s)
         self.riches.append(rich)
 
