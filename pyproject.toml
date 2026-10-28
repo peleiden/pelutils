@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pelutils"
-version = "4.5.0"
+version = "4.6.0"
 description = "The Swiss army knife of Python projects"
 readme = "README.md"
 requires-python = ">=3.11"

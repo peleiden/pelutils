@@ -1,5 +1,14 @@
 # History
 
+## 4.6.0 (unreleased)
+
+- Make `TickTock` profiling safe to use from multiple threads and asyncio tasks, including `TickTock.as_active` and `get_active_ticktock`.
+- `TickTock.profile` can be used as a decorator and now profiles the full execution of decorated `async` functions.
+- Allow `TickTock.fuse` and `TickTock.fuse_multiple` to merge instances with different profile trees.
+- Reduce `TickTock.profile` overhead.
+- Fix several `TickTock` profiling bugs: profiles ended out of order, profiles started before a reset, profiles still in progress being included in statistics, and a `ZeroDivisionError` in `str(TickTock)`.
+- Remove the warning for profiling in a different thread than the one that created the `TickTock`.
+
 ## 4.5.0
 
 - Escape literal Rich markup in logged text and align table columns containing wide Unicode characters.
