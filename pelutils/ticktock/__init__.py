@@ -29,12 +29,12 @@ Quick start
                 ...
     print(TT)  # Pretty table of the full profile tree
 
-``TT`` is a ready-to-use global instance and is all most code needs. When you need
-isolation — most importantly one instance per thread, since profiling is not
-thread-safe — construct your own with :class:`TickTock`. See :class:`TickTock` for
-the full API, including ``hits`` for very tight loops, ``do_at_interval`` for running
-periodic tasks, and ``fuse``/``fuse_multiple`` for combining results across
-processes.
+``TT`` is a ready-to-use global instance and is all most code needs. Profiling is
+safe to use from multiple threads and asyncio tasks, with results from all threads
+merged into one profile tree. When you need isolation, construct your own instance
+with :class:`TickTock`. See :class:`TickTock` for the full API, including ``hits``
+for very tight loops, ``do_at_interval`` for running periodic tasks, and
+``fuse``/``fuse_multiple`` for combining results across processes.
 """
 
 from ._ticktock import TT, Profile, TickTock, TickTockException, get_active_ticktock

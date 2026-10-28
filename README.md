@@ -133,8 +133,8 @@ print(TT)
 `with TT.profile("name", hits=n):` records `n` hits at once, which is handy for very
 tight loops or for a block that processes `n` items in parallel. `TT.do_at_interval(...)`
 turns the same instance into a throttle for periodic tasks. The default `TT` is a
-shared instance; construct your own with `TickTock()` when you need isolation — most
-importantly one per thread, as profiling is not thread-safe.
+shared instance that is safe to profile with from multiple threads and asyncio tasks;
+construct your own with `TickTock()` when you need isolation.
 
 ## Serialisation
 
