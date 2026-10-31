@@ -232,16 +232,16 @@ For a single job, drop `multiple_jobs=True` and call `parse_job()` instead. A co
 path can target one section directly, e.g. `--config-file config.ini:low-lr`. See the
 [job parser docs](https://pelutils.readthedocs.io/en/latest/api/pelutils.job_parser.html) for auto-documentation details.
 
-To get fully typed jobs and Pydantic validation, declare the arguments as a `JobModel`
+To get fully typed jobs and Pydantic validation, declare the arguments as a `ArgparseModel`
 instead. Parsing returns instances of your class, and config files and overrides work
 the same way:
 
 ```py
 from pathlib import Path
 from pydantic import Field
-from pelutils.job_parser import JobModel
+from pelutils.job_parser import ArgparseModel
 
-class TrainJob(JobModel):
+class TrainJob(ArgparseModel):
     """Train a model."""
 
     data_path: Path = Field(description="Training data directory")

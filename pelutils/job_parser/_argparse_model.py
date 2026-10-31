@@ -15,7 +15,7 @@ from ._structs import ArgumentTypes, Flag, JobDescription, JobParserError, Optio
 
 @dataclass(frozen=True)
 class Arg:
-    """Set the short option of a :class:`JobModel` field.
+    """Set the short option of a :class:`ArgparseModel` field.
 
     Attach it to the whole field type with ``typing.Annotated``, e.g.
     ``seed: Annotated[int | None, Arg(abbrev="S")] = None``.
@@ -82,7 +82,7 @@ def _argument(field_name: str, field: FieldInfo) -> ArgumentTypes:
     return OptionalArg(name, default=default, type=str, abbrev=abbrev, help=description, nargs=nargs)
 
 
-class JobModel(BaseModel):  # noqa: PLW1641
+class ArgparseModel(BaseModel):  # noqa: PLW1641
     """Declare a job's arguments as a typed Pydantic model.
 
     Subclass it and declare fields, then call :meth:`parse_job` or :meth:`parse_jobs`

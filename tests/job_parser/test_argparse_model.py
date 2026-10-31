@@ -7,7 +7,7 @@ from typing import Annotated, Literal, Self
 import pytest
 from pydantic import Field, model_validator
 
-from pelutils.job_parser import Arg, ConfigError, JobModel, JobParserError
+from pelutils.job_parser import Arg, ArgparseModel, ConfigError, JobParserError
 from pelutils.tests import UnitTestCollection, restore_argv
 
 
@@ -19,7 +19,7 @@ class Level(IntEnum):
     LOW = 1
 
 
-class Job(JobModel):
+class Job(ArgparseModel):
     """Job description with 100% coverage."""
 
     data_path: Path = Field(description="Uses 100% of the data")
@@ -57,21 +57,21 @@ fp16 = False
 """
 
 
-class Forward(JobModel):
+class Forward(ArgparseModel):
     values: "LateList | None" = None
 
 
 LateList = list[int]
 
 
-class TestJobModel(UnitTestCollection):
+class TestArgparseModel(UnitTestCollection):
     def setup_class(self):
         super().setup_class()
         self._config_file = self.get_test_path("jobs.ini")
         self._config_file.write_text(_config)
 
     @staticmethod
-    def _parse(*argv: str, model: type[JobModel] = Job):
+    def _parse(*argv: str, model: type[ArgparseModel] = Job):
         sys.argv = ["main.py", *argv]
         return model.parse_job()
 
@@ -157,7 +157,7 @@ class TestJobModel(UnitTestCollection):
 
     @restore_argv
     def test_required_kinds(self):
-        class Required(JobModel):
+        class Required(ArgparseModel):
             items: list[int]
             enabled: bool
 
@@ -170,19 +170,19 @@ class TestJobModel(UnitTestCollection):
 
     @restore_argv
     def test_unsupported_fields(self):
-        class WithDict(JobModel):
+        class WithDict(ArgparseModel):
             values: dict[str, int] = {}  # noqa: RUF012
 
-        class WithModel(JobModel):
+        class WithModel(ArgparseModel):
             nested: Job | None = None
 
-        class WithContainerUnion(JobModel):
+        class WithContainerUnion(ArgparseModel):
             values: list[int] | int = 1
 
-        class WithAlias(JobModel):
+        class WithAlias(ArgparseModel):
             value: int = Field(1, alias="other")
 
-        class WithArgDefault(JobModel):
+        class WithArgDefault(ArgparseModel):
             value: int = Arg(abbrev="v")  # pyright: ignore[reportAssignmentType]
 
         for model in (WithDict, WithModel, WithContainerUnion, WithAlias, WithArgDefault):
@@ -191,7 +191,7 @@ class TestJobModel(UnitTestCollection):
 
     @restore_argv
     def test_reserved_names(self):
-        class WithConfigFile(JobModel):
+        class WithConfigFile(ArgparseModel):
             config_file: str = ""
 
         with pytest.raises(JobParserError, match="reserved"):
@@ -199,7 +199,7 @@ class TestJobModel(UnitTestCollection):
 
     @restore_argv
     def test_arg_options(self):
-        class WithOptions(JobModel):
+        class WithOptions(ArgparseModel):
             seed: Annotated[int, Arg(abbrev="S")] = 0
             flag: Annotated[bool, Arg(abbrev="F")] = False
 
@@ -223,7 +223,7 @@ class TestJobModel(UnitTestCollection):
     def test_default_factory_only_called_when_needed(self):
         calls = []
 
-        class WithFactory(JobModel):
+        class WithFactory(ArgparseModel):
             value: int = Field(default_factory=lambda: calls.append(1) or 5)
 
         job = self._parse("--value", "4", model=WithFactory)
@@ -241,7 +241,7 @@ class TestJobModel(UnitTestCollection):
 
     @restore_argv
     def test_annotated_in_union(self):
-        class Nested(JobModel):
+        class Nested(ArgparseModel):
             values: Annotated[list[int], Field(min_length=1)] | None = None
 
         job = self._parse("--values", "1", "2", model=Nested)
@@ -250,7 +250,7 @@ class TestJobModel(UnitTestCollection):
 
     @restore_argv
     def test_flag_in_config_is_case_insensitive(self):
-        class WithFlag(JobModel):
+        class WithFlag(ArgparseModel):
             flag: bool = False
 
         config = self.get_test_path("flag.ini")
@@ -280,7 +280,7 @@ class TestJobModel(UnitTestCollection):
 
     @restore_argv
     def test_frozen_and_inheritance(self):
-        class Frozen(JobModel, frozen=True):
+        class Frozen(ArgparseModel, frozen=True):
             a: int = 1
 
         class Child(Frozen):

@@ -57,7 +57,7 @@ to get one :class:`JobDescription` back. See :class:`JobParser` for the full API
 Typed jobs
 ----------
 
-Subclass :class:`JobModel` to declare the arguments as a Pydantic model instead. Jobs are
+Subclass :class:`ArgparseModel` to declare the arguments as a Pydantic model instead. Jobs are
 then instances of your class, so type checkers know their attributes, and the model's
 constraints and validators apply to command-line and config file values:
 
@@ -66,9 +66,9 @@ constraints and validators apply to command-line and config file values:
     from pathlib import Path
     from typing import Annotated
     from pydantic import Field
-    from pelutils.job_parser import Arg, JobModel
+    from pelutils.job_parser import Arg, ArgparseModel
 
-    class TrainJob(JobModel):
+    class TrainJob(ArgparseModel):
         '''Train a model.'''  # Shown by --help
 
         data_path: Path = Field(description="Training data directory")  # Required
@@ -82,20 +82,20 @@ constraints and validators apply to command-line and config file values:
         job.write_documentation(Path("runs") / job.name / "arguments.ini")
 
 Config files, overrides, and documentation work exactly as described above. Use
-:meth:`JobModel.parse_job` for a single job; :class:`JobParser`'s ``multiple_jobs`` is not needed.
+:meth:`ArgparseModel.parse_job` for a single job; :class:`JobParser`'s ``multiple_jobs`` is not needed.
 """
 
-from ._job_model import Arg, JobModel
+from ._argparse_model import Arg, ArgparseModel
 from ._job_parser import JobParser
 from ._structs import ArgumentTypes, ConfigError, Flag, JobDescription, JobParserError, OptionalArg, RequiredArg
 
 __all__ = (
     "Arg",
+    "ArgparseModel",
     "ArgumentTypes",
     "ConfigError",
     "Flag",
     "JobDescription",
-    "JobModel",
     "JobParser",
     "JobParserError",
     "OptionalArg",
