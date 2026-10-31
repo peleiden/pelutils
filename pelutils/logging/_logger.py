@@ -329,3 +329,4 @@ class Logger:
 
 
 log = Logger()
+"""A convenient global logging instance good enough for most projects."""
