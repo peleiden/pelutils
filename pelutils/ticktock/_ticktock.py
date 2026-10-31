@@ -668,6 +668,5 @@ def get_active_ticktock() -> TickTock:
     return ticktock if ticktock is not None else TickTock()
 
 
-# Globally accessible default instance
-# It suffices to use this for most cases
 TT = TickTock()
+"""Globally accessible default TickTock instance; it suffices to use this for most cases."""
