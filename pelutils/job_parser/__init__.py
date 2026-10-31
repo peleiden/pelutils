@@ -53,9 +53,51 @@ like:
 For the common single-job case, drop ``multiple_jobs=True`` and call :meth:`JobParser.parse_job`
 to get one :class:`JobDescription` back. See :class:`JobParser` for the full API and
 :meth:`JobDescription.write_documentation` for auto-documenting a run.
+
+Typed jobs
+----------
+
+Subclass :class:`JobModel` to declare the arguments as a Pydantic model instead. Jobs are
+then instances of your class, so type checkers know their attributes, and the model's
+constraints and validators apply to command-line and config file values:
+
+.. code-block:: python
+
+    from pathlib import Path
+    from typing import Annotated
+    from pydantic import Field
+    from pelutils.job_parser import Arg, JobModel
+
+    class TrainJob(JobModel):
+        '''Train a model.'''  # Shown by --help
+
+        data_path: Path = Field(description="Training data directory")  # Required
+        learning_rate: float = Field(1e-4, gt=0, description="Optimizer learning rate")
+        layers: list[int] = [64, 64]  # --layers 128 128
+        fp16: bool = False  # --fp16
+        seed: Annotated[int, Arg(abbrev="S")] = 0  # -S 42
+
+    for job in TrainJob.parse_jobs():
+        print(job.name, job.data_path, job.learning_rate)
+        job.write_documentation(Path("runs") / job.name / "arguments.ini")
+
+Config files, overrides, and documentation work exactly as described above. Use
+:meth:`JobModel.parse_job` for a single job; :class:`JobParser`'s ``multiple_jobs`` is not needed.
 """
 
+from ._job_model import Arg, JobModel
 from ._job_parser import JobParser
 from ._structs import ArgumentTypes, ConfigError, Flag, JobDescription, JobParserError, OptionalArg, RequiredArg
 
-__all__ = ("ArgumentTypes", "ConfigError", "Flag", "JobDescription", "JobParser", "JobParserError", "OptionalArg", "RequiredArg")
+__all__ = (
+    "Arg",
+    "ArgumentTypes",
+    "ConfigError",
+    "Flag",
+    "JobDescription",
+    "JobModel",
+    "JobParser",
+    "JobParserError",
+    "OptionalArg",
+    "RequiredArg",
+)

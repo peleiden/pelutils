@@ -232,6 +232,26 @@ For a single job, drop `multiple_jobs=True` and call `parse_job()` instead. A co
 path can target one section directly, e.g. `--config-file config.ini:low-lr`. See the
 [job parser docs](https://pelutils.readthedocs.io/en/latest/api/pelutils.job_parser.html) for auto-documentation details.
 
+To get fully typed jobs and Pydantic validation, declare the arguments as a `JobModel`
+instead. Parsing returns instances of your class, and config files and overrides work
+the same way:
+
+```py
+from pathlib import Path
+from pydantic import Field
+from pelutils.job_parser import JobModel
+
+class TrainJob(JobModel):
+    """Train a model."""
+
+    data_path: Path = Field(description="Training data directory")
+    learning_rate: float = Field(1e-4, gt=0, description="Optimizer learning rate")
+    fp16: bool = False
+
+for job in TrainJob.parse_jobs():  # Or TrainJob.parse_job() for a single job
+    print(job.name, job.data_path, job.learning_rate, job.fp16)
+```
+
 ## Fast `unique`
 
 A linear-time alternative to `numpy.unique`, significantly faster on large arrays. Unlike with `np.unique`, the returned elements are unsorted.

@@ -2,7 +2,6 @@ import io
 import shlex
 import sys
 from argparse import SUPPRESS, ArgumentParser
-from ast import literal_eval
 from configparser import ConfigParser, MissingSectionHeaderError
 from copy import deepcopy
 from datetime import datetime
@@ -208,10 +207,9 @@ class JobParser:
                 if isinstance(self._arguments[argname], Flag):
                     # If flag value is given in config file, parse True/False
                     if isinstance(value, str):  # pyright: ignore[reportUnnecessaryIsInstance]
-                        config_dict[section][argname] = literal_eval(value)
-                        # Check if valid value
-                        if not isinstance(config_dict[section][argname], bool):
+                        if value.lower() not in {"true", "false"}:
                             raise ValueError(f"Value {argname} in section {section} must be 'True' or 'False', not '{value}'")
+                        config_dict[section][argname] = value.lower() == "true"
                     else:
                         assert value is None
                         config_dict[section][argname] = True
@@ -263,7 +261,7 @@ class JobParser:
             if len(config_dict) > 1:
                 del config_dict[self._default_config_job]
             if len(config_dict) > 1 and not self._multiple_jobs:
-                raise ConfigError("Multiple sections found in config file, yet multiple_jobs has been set to `False`")
+                raise ConfigError("Multiple sections found in config file, but only a single job was expected")
 
             # Create job descriptions section-wise
             for section, config_args in config_dict.items():
