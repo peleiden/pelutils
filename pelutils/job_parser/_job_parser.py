@@ -204,6 +204,8 @@ class JobParser:
                 argname = fixdash(argname)  # noqa: PLW2901
                 if argname not in self._arguments:
                     raise JobParserError(f"Unknown argument '{argname}'")
+                if argname == self._name_arg.name:
+                    raise ConfigError(f"'name' cannot be set in section '{section}', as jobs are named after their sections")
                 if isinstance(self._arguments[argname], Flag):
                     # If flag value is given in config file, parse True/False
                     if isinstance(value, str):  # pyright: ignore[reportUnnecessaryIsInstance]
@@ -214,6 +216,8 @@ class JobParser:
                         assert value is None
                         config_dict[section][argname] = True
                 else:  # Arguments and options
+                    if value is None:  # pyright: ignore[reportUnnecessaryComparison]
+                        raise ConfigError(f"Argument '{argname}' in section '{section}' has no value")
                     # If multiple values, parse each as given type
                     # Otherwise, parse single argument as given type
                     try:

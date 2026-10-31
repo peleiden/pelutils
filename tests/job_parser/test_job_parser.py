@@ -1,3 +1,4 @@
+import io
 import itertools
 import shlex
 import sys
@@ -399,6 +400,27 @@ class TestParser(UnitTestCollection):
         parser = JobParser(OptionalArg("bar", type=int, default=[1, 2]))
         with pytest.raises(JobParserError):
             parser.parse_job()
+
+    @restore_argv
+    @pytest.mark.parametrize(
+        "arg", [OptionalArg("foo", default="bar"), RequiredArg("foo"), OptionalArg("foo", default=[1], nargs=0, type=int)]
+    )
+    def test_config_key_without_value(self, arg: OptionalArg | RequiredArg, monkeypatch: pytest.MonkeyPatch):
+        config = self.get_test_path("no-value.ini")
+        config.write_text("[job]\nfoo\n")
+        sys.argv = [*_argv_template, "-c", str(config)]
+        monkeypatch.setattr(sys, "stdin", io.StringIO("1 2"))  # Must not be read
+        with pytest.raises(ConfigError, match="'foo' in section 'job'"):
+            JobParser(arg).parse_job()
+
+    @restore_argv
+    @pytest.mark.parametrize("content", ["[job]\nname = other\n", "[job]\nname\n", "[DEFAULT]\nname = other\n"])
+    def test_name_in_config(self, content: str):
+        config = self.get_test_path("name.ini")
+        config.write_text(content)
+        sys.argv = [*_argv_template, "-c", str(config)]
+        with pytest.raises(ConfigError, match="'name'"):
+            JobParser().parse_job()
 
     @restore_argv
     def test_document(self):

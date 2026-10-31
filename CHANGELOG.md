@@ -11,6 +11,7 @@
 - Remove the warning for profiling in a different thread than the one that created the `TickTock`.
 - Add `JobModel` to `job_parser` for declaring job arguments as a Pydantic model, giving typed and validated jobs, and `Arg` for setting their short options.
 - Accept flag values in config files regardless of case, e.g. `fp16 = true`.
+- Raise `ConfigError` for config keys without a value on non-flag arguments, which could read from stdin or silently give the string `"None"`, and for `name` keys, which raised `TypeError`.
 
 ## 4.5.0
 
