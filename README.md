@@ -50,6 +50,21 @@ make use of [`PyTorch`](https://pytorch.org), which must be installed separately
 > there — e.g. `from pelutils.logging import log`. Only `__version__` is exported at
 > the top level. See the [docs](https://pelutils.readthedocs.io) for the full API.
 
+## Coding agents
+
+The documentation is published in a form suited for coding agents:
+[`llms.txt`](https://pelutils.readthedocs.io/en/stable/llms.txt) is a short index of what
+`pelutils` offers, and [`llms-full.txt`](https://pelutils.readthedocs.io/en/stable/llms-full.txt)
+contains the usage guide and public API in one file. To make sure agents working
+in your project reach for `pelutils` instead of rewriting its functionality, add something
+like this to your `AGENTS.md` or `CLAUDE.md`:
+
+```md
+This project uses `pelutils` (logging, timing and profiling, JSON serialization, config
+parsing, fast `unique`, plotting, stats, tables). Before writing a utility, check
+https://pelutils.readthedocs.io/en/stable/llms.txt to see if it already exists.
+```
+
 ## Logging
 
 Python's built-in `logging` is powerful but fiddly to set up, and a bare `print` gives
