@@ -285,29 +285,29 @@ class Logger:
         self._set_collect_mode(False)
 
     def section(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None, newline: bool = True):  # pyright: ignore[reportExplicitAny]
-        """Log at SECTION level. See .log method for argument descriptions."""
+        """Log at SECTION level. See ``__call__`` for argument descriptions."""
         if newline:
             self._log("")
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.SECTION)
 
     def critical(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):  # pyright: ignore[reportExplicitAny]
-        """Log at CRITICAL level. See .log method for argument descriptions."""
+        """Log at CRITICAL level. See ``__call__`` for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.CRITICAL)
 
     def error(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):  # pyright: ignore[reportExplicitAny]
-        """Log at ERROR level. See .log method for argument descriptions."""
+        """Log at ERROR level. See ``__call__`` for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.ERROR)
 
     def warning(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):  # pyright: ignore[reportExplicitAny]
-        """Log at WARNING level. See .log method for argument descriptions."""
+        """Log at WARNING level. See ``__call__`` for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.WARNING)
 
     def info(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):  # pyright: ignore[reportExplicitAny]
-        """Log at INFO level. See .log method for argument descriptions."""
+        """Log at INFO level. See ``__call__`` for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.INFO)
 
     def debug(self, *tolog: Any, with_info: bool = True, sep: str | None = None, with_print: bool | None = None):  # pyright: ignore[reportExplicitAny]
-        """Log at DEBUG level. See .log method for argument descriptions."""
+        """Log at DEBUG level. See ``__call__`` for argument descriptions."""
         self._log(*tolog, with_info=with_info, sep=sep, with_print=with_print, level=LogLevels.DEBUG)
 
     def __call__(
@@ -318,7 +318,19 @@ class Logger:
         sep: str | None = None,
         with_print: bool | None = None,
     ):
-        """Shorthand for specific logging methods where level is specified as an argument."""
+        """Shorthand for specific logging methods where level is specified as an argument.
+
+        Parameters
+        ----------
+        level : LogLevels, optional
+            Level (or severity) at which to log, by default LogLevels.INFO.
+        with_info : bool, optional
+            Include timestamp and severity information, by default True.
+        sep : str | None, optional
+            String separator. If None, use default_separator from .configure is used, by default None.
+        with_print : bool | None, optional
+            If given, force enable/disable printing, otherwise determined by the log level, by default None.
+        """
         self._log(*tolog, level=level, with_info=with_info, sep=sep, with_print=with_print)
 
     @override
