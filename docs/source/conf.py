@@ -1,12 +1,16 @@
+import os
 import re
 import sys
 from pathlib import Path
 
-# Make pelutils importable for autodoc
+# Make pelutils importable for autodoc and the local helpers importable here
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from docutils import nodes
 from sphinx.transforms import SphinxTransform
+
+from _llms import write_llms_txt
 
 from pelutils import __version__ as release
 
@@ -83,9 +87,12 @@ def setup(app):
     app.add_post_transform(RemoveObjectBases)
     app.connect("autodoc-skip-member", skip_reexported_top_level_members)
     app.connect("autodoc-process-signature", fix_type_alias_forward_refs)
+    app.connect("build-finished", write_llms_txt)
 
 
 html_theme = "furo"
+# Read the Docs sets this to the URL of the version being built, which makes the links in llms.txt absolute
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "")
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
