@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pelutils"
 version = "4.6.0"
-description = "The Swiss army knife of Python projects"
+description = "The Swiss army knife of Python projects: logging, timing and profiling, JSON serialization, job and config parsing, fast numpy unique, plotting, statistics, and tables"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -15,7 +15,7 @@ authors = [
     { name = "Asger Laurits Schultz", email = "asger.s@protonmail.com" },
     { name = "Søren Winkel Holm", email = "swholm@protonmail.com" },
 ]
-keywords = ["utility", "logger", "parser", "profiling", "plotting"]
+keywords = ["utility", "logger", "parser", "profiling", "timing", "serialization", "plotting", "statistics", "tables"]
 classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
