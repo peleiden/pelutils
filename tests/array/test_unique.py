@@ -205,6 +205,54 @@ def test_unique_first_occurrence_order():
     assert index.tolist() == [0, 1, 3]
 
 
+def _nans(dtype, bit_patterns):
+    uint_dtype = f"u{np.dtype(dtype).itemsize}"
+    return np.array(bit_patterns, dtype=uint_dtype).view(dtype)
+
+
+@pytest.mark.parametrize(
+    ("dtype", "bit_patterns"),
+    [
+        (np.float16, [0x7E00, 0xFE00, 0x7E01]),
+        (np.float32, [0x7FC00000, 0xFFC00000, 0x7FC00001]),
+        (np.float64, [0x7FF8000000000000, 0xFFF8000000000000, 0x7FF8000000000001]),
+    ],
+)
+def test_unique_equal_nans(dtype, bit_patterns):
+    nans = _nans(dtype, bit_patterns)
+    a = np.concatenate([np.array([1, 0, -0.0], dtype=dtype), nans, np.array([1], dtype=dtype)])
+    original_bytes = a.tobytes()
+    values, index, inverse, counts, groups = _all_results(a)
+    assert a.tobytes() == original_bytes
+    assert values.tobytes() == a[[0, 1, 2, 3]].tobytes()  # NaN keeps its first bits and -0.0 stays distinct
+    assert index.tolist() == [0, 1, 2, 3]
+    assert inverse.tolist() == [0, 1, 2, 3, 3, 3, 0]
+    assert counts.tolist() == [2, 1, 1, 3]
+    assert groups[3].tolist() == [3, 4, 5]
+
+
+def test_unique_equal_nans_complex_and_axis():
+    a = np.array([complex(np.nan, 1), complex(1, np.nan), complex(np.nan, np.nan), 1])
+    assert len(unique(a)) == 2
+
+    nan1, nan2 = _nans(np.float64, [0x7FF8000000000000, 0x7FF8000000000001])
+    rows = np.array([[1, nan1], [1, nan2], [2, nan1]])
+    assert len(unique(rows)) == 2
+    assert unique(rows, return_inverse=True)[1].tolist() == [0, 0, 1]
+    assert unique(rows.T, return_inverse=True, axis=1)[1].tolist() == [0, 0, 1]
+
+
+@pytest.mark.parametrize("n_threads", [1, 3])
+def test_unique_equal_nans_large(n_threads):
+    a = np_rng.integers(0, 10, 2**18 + 100).astype(np.float64)
+    bits = a.view(np.uint64)
+    is_nan = np_rng.random(len(a)) < 0.1
+    bits[is_nan] = 0x7FF8000000000000 | np_rng.integers(0, 2**51, is_nan.sum(), dtype=np.uint64)
+    values, index = unique(a, return_index=True, n_threads=n_threads)
+    assert len(values) == 11
+    assert values.tobytes() == a[index].tobytes()
+
+
 @pytest.mark.parametrize(
     "array",
     [
