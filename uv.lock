@@ -1457,7 +1457,7 @@ wheels = [
 
 [[package]]
 name = "pelutils"
-version = "4.6.0"
+version = "4.6.0a1"
 source = { editable = "." }
 dependencies = [
     { name = "gitpython" },
