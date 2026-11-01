@@ -245,6 +245,7 @@ values = unique(x)
 values, index, inverse, counts = unique(
     x, return_index=True, return_inverse=True, return_counts=True,
 )
+values, groups = unique([1, 2, 3, 1], return_groups=True)  # groups[0] is array([0, 3])
 ```
 
 ## Data science
