@@ -4,6 +4,8 @@
 #define PY_Suint64_t_CLEAN
 
 #include <inttypes.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <Python.h>
@@ -13,5 +15,6 @@
 
 
 PyObject *unique(PyObject *self, PyObject *args);
+PyObject *unique_groups(PyObject *self, PyObject *args);
 
 #endif

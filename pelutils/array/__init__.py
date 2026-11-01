@@ -16,6 +16,7 @@ Quick start
     values, index, inverse, counts = unique(
         x, return_index=True, return_inverse=True, return_counts=True,
     )
+    values, groups = unique([1, 2, 3, 1], return_groups=True)  # groups[0] is array([0, 3])
 
 :class:`SparseGridBlobDetection` is used for detecting blobs in a sparse, N-dimensional grid.
 It also works for dense grids (effetively boolean numpy arrays), which can trivially be converted

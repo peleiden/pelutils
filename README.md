@@ -265,7 +265,10 @@ values = unique(x)
 values, index, inverse, counts = unique(
     x, return_index=True, return_inverse=True, return_counts=True,
 )
+values, groups = unique([1, 2, 3, 1], return_groups=True)  # groups[0] is array([0, 3])
 ```
+
+Large arrays use multiple threads, limited by the `n_threads` argument, or else the available CPUs up to 8.
 
 ## Data science
 

@@ -10,6 +10,7 @@ static PyMethodDef _pelutils_c_methods[] = {
     { "free_lookup_table", free_lookup_table, METH_VARARGS, NULL },
     { "find_blob", find_blob, METH_VARARGS, NULL },
     { "unique", unique, METH_VARARGS, NULL },
+    { "unique_groups", unique_groups, METH_VARARGS, NULL },
     { NULL, NULL, 0, NULL }
 };
 

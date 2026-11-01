@@ -2,13 +2,14 @@
 
 ## 4.6.0 (unreleased)
 
-- Publish `llms.txt` and `llms-full.txt` with the documentation on Read the Docs, and describe the package's features in its metadata.
-- Make `TickTock` profiling safe to use from multiple threads and asyncio tasks, including `TickTock.as_active` and `get_active_ticktock`.
-- `TickTock.profile` can be used as a decorator and now profiles the full execution of decorated `async` functions.
-- Allow `TickTock.fuse` and `TickTock.fuse_multiple` to merge instances with different profile trees.
-- Reduce `TickTock.profile` overhead.
-- Fix several `TickTock` profiling bugs: profiles ended out of order, profiles started before a reset, profiles still in progress being included in statistics, and a `ZeroDivisionError` in `str(TickTock)`.
-- Remove the warning for profiling in a different thread than the one that created the `TickTock`.
+- Publish `llms.txt` and `llms-full.txt` with the documentation.
+- Make `TickTock` profiling safe across threads and asyncio tasks.
+- Allow `TickTock.profile` as a decorator, including on `async` functions.
+- Allow `TickTock.fuse` and `TickTock.fuse_multiple` to merge different profile trees.
+- Fix several `TickTock` profiling bugs.
+- Make `unique` faster and multithreaded, configurable with `n_threads`.
+- Add `return_groups` to `unique` for getting the indices of each unique value.
+- Fix edge case bugs in `unique` and better support for edge cases and unusual arrays.
 - Add `ArgparseModel` to `job_parser` for declaring job arguments as a Pydantic model.
 - Accept flag values in config files regardless of case.
 - Raise `ConfigError` for config keys without a value on non-flag arguments and for `name` keys.
