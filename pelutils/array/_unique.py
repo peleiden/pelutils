@@ -37,6 +37,18 @@ def _resolve_n_threads(n_threads: SupportsIndex | None) -> int:
     return min(_available_cpus(), _MAX_DEFAULT_THREADS)
 
 
+def _with_equal_nans(array: AnyArray) -> AnyArray:
+    """Return the array with the same bytes for all NaNs, which is a copy if there are any NaNs."""
+    if array.dtype.kind not in "fc":
+        return array
+    is_nan = np.isnan(array)
+    if not is_nan.any():
+        return array
+    array = array.copy()
+    array[is_nan] = np.nan
+    return array
+
+
 def unique(  # noqa: PLR0912, PLR0913
     array: npt.ArrayLike,
     *,
@@ -53,8 +65,10 @@ def unique(  # noqa: PLR0912, PLR0913
     for large arrays. Unlike with ``np.unique``, the returned unique values are unsorted. Because of this, it can
     also be used for detecting uniqueness along axes when ordering along the respective axes matters.
 
-    Values are returned in the order they first appear, and elements are equal if their bytes are equal, including any
-    padding bytes.
+    Values are returned in the order they first appear. Elements are equal if their bytes are equal, including any
+    padding bytes, except that all NaNs in float and complex arrays are equal to each other. This takes a temporary
+    copy of arrays containing NaNs, and a returned NaN keeps the bits of its first occurrence. ``0.0`` and ``-0.0`` are
+    different, and NaNs in the fields of structured arrays have no special treatment.
 
     The results do not depend on the number of threads. The GIL is held during the computation, including when using
     multiple threads, so Python threads wait for it to finish. On free-threaded Python, the array must not be modified
@@ -115,8 +129,10 @@ def unique(  # noqa: PLR0912, PLR0913
 
     if n < _MIN_PARALLEL_SIZE or element_size in _SERIAL_ELEMENT_SIZES:
         n_threads = 1
+    # Must stay alive during the call, as C only gets its address
+    keys = _with_equal_nans(array)
     c = _c.unique(
-        array.ctypes.data,
+        keys.ctypes.data,
         n,
         element_size,
         n_threads,
