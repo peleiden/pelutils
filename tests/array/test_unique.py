@@ -141,6 +141,11 @@ def test_unique_longdouble_padding_bytes_are_compared():
     assert len(unique(a)) == 2
 
 
+def test_unique_rejects_objects():
+    with pytest.raises(TypeError):
+        unique(np.array([(1, "a")], dtype=[("i", "i4"), ("o", "O")]))
+
+
 @pytest.mark.parametrize("n_threads", [2.5, "2"])
 @pytest.mark.parametrize("n", [1, 2**18 + 100])
 def test_unique_rejects_non_integer_n_threads(n, n_threads):

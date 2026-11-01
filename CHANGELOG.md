@@ -9,7 +9,7 @@
 - Fix several `TickTock` profiling bugs.
 - Make `unique` faster and multithreaded, configurable with `n_threads`.
 - Add `return_groups` to `unique` for getting the indices of each unique value.
-- `unique` now treats all NaNs as equal.
+- `unique` now treats all NaNs as equal and rejects dtypes with object fields.
 - Fix `unique` crashes and out-of-bounds reads on some unusual arrays.
 
 ## 4.5.0

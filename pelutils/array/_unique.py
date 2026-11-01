@@ -103,7 +103,7 @@ def unique(  # noqa: PLR0912, PLR0913
     n_threads = _resolve_n_threads(n_threads)
 
     array = np.asarray(array)
-    if np.issubdtype(array.dtype, np.object_):
+    if array.dtype.hasobject:
         raise TypeError(f"Unsupported array dtype {array.dtype}")
 
     if array.ndim == 0:
