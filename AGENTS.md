@@ -55,6 +55,8 @@ Ignore untracked local files, unless created as part current work.
 - Add feature changes to the unreleased section of `CHANGELOG.md`. If none exists, create
   the next version's section, mark it unreleased, and update `pyproject.toml`'s version to match.
   Semantic versioning should be followed.
+  Keep the changelog short and simple: one brief line per major change or fix that a user would
+  want to know about, without details that can be looked up elsewhere.
 - Before committing nontrivial changes, request a subagent review. Typo-only and
   formatting-only changes are exempt. If delegation is unavailable, report that limitation.
 - Commits fixing specific issues should mention `Resolves #<issue number>` in the commit body.
