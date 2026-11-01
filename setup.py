@@ -12,6 +12,7 @@ setup(
             name="_pelutils_c",
             sources=c_files,
             extra_compile_args=["-DMS_WIN64"] if sys.platform == "win32" else [],
+            libraries=[] if sys.platform == "win32" else ["pthread"],
         )
     ]
 )
