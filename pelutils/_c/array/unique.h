@@ -13,5 +13,6 @@
 
 
 PyObject *unique(PyObject *self, PyObject *args);
+PyObject *unique_groups(PyObject *self, PyObject *args);
 
 #endif

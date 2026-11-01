@@ -89,3 +89,29 @@ def test_unique():  # noqa: PLR0915
         unique(np.array(str))
     with pytest.raises(ValueError):
         unique(torch.tensor(5))
+
+
+def _all_results(a, **kwargs):
+    return unique(a, return_index=True, return_inverse=True, return_counts=True, return_groups=True, **kwargs)
+
+
+def test_unique_groups():
+    values, groups = unique([1, 2, 3, 1], return_groups=True)
+    assert values.tolist() == [1, 2, 3]
+    assert [group.tolist() for group in groups] == [[0, 3], [1], [2]]
+
+    values, groups = unique(np.array([]), return_groups=True)
+    assert len(values) == 0
+    assert groups == []
+
+    _, groups = unique([5], return_groups=True)
+    assert [group.tolist() for group in groups] == [[0]]
+
+    a = np_rng.integers(0, 3, (2, 200))
+    values, index, inverse, counts, groups = _all_results(a, axis=1)
+    assert len(groups) == values.shape[1]
+    for k, group in enumerate(groups):
+        assert group.dtype == np.int64
+        assert np.array_equal(group, np.flatnonzero(inverse == k))
+        assert group[0] == index[k]
+        assert len(group) == counts[k]

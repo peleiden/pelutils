@@ -63,5 +63,20 @@ PyObject *unique(PyObject *self, PyObject *args) {
     return PyLong_FromSize_t(n_unique);
 }
 
+// Python signature: unique_groups(n, inverse, starts, order) -> None
+// Writes the indices of the elements to order, grouped by unique element and ascending within each group. All pointers
+// are passed as integers. starts must hold the position in order at which each group starts and is overwritten.
+PyObject *unique_groups(PyObject *self, PyObject *args) {
+    u64 n, inverse, starts, order;
+    if (!PyArg_ParseTuple(args, "KKKK", &n, &inverse, &starts, &order))
+        return NULL;
 
-
+    // Stable counting sort. starts is used as the next write position of each group.
+    const i64 *p_inverse = (const i64*)(uintptr_t)inverse;
+    i64 *p_starts = (i64*)(uintptr_t)starts;
+    i64 *p_order = (i64*)(uintptr_t)order;
+    // Visiting elements in order of index keeps each group ascending
+    for (u64 i = 0; i < n; ++ i)
+        p_order[p_starts[p_inverse[i]] ++] = (i64)i;
+    Py_RETURN_NONE;
+}

@@ -7,6 +7,7 @@
 - Allow `TickTock.profile` as a decorator, including on `async` functions.
 - Allow `TickTock.fuse` and `TickTock.fuse_multiple` to merge different profile trees.
 - Fix several `TickTock` profiling bugs.
+- Add `return_groups` to `unique` for getting the indices of each unique value.
 
 ## 4.5.0
 
