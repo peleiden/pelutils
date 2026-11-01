@@ -10,7 +10,7 @@ description = "The Swiss army knife of Python projects: logging, timing and prof
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
-license-files = ["LICENSE.txt", "pelutils/_c/hashmap/LICENSE"]
+license-files = ["LICENSE.txt", "pelutils/_c/hash/LICENSE"]
 authors = [
     { name = "Asger Laurits Schultz", email = "asger.s@protonmail.com" },
     { name = "Søren Winkel Holm", email = "swholm@protonmail.com" },

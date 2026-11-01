@@ -110,7 +110,7 @@ static inline u64 hash_elem(const char *p, u64 size) {
         memcpy(&v, p, size);
         return mix64(v);
     }
-    return hashmap_xxhash3(p, size, 0, 0);
+    return xxh3(p, size, 0);
 }
 
 // Returns the first index of the element at index i, inserting the element if it is new, in which case the first index

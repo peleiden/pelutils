@@ -10,7 +10,7 @@
 
 #include <Python.h>
 
-#include "../hashmap/hashmap.h"
+#include "../hash/hash.h"
 #include "../types.h"
 
 

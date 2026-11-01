@@ -10,6 +10,7 @@
 - Make `unique` faster and multithreaded, configurable with `n_threads`.
 - Add `return_groups` to `unique` for getting the indices of each unique value.
 - Fix edge case bugs in `unique` and better support for edge cases and unusual arrays.
+- Make `SparseGridBlobDetection` faster and use less memory.
 - Add `ArgparseModel` to `job_parser` for declaring job arguments as a Pydantic model.
 - Accept flag values in config files regardless of case.
 - Raise `ConfigError` for config keys without a value on non-flag arguments and for `name` keys.

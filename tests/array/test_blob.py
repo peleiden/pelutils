@@ -146,3 +146,42 @@ class TestSparseGridBlobDetection:
         for pos_blob, neg_blob in zip(pos_detector.find_all_blobs(), neg_detector.find_all_blobs(), strict=True):
             assert (pos_blob == neg_blob).all()
         assert neg_detector._visited.all()
+
+    def test_duplicate_coordinates(self):
+        """Test that each row is in exactly one blob, and that only the last row of a duplicate is reached from neighbours."""
+        coords = np.array([[0, 1], [0, 0], [0, 0], [5, 5]])
+        blobs = SparseGridBlobDetection(coords).find_all_blobs()
+        assert [blob.tolist() for blob in blobs] == [[0, 2], [1], [3]]
+
+    def test_duplicate_coordinates_from_wrapping(self):
+        """Test that coordinates which only become equal when wrapped are treated as duplicates."""
+        coords = np.array([[0], [10], [1]])
+        blobs = SparseGridBlobDetection(coords, wrap_axes={0: 10}).find_all_blobs()
+        assert [blob.tolist() for blob in blobs] == [[0, 2], [1]]
+
+    def test_random_against_flood_fill(self):
+        """Test many coordinates, where claimed slots must not hide other coordinates in the table."""
+        rng = np.random.default_rng(0)
+        grid = rng.random((80, 80, 3)) < 0.45
+        # Shuffling means that coordinates are not claimed in the order they were inserted
+        coords = rng.permutation(np.column_stack(np.where(grid)))
+
+        expected: set[frozenset[tuple[int, ...]]] = set()
+        remaining = {tuple(int(x) for x in coord) for coord in coords}
+        while remaining:
+            stack = [remaining.pop()]
+            blob = set(stack)
+            while stack:
+                coord = stack.pop()
+                for axis in range(3):
+                    for direction in (-1, 1):
+                        neighbour = (*coord[:axis], coord[axis] + direction, *coord[axis + 1 :])
+                        if neighbour in remaining:
+                            remaining.remove(neighbour)
+                            blob.add(neighbour)
+                            stack.append(neighbour)
+            expected.add(frozenset(blob))
+
+        blobs = SparseGridBlobDetection(coords).find_all_blobs()
+        assert sum(len(blob) for blob in blobs) == len(coords)
+        assert {frozenset(tuple(int(x) for x in coords[i]) for i in blob) for blob in blobs} == expected

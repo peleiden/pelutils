@@ -68,7 +68,7 @@ class SparseGridBlobDetection:
         # The pointers array is used to store pointers from objects allocated in the C code and pass them between calls
         # This is very ugly and hacky but it works and is arguably simpler that using the Python C API correctly in this
         # use case - at least I'm lazy enough to assume so
-        # This first element is the pointer to the coord-to-index hashmap
+        # This first element is the pointer to the coord-to-index lookup table
         self._pointers = np.empty(1, dtype=np.uint64)
 
         self._index_args = c_utils.ArrayArgs(self._grid_coords)
@@ -172,7 +172,7 @@ class SparseGridBlobDetection:
             _c.free_lookup_table(self._pointer_args.array_ptr)
         except AttributeError:
             # If the error happens early in init (e.g. wrong call to __init__), _pointer_args has not yet been defined,
-            # and the hashmap has not been created
+            # and the lookup table has not been created
             pass
 
     def __copy__(self):
