@@ -12,6 +12,7 @@
 - Add `ArgparseModel` to `job_parser` for declaring job arguments as a Pydantic model.
 - Accept flag values in config files regardless of case.
 - Raise `ConfigError` for config keys without a value on non-flag arguments and for `name` keys.
+- Fix arguments named `config` when using config files, and reject arguments named `explicit-args` or `docfile-content`.
 
 ## 4.5.0
 

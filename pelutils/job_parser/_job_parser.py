@@ -49,6 +49,7 @@ class JobParser:
     _reserved_arguments: tuple[ArgumentTypes, ...] = (_name_arg, _config_arg)
     _reserved_names = {arg.name for arg in _reserved_arguments}  # noqa: RUF012
     _reserved_names.add("help")  # Reserved by argparse
+    _job_description_names = {"explicit_args", "docfile_content"}  # noqa: RUF012
     _reserved_abbreviations = {arg.abbrev for arg in _reserved_arguments if arg.abbrev}  # noqa: RUF012
 
     @property
@@ -77,8 +78,10 @@ class JobParser:
         self._configparser.optionxform = str  # pyright: ignore[reportAttributeAccessIssue]
 
         # Ensure that no conflicts exist with reserved arguments
-        if any(arg.name in self._reserved_names for arg in arguments):
-            raise JobParserError(f"An argument conflicted with one of the reserved arguments: {self._reserved_names}")
+        if any(arg.name in self._reserved_names or fixdash(arg.name) in self._job_description_names for arg in arguments):
+            raise JobParserError(
+                f"An argument conflicted with one of the reserved arguments: {self._reserved_names | self._job_description_names}"
+            )
         if any(arg.abbrev in self._reserved_abbreviations for arg in arguments):
             raise JobParserError(f"An argument conflicted with one of the reserved abbreviations: {self._reserved_abbreviations}")
 
@@ -279,10 +282,7 @@ class JobParser:
                 # Final values of all arguments
                 # No prepended dashes, but in-word dashes have been changed to underscores
                 value_dict = {
-                    **except_keys(
-                        self._get_default_values(),
-                        ("name", "config"),
-                    ),
+                    **self._get_default_values(),
                     **config_args,
                     **{argname: value for argname, value in except_keys(vars(args), ("name",)).items() if argname in explicit_cli_args},
                 }

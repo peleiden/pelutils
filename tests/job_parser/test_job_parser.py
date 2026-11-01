@@ -423,6 +423,20 @@ class TestParser(UnitTestCollection):
             JobParser().parse_job()
 
     @restore_argv
+    def test_argument_named_config(self):
+        config = self.get_test_path("config-arg.ini")
+        config.write_text("[job]\nother = 2\n")
+        sys.argv = [*_argv_template, "-c", str(config)]
+        job = JobParser(OptionalArg("config", default="x"), OptionalArg("other", default=1)).parse_job()
+        assert job.config == "x"
+        assert job.given_args_to_dict()["config"] == "x"
+
+    @pytest.mark.parametrize("name", ["explicit-args", "explicit_args", "docfile-content"])
+    def test_names_conflicting_with_job_description(self, name: str):
+        with pytest.raises(JobParserError, match="reserved"):
+            JobParser(OptionalArg(name))
+
+    @restore_argv
     def test_document(self):
         output_dir = self.get_test_path(_testdir)
         docfile = output_dir / "docfile.ini"

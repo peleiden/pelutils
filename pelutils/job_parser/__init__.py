@@ -41,7 +41,8 @@ like:
 .. code-block:: ini
 
     [DEFAULT]
-    data-path = /data/train    # Shared by every job below
+    # Shared by every job below
+    data-path = /data/train
 
     [baseline]
     # Inherits the default learning rate; fp16 as a bare key means True

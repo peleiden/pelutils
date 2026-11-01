@@ -287,6 +287,22 @@ class TestArgparseModel(UnitTestCollection):
         assert Job(data_path=Path("x")).name == "Job"
 
     @restore_argv
+    def test_documentation_of_default_factory(self):
+        class WithFactory(ArgparseModel):
+            one: int = Field(default_factory=lambda: 1)
+            many: list[int] = Field(default_factory=lambda: [1, 2])
+            pair: tuple[int, float] = Field(default_factory=lambda: (1, 2.0))
+
+        docfile = self.get_test_path("docs") / "factory.ini"
+        job = self._parse(model=WithFactory)
+        job.write_documentation(docfile, append=False)
+        content = docfile.read_text()
+        assert "'one': <default_factory>" in content
+        assert "'many': <default_factory>" in content
+        assert "'pair': <default_factory>" in content
+        assert job.model_dump() == {"one": 1, "many": [1, 2], "pair": (1, 2.0)}
+
+    @restore_argv
     def test_documentation(self):
         docfile = self.get_test_path("docs") / "job.ini"
         sys.argv = ["main.py", "-c", f"{self._config_file}:first"]

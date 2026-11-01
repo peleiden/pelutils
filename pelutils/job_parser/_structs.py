@@ -237,7 +237,7 @@ class JobDescription(Namespace):
         Parser bookkeeping and private attributes are not included in the result.
         """
         d = vars(self)
-        d = {kw: v for kw, v in d.items() if not kw.startswith("_") and kw not in {"config", "explicit_args"}}
+        d = {kw: v for kw, v in d.items() if not kw.startswith("_") and kw != "explicit_args"}
         return d
 
     def write_documentation(self, path: str | Path, *, append: bool = True):

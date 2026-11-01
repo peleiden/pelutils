@@ -38,6 +38,14 @@ def _nargs(field_name: str, annotation: Any) -> int | None:  # pyright: ignore[r
     return None
 
 
+class _FactoryDefault(list[Any]):  # pyright: ignore[reportExplicitAny]
+    """Placeholder in job documentation. The parser requires a list of length `nargs` for arguments with `nargs`."""
+
+    @override
+    def __repr__(self) -> str:
+        return "<default_factory>"
+
+
 def _argument(field_name: str, field: FieldInfo) -> ArgumentTypes:
     """Convert a model field to an argument. Values stay strings, as they are converted by the model."""
     if field.alias is not None or field.validation_alias is not None:
@@ -53,8 +61,8 @@ def _argument(field_name: str, field: FieldInfo) -> ArgumentTypes:
         return RequiredArg(name, type=str, help=f"{description} (required)", nargs=nargs)
 
     # Parser defaults are only displayed, so default factories are not called
-    default = field.default if field.default_factory is None else None
-    if nargs is not None and default is not None:
+    default = field.default if field.default_factory is None else _FactoryDefault([None] * (nargs or 0))
+    if nargs is not None and default is not None and field.default_factory is None:
         default = list(default)
     if field.default_factory is None:
         description += f" (default: {default})".replace("%", "%%")
@@ -80,8 +88,9 @@ class ArgparseModel(BaseModel):  # noqa: PLW1641
     - Short options are assigned automatically from field names, so they can change when
       fields are added.
 
-    Fields named ``name``, ``config_file``, or ``help`` are reserved. Fields of type
-    ``dict`` or ``BaseModel`` and fields with aliases are not supported.
+    Fields named ``name``, ``config_file``, ``help``, ``explicit_args``, or
+    ``docfile_content`` are not allowed. Fields of type ``dict`` or ``BaseModel`` and
+    fields with aliases are not supported.
 
     All values given by the command line or a configuration file are validated by the
     model, so field constraints and validators apply to them. Since those values are
