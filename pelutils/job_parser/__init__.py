@@ -64,9 +64,8 @@ constraints and validators apply to command-line and config file values:
 .. code-block:: python
 
     from pathlib import Path
-    from typing import Annotated
     from pydantic import Field
-    from pelutils.job_parser import Arg, ArgparseModel
+    from pelutils.job_parser import ArgparseModel
 
     class TrainJob(ArgparseModel):
         '''Train a model.'''  # Shown by --help
@@ -75,7 +74,6 @@ constraints and validators apply to command-line and config file values:
         learning_rate: float = Field(1e-4, gt=0, description="Optimizer learning rate")
         layers: list[int] = [64, 64]  # --layers 128 128
         fp16: bool = False  # --fp16
-        seed: Annotated[int, Arg(abbrev="S")] = 0  # -S 42
 
     for job in TrainJob.parse_jobs():
         print(job.name, job.data_path, job.learning_rate)
@@ -85,12 +83,11 @@ Config files, overrides, and documentation work exactly as described above. Use
 :meth:`ArgparseModel.parse_job` for a single job; :class:`JobParser`'s ``multiple_jobs`` is not needed.
 """
 
-from ._argparse_model import Arg, ArgparseModel
+from ._argparse_model import ArgparseModel
 from ._job_parser import JobParser
 from ._structs import ArgumentTypes, ConfigError, Flag, JobDescription, JobParserError, OptionalArg, RequiredArg
 
 __all__ = (
-    "Arg",
     "ArgparseModel",
     "ArgumentTypes",
     "ConfigError",

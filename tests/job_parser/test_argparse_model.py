@@ -7,7 +7,7 @@ from typing import Annotated, Literal, Self
 import pytest
 from pydantic import Field, model_validator
 
-from pelutils.job_parser import Arg, ArgparseModel, ConfigError, JobParserError
+from pelutils.job_parser import ArgparseModel, ConfigError, JobParserError
 from pelutils.tests import UnitTestCollection, restore_argv
 
 
@@ -182,10 +182,7 @@ class TestArgparseModel(UnitTestCollection):
         class WithAlias(ArgparseModel):
             value: int = Field(1, alias="other")
 
-        class WithArgDefault(ArgparseModel):
-            value: int = Arg(abbrev="v")  # pyright: ignore[reportAssignmentType]
-
-        for model in (WithDict, WithModel, WithContainerUnion, WithAlias, WithArgDefault):
+        for model in (WithDict, WithModel, WithContainerUnion, WithAlias):
             with pytest.raises(JobParserError, match=r"'(values|nested|value)'"):
                 self._parse(model=model)
 
@@ -196,17 +193,6 @@ class TestArgparseModel(UnitTestCollection):
 
         with pytest.raises(JobParserError, match="reserved"):
             self._parse(model=WithConfigFile)
-
-    @restore_argv
-    def test_arg_options(self):
-        class WithOptions(ArgparseModel):
-            seed: Annotated[int, Arg(abbrev="S")] = 0
-            flag: Annotated[bool, Arg(abbrev="F")] = False
-
-        job = self._parse("-S", "3", "-F", model=WithOptions)
-        assert isinstance(job, WithOptions)
-        assert job.seed == 3
-        assert job.flag is True
 
     @restore_argv
     def test_help(self, capsys: pytest.CaptureFixture[str]):

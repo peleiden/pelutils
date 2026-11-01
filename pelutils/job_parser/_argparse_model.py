@@ -1,5 +1,4 @@
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
 from pathlib import Path
 from types import NoneType, UnionType
 from typing import Annotated, Any, Self, Union, get_args, get_origin  # pyright: ignore[reportDeprecated]
@@ -11,22 +10,6 @@ from typing_extensions import override
 
 from ._job_parser import JobParser
 from ._structs import ArgumentTypes, Flag, JobDescription, JobParserError, OptionalArg, RequiredArg
-
-
-@dataclass(frozen=True)
-class Arg:
-    """Set the short option of a :class:`ArgparseModel` field.
-
-    Attach it to the whole field type with ``typing.Annotated``, e.g.
-    ``seed: Annotated[int | None, Arg(abbrev="S")] = None``.
-
-    Parameters
-    ----------
-    abbrev : str
-        Single-letter short option, without its leading dash.
-    """
-
-    abbrev: str
 
 
 def _nargs(field_name: str, annotation: Any) -> int | None:  # pyright: ignore[reportExplicitAny]
@@ -59,19 +42,15 @@ def _argument(field_name: str, field: FieldInfo) -> ArgumentTypes:
     """Convert a model field to an argument. Values stay strings, as they are converted by the model."""
     if field.alias is not None or field.validation_alias is not None:
         raise JobParserError(f"Field '{field_name}' has an alias, which is not supported")
-    if isinstance(field.default, Arg):
-        raise JobParserError(f"Field '{field_name}' has Arg as its default; attach it with typing.Annotated instead")
-
     name = field_name.replace("_", "-")
-    abbrev = next((meta.abbrev for meta in field.metadata if isinstance(meta, Arg)), None)
     description = (field.description or "").replace("%", "%%")
 
     if field.annotation is bool and field.default is False:
-        return Flag(name, abbrev=abbrev, help=description)
+        return Flag(name, help=description)
 
     nargs = _nargs(field_name, field.annotation)
     if field.is_required():
-        return RequiredArg(name, type=str, abbrev=abbrev, help=f"{description} (required)", nargs=nargs)
+        return RequiredArg(name, type=str, help=f"{description} (required)", nargs=nargs)
 
     # Parser defaults are only displayed, so default factories are not called
     default = field.default if field.default_factory is None else None
@@ -79,7 +58,7 @@ def _argument(field_name: str, field: FieldInfo) -> ArgumentTypes:
         default = list(default)
     if field.default_factory is None:
         description += f" (default: {default})".replace("%", "%%")
-    return OptionalArg(name, default=default, type=str, abbrev=abbrev, help=description, nargs=nargs)
+    return OptionalArg(name, default=default, type=str, help=description, nargs=nargs)
 
 
 class ArgparseModel(BaseModel):  # noqa: PLW1641
@@ -99,7 +78,7 @@ class ArgparseModel(BaseModel):  # noqa: PLW1641
     - ``Field(description=...)`` is the help text, and the class docstring is the
       description in ``--help``.
     - Short options are assigned automatically from field names, so they can change when
-      fields are added. Use :class:`Arg` to fix one.
+      fields are added.
 
     Fields named ``name``, ``config_file``, or ``help`` are reserved. Fields of type
     ``dict`` or ``BaseModel`` and fields with aliases are not supported.
