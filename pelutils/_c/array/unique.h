@@ -4,6 +4,8 @@
 #define PY_Suint64_t_CLEAN
 
 #include <inttypes.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <Python.h>
