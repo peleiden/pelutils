@@ -1310,3 +1310,12 @@ def test_bounded_memory():
     gc.collect()
     # Interval timers of the finished thread are released
     assert key_ref() is None
+
+
+def test_profile_start():
+    tt = TickTock()
+    with tt.profile("a"):
+        pass
+    profile = next(tt.iter_profiles())
+    assert isinstance(profile, Profile)
+    assert profile.start > 0

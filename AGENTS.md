@@ -6,6 +6,7 @@
   `pelutils/tests/` contains public test helpers, not the project's test suite.
 - Public APIs live in submodules and their `__all__` exports. Keep the package root
   limited to `__version__`; preserve API compatibility unless the task requires a change.
+  Breaking changes to released public APIs require explicit permission from the user; bug fixes are exempt.
 - Follow nearby code, add type hints, and use NumPy-style docstrings for public APIs.
   Ruff configuration in `ruff.toml` defines formatting and lint rules.
 - Keep docstrings concise; add detail where needed to explain non-obvious behavior or constraints.
