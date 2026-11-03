@@ -62,7 +62,7 @@ class JobParser:
         """Argument abbreviations which are reserved."""
         return self._reserved_abbreviations
 
-    def __init__(
+    def __init__(  # noqa: PLR0912
         self,
         *arguments: ArgumentTypes,
         description: str | None = None,
@@ -102,6 +102,8 @@ class JobParser:
                 _used_abbreviations.add(argument.abbrev)
             elif argument.abbrev:
                 raise JobParserError(f"Abbreviation '{argument.abbrev}' was used multiple times")
+            elif not argument._auto_abbrev:  # pyright: ignore[reportPrivateUsage]
+                continue
             # Autogenerate abbreviation
             # First argname[0] is tried. If it exists, the other casing is used if it does not exist
             elif argname[0] not in _used_abbreviations:
