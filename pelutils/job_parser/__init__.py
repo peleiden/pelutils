@@ -82,6 +82,24 @@ constraints and validators apply to command-line and config file values:
 
 Config files, overrides, and documentation work exactly as described above. Use
 :meth:`ArgparseModel.parse_job` for a single job; :class:`JobParser`'s ``multiple_jobs`` is not needed.
+
+Fields holding a Pydantic model group arguments under dotted names, and ``Field(init=False)``
+keeps a field off the command line:
+
+.. code-block:: python
+
+    from pydantic import BaseModel
+
+    class Optimizer(BaseModel):
+        learning_rate: float = 1e-3
+        momentum: float = 0.9
+
+    class TrainJob(ArgparseModel):
+        optimizer: Optimizer = Optimizer(momentum=0.5)  # --optimizer.learning-rate 0.1
+        run_id: str = Field(default="", init=False)  # Not an argument
+
+In config files, use the same names, e.g. ``optimizer.learning-rate = 0.1``. Arguments that are
+not given keep the values of the default, so ``momentum`` above stays ``0.5``.
 """
 
 from ._argparse_model import ArgparseModel

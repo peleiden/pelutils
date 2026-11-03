@@ -70,6 +70,9 @@ class Profile:
         else:
             assert depth == 0
         self.children: list[Profile] = list()
+        # Timestamp of when the latest hit started, initialised to 0
+        # Kept for backwards compatibility and has no internal functionality, as runtimes are measured per hit
+        self.start: float = 0
         # Number of hits that have started but not yet finished
         self._active_hits = 0
         # Children by name for fast lookup
@@ -314,6 +317,7 @@ class TickTock:
         frame = _Frame(profile, top, tree, disabled, hits)
         frame.token = self._stack.set(frame)
         frame.start = perf_counter()
+        profile.start = frame.start  # Only for users, see Profile.start
         return frame, profile_was_new
 
     def _end_profile(self, frame: _Frame, *, completed: bool = True):
