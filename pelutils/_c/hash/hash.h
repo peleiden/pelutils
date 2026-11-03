@@ -2,6 +2,8 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
+// Header-only so the hash can be inlined into the loops that call it
+
 #ifndef HASH_H
 #define HASH_H
 
