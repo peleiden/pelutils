@@ -252,6 +252,10 @@ for job in TrainJob.parse_jobs():  # Or TrainJob.parse_job() for a single job
     print(job.name, job.data_path, job.learning_rate, job.fp16)
 ```
 
+Fields holding a Pydantic model become dotted arguments such as `--optimizer.learning-rate`,
+and fields with `Field(init=False)` are left out of the command line. To save and load jobs as
+JSON, also inherit from `UniversalJsonModel`: `class TrainJob(ArgparseModel, UniversalJsonModel)`.
+
 ## Fast `unique`
 
 A linear-time alternative to `numpy.unique`, significantly faster on large arrays. Unlike with `np.unique`, the returned elements are unsorted.

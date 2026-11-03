@@ -460,3 +460,12 @@ class TestParser(UnitTestCollection):
         assert " " not in job.name
         assert ":" not in job.name
         assert "/" not in job.name
+
+    @restore_argv
+    def test_dotted_names_get_abbreviations(self):
+        # Abbreviations are assigned to dotted names as in previous versions; only ArgparseModel opts out
+        parser = JobParser(OptionalArg("model.lr", type=float, default=1.0), OptionalArg("mode", default="a"))
+        sys.argv = ["main.py", "-m", "0.5", "-M", "b"]
+        job = parser.parse_job()
+        assert job["model.lr"] == 0.5
+        assert job.mode == "b"

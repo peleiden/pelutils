@@ -37,7 +37,7 @@ dependencies = [
     "matplotlib>=3.3",
     "scipy>=1.6",
     "tqdm>=4.55",
-    "pydantic>=2",
+    "pydantic>=2.11",
     "typing_extensions>=4.6",
 ]
 

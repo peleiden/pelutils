@@ -36,6 +36,9 @@ class _AbstractArgument(ABC):  # noqa: B024
     '--' is automatically prepended to `name` when given from the command line.
     """
 
+    # Whether JobParser may assign an abbreviation when none is given
+    _auto_abbrev = True
+
     def __init__(self, name: str, abbrev: str | None, help: str | None, **kwargs: Any):  # pyright: ignore[reportExplicitAny]
         self._validate(name, abbrev)
 
