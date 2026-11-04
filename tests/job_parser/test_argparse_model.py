@@ -596,6 +596,22 @@ class TestArgparseModel(UnitTestCollection):
             self._parse("--limits.low", "2", model=WithLimited)
 
     @restore_argv
+    def test_edge_underscores(self):
+        class Inner(BaseModel):
+            beta_: int = 0
+
+        class Edges(ArgparseModel):
+            lambda_: float = 0.0
+            max__norm__: int = 0
+            inner: Inner = Inner()
+
+        job = self._parse(*"--lambda_ 0.5 --max--norm__ 2 --inner.beta_ 3".split(), model=Edges)
+        assert job == Edges(lambda_=0.5, max__norm__=2, inner=Inner(beta_=3), name=job.name)
+
+        with pytest.raises(JobParserError, match=r"\n  --inner\.beta_: "):
+            self._parse("--inner.beta_", "x", model=Edges)
+
+    @restore_argv
     def test_invalid_model_defaults(self):
         class DictDefault(ArgparseModel):
             schedule: Schedule = Field({"warmup": 1}, validate_default=True)  # pyright: ignore[reportAssignmentType]

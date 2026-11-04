@@ -1,3 +1,4 @@
+import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from types import NoneType, UnionType
@@ -135,9 +136,14 @@ class _FactoryDefault(list[Any]):  # pyright: ignore[reportExplicitAny]
         return "<default_factory>"
 
 
+def _dashed(name: str) -> str:
+    """Replace underscores with dashes, except at the start or end of each dotted part, e.g. ``lambda_``."""
+    return re.sub(r"(?<=[^_.])_+(?=[^_.])", lambda match: "-" * len(match[0]), name)
+
+
 def _argument(name: str, field: FieldInfo, default: Any) -> ArgumentTypes:  # pyright: ignore[reportExplicitAny]
     """Convert a field to an argument. Values stay strings, as they are converted by the model."""
-    arg_name = name.replace("_", "-")
+    arg_name = _dashed(name)
     description = (field.description or "").replace("%", "%%")
 
     if field.annotation is bool and default is False:
@@ -184,7 +190,8 @@ class ArgparseModel(BaseModel):
     to get instances of the subclass. Values are resolved as in :class:`JobParser`: The
     command line overrides configuration files, which override field defaults.
 
-    Fields map to arguments as follows, where ``learning_rate`` becomes ``--learning-rate``:
+    Fields map to arguments as follows, where ``learning_rate`` becomes ``--learning-rate``
+    and leading or trailing underscores are kept, so ``lambda_`` becomes ``--lambda_``:
 
     - Fields without a default are required.
     - ``bool`` fields defaulting to ``False`` are flags, which can only be turned on from
@@ -342,5 +349,5 @@ def _format_error(model: type[BaseModel], error: ErrorDetails) -> str:
     if not path:
         return f"  {error['msg']}"
     # Errors of a whole nested model, e.g. from its model validators, have no option of their own
-    location = ".".join(path).replace("_", "-")
+    location = _dashed(".".join(path))
     return f"  {location}: {error['msg']}" if nested is not None else f"  --{location}: {error['msg']}"
