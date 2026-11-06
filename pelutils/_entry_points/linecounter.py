@@ -96,7 +96,7 @@ def linecounter(repos: list[str], output: str, extensions: str, date_format: str
     for possible_repo_path in repos:
         repo_path, __ = git_repo_info(possible_repo_path)
         if repo_path is None:
-            raise ValueError(f"{repo_path} is not a git repository")
+            raise ValueError(f"{possible_repo_path} is not a git repository")
         os.chdir(repo_path)
 
         repo = git.Repo()
