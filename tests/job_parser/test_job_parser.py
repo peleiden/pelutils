@@ -431,6 +431,40 @@ class TestParser(UnitTestCollection):
         assert job.config == "x"
         assert job.given_args_to_dict()["config"] == "x"
 
+    def test_reserved_abbreviation(self):
+        with pytest.raises(JobParserError, match="reserved abbreviations"):
+            JobParser(OptionalArg("cfg", abbrev="c", default=1))
+
+    @restore_argv
+    def test_config_without_section_header(self):
+        config = self.get_test_path("no-header.ini")
+        config.write_text("foo = 1\n")
+        sys.argv = [*_argv_template, "-c", str(config)]
+        with pytest.raises(ConfigError, match="no section headers"):
+            JobParser(OptionalArg("foo", default=0)).parse_job()
+
+    @restore_argv
+    def test_config_file_not_found(self):
+        sys.argv = [*_argv_template, "-c", str(self.get_test_path("does-not-exist.ini"))]
+        with pytest.raises(FileNotFoundError):
+            JobParser(OptionalArg("foo", default=0)).parse_job()
+
+    @restore_argv
+    def test_config_unparsable_value(self):
+        config = self.get_test_path("bad-value.ini")
+        config.write_text("[job]\nfoo = not-a-number\n")
+        sys.argv = [*_argv_template, "-c", str(config)]
+        with pytest.raises(ValueError, match="'foo' in section 'job'"):
+            JobParser(OptionalArg("foo", default=0)).parse_job()
+
+    @restore_argv
+    def test_parse_job_with_multiple_jobs(self):
+        sys.argv = [*_argv_template, "-c", str(self._multiple_jobs_file), "--gib-num", "3.2"]
+        parser = JobParser(*_sample_arguments, multiple_jobs=True)
+        with pytest.raises(ConfigError, match="parse_jobs"):
+            parser.parse_job()
+        assert len(parser.parse_jobs()) == 2
+
     @pytest.mark.parametrize("name", ["explicit-args", "explicit_args", "docfile-content"])
     def test_names_conflicting_with_job_description(self, name: str):
         with pytest.raises(JobParserError, match="reserved"):

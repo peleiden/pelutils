@@ -81,6 +81,17 @@ class TestRotate(UnitTestCollection):
         assert len(written) == n
         assert all(x == "0" for x in written)
 
+    def test_write_mode(self):
+        self.reset()
+        rotater = Rotater(None, self.logfile)
+        rotater.write("a\n")
+        rotater.write("b\n", "a")
+        assert rotater.base_file.read_text() == "a\nb\n"
+        rotater.write("c\n", "w")
+        assert rotater.base_file.read_text() == "c\n"
+        with pytest.raises(ValueError, match="Write mode"):
+            rotater.write("", "x")
+
     def test_size_rotate(self):
         self.reset()
         n = 1500
@@ -99,10 +110,9 @@ class TestRotate(UnitTestCollection):
         for unit in Rotater.supported_time_units:
             for now in start_times:
                 self.reset()
-                freezer = freeze_time(now)
-                freezer.start()
-                rotater = Rotater(unit, self.logfile)
-                rotater.write("")
+                with freeze_time(now):
+                    rotater = Rotater(unit, self.logfile)
+                    rotater.write("")
                 files = sorted(self.logfile.parent.glob("*.log"))
                 assert not self.logfile.is_file()
                 assert len(files) == 1
@@ -110,27 +120,23 @@ class TestRotate(UnitTestCollection):
                 assert f".{now.year:04}" in fname
                 if unit == "hour":
                     assert f"_{now.hour:02}." in fname
-                freezer.stop()
 
-                now += timedelta(3213, 28137)  # noqa: PLW2901
-                freezer = freeze_time(now)
-                freezer.start()
-                rotater.write("")
+                later = now + timedelta(3213, 28137)
+                with freeze_time(later):
+                    rotater.write("")
                 files = sorted(self.logfile.parent.glob("*.log"))
                 assert not self.logfile.is_file()
                 assert len(files) == 2
                 fname = files[1].name
-                assert f".{now.year:04}" in fname
+                assert f".{later.year:04}" in fname
                 if unit == "hour":
-                    assert f"_{now.hour:02}." in fname
-                freezer.stop()
+                    assert f"_{later.hour:02}." in fname
 
     def test_next_time(self):
         for unit in Rotater.supported_time_units:
             for now in start_times:
-                freezer = freeze_time(now)
-                freezer.start()
-                rotater = Rotater(unit, self.logfile)
+                with freeze_time(now):
+                    rotater = Rotater(unit, self.logfile)
 
                 for _i in range(1000):
                     if unit == "hour":
@@ -160,7 +166,6 @@ class TestRotate(UnitTestCollection):
 
                     rotater.current_time = rotater.next_time
                     rotater.next_time = rotater.get_next_time()
-                freezer.stop()
 
     def test_resolve(self):
         """Test resolution with no constraints: Should always return the base file."""

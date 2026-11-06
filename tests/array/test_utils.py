@@ -46,6 +46,11 @@ def test_array_ptr():
     assert array_ptr(a).value == array_ptr(a.numpy()).value
 
 
+def test_array_bytes_invalid_type():
+    with pytest.raises(TypeError):
+        array_bytes([1, 2, 3])
+
+
 def test_tensor_size():
     sizes = np.arange(5)
     for x in sizes:

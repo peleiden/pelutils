@@ -71,6 +71,11 @@ class TestUniversalJsonModel(UnitTestCollection):
         assert "date" not in json_dict
         assert json_dict["np_arr"].startswith(f"{_PICKLE_PREFIX}:")
 
+    @pytest.mark.parametrize("kwarg", ["mode", "fallback"])
+    def test_to_json_dict_rejects_fixed_kwargs(self, kwarg: str):
+        with pytest.raises(TypeError, match="fixed"):
+            data.to_json_dict(**{kwarg: None})
+
     def test_to_json_dict_forwards_model_dump_warnings(self):
         model = SerializerWarningModel(value=1)
 
