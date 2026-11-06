@@ -6,26 +6,29 @@ from pelutils.misc._conditional_import import import_git
 git = import_git()
 
 
-def git_repo_info(path: str | Path | None = None) -> tuple[Path, str] | tuple[None, None]:
-    """Return absolute path of git repository and commit SHA.
+def git_repo_info(path: str | Path | None = None) -> tuple[Path, str | None] | tuple[None, None]:
+    """Return the working tree root and current commit SHA of a git repository.
 
-    Searches for repo by searching upwards from given directory (if None: uses working dir).
-    If it cannot find a repository, it returns (None, None).
+    The repository is found by searching upwards from `path`, or from the working directory
+    if `path` is None. If no repository with a working tree is found, or git is unavailable,
+    ``(None, None)`` is returned. The commit SHA is None if the repository has no commits.
     """
     if git is None:
         return None, None
     if path is None:
         path = os.getcwd()
-    path = str(path)
-    cdir = os.path.join(path, ".")
-    pdir = os.path.dirname(cdir)
-    while cdir != pdir:
-        cdir = pdir
-        try:  # Check if repository
-            repo = git.Repo(cdir)
-            return Path(cdir).resolve(), str(repo.head.commit)
-        except git.InvalidGitRepositoryError:
-            pass
-        pdir = os.path.dirname(cdir)
-
-    return None, None
+    try:
+        # Resolve symlinks first, as git does
+        repo = git.Repo(Path(path).resolve(), search_parent_directories=True)
+    except git.InvalidGitRepositoryError:
+        return None, None
+    with repo:
+        if repo.working_tree_dir is None:
+            # Bare repository
+            return None, None
+        try:
+            commit = repo.head.commit.hexsha
+        except ValueError:
+            # HEAD points to a branch without commits
+            commit = None
+        return Path(repo.working_tree_dir).resolve(), commit
