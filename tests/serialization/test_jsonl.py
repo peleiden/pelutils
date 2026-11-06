@@ -40,3 +40,14 @@ class TestJsonl(UnitTestCollection):
             content = list(jsonl_load(f))
 
         assert content == 2 * data
+
+    def test_blank_lines_ignored(self):
+        content = '\n{"a": 1}\n  \n\n{"b": 2}\n'
+        assert list(jsonl_loads(content)) == [{"a": 1}, {"b": 2}]
+        self.path.write_text(content)
+        with open(self.path) as f:
+            assert list(jsonl_load(f)) == [{"a": 1}, {"b": 2}]
+
+    def test_empty(self):
+        assert jsonl_dumps([]) == ""
+        assert list(jsonl_loads("")) == []

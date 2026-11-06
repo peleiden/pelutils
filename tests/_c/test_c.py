@@ -24,3 +24,8 @@ def test_get_c_array_args():
             assert d == ctypes.c_uint64.from_address(args.dims_ptr + i * itemsize).value
             assert s == ctypes.c_uint64.from_address(args.strides_ptr + i * itemsize).value
             s *= d
+
+
+def test_array_args_invalid_type():
+    with pytest.raises(TypeError):
+        c_utils.ArrayArgs([1, 2, 3])

@@ -29,7 +29,7 @@ def test_colours():
 
 
 def test_get_dateticks():
-    start_time = datetime.now()
+    start_time = datetime(2024, 3, 5, 12)
     end_time = start_time + timedelta(days=10)
 
     num_datapoints = 50
@@ -57,13 +57,20 @@ def test_histogram():
     assert isinstance(y, np.ndarray)
     assert (y >= 0).all()
 
+    assert len(x) == len(y) == 25
+
+    # Without density, bin heights are counts
+    x, y = histogram(obs, bins=2, density=False)
+    assert np.allclose(x, [1.25, 1.75])
+    assert y.tolist() == [2, 3]
+
     x, y = histogram(obs, ignore_zeros=True)
     assert (y > 0).all()
 
 
 class TestBinning:
     bins = 25
-    uniform_data = np.random.uniform(1, 200, 500)  # noqa: NPY002
+    uniform_data = np.random.default_rng(0).uniform(1, 200, 500)
 
     def test_linear_binning(self):
         binning = linear_binning(self.uniform_data, self.bins)
@@ -108,10 +115,9 @@ class TestFigure(UnitTestCollection):
         assert os.path.exists(self.savepath)
         os.remove(self.savepath)
 
-        with pytest.raises(ZeroDivisionError):
-            with Figure(self.savepath):
-                0 / 0  # noqa: B018
-            assert not os.path.exists(self.savepath)
+        with pytest.raises(ZeroDivisionError), Figure(self.savepath):
+            0 / 0  # noqa: B018
+        assert not os.path.exists(self.savepath)
 
     def test_restore_rc_params(self):
         default_fontsize = mpl.rcParams["font.size"]
