@@ -29,8 +29,8 @@ type hints (including `py.typed`), and is easy to start using.
 - **`UniversalJsonModel`** — a `pydantic.BaseModel` that can save *any* attribute to a
   human-readable JSON file (numpy arrays, tensors, and other unserialisable types are
   pickled transparently) and load it straight back.
-- **`JobParser`** — one parser that unifies command-line arguments and config files,
-  with support for running many jobs from a single config and auto-documenting them.
+- **`ArgparseModel`** — write a Pydantic model, get a typed, validated CLI with config
+  file support, multi-job configs, and nested argument groups. No argparse boilerplate.
 - **`unique`** — a linear-time drop-in for `numpy.unique`, dramatically faster on
   large arrays (backed by a small C extension).
 - **Data-science helpers** — a `matplotlib` `Figure` context manager with improved default
@@ -198,63 +198,72 @@ execute arbitrary code. Do not load files from untrusted sources.
 
 ## Config and command-line argument parsing
 
-`JobParser` combines typed command-line options with INI config files. CLI values
-override config values, which override defaults. Declare `RequiredArg` for values
-every job must provide, `OptionalArg` for values with defaults, and `Flag` for
-booleans. Names are `--kebab-case` on the command line and `snake_case` attributes on
-the resulting job.
+Your config is a Pydantic model. `ArgparseModel` turns it into a CLI: fields become
+`--kebab-case` options, help text comes from `Field(description=...)` and the
+docstring, and every value is validated by Pydantic. What you get back is an instance
+of your class, so your editor and type checker know every field.
 
 ```py
 from pathlib import Path
-from pelutils.job_parser import Flag, JobParser, OptionalArg, RequiredArg
-
-parser = JobParser(
-    RequiredArg("data-path", help="Training data directory"),
-    OptionalArg("learning-rate", default=1e-4, type=float, help="Optimizer learning rate"),
-    Flag("fp16", help="Use mixed precision"),
-    multiple_jobs=True,
-)
-
-for job in parser.parse_jobs():
-    print(job.name, job.data_path, job.learning_rate, job.fp16)
-    job.write_documentation(Path("runs") / job.name / "arguments.ini")
-    # ... run your application with the resolved job values
-```
-
-A single config file can define several named jobs (with a shared `[DEFAULT]`
-section), and one CLI override applies to all of them:
-
-```console
-python main.py --config-file config.ini --learning-rate 5e-5
-```
-
-For a single job, drop `multiple_jobs=True` and call `parse_job()` instead. A config
-path can target one section directly, e.g. `--config-file config.ini:low-lr`. See the
-[job parser docs](https://pelutils.readthedocs.io/en/latest/api/pelutils.job_parser.html) for auto-documentation details.
-
-To get fully typed jobs and Pydantic validation, declare the arguments as a `ArgparseModel`
-instead. Parsing returns instances of your class, and config files and overrides work
-the same way:
-
-```py
-from pathlib import Path
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pelutils.job_parser import ArgparseModel
 
-class TrainJob(ArgparseModel):
+class Optimizer(BaseModel):
+    learning_rate: float = Field(1e-4, gt=0, description="Optimizer learning rate")
+    momentum: float = 0.9
+
+class TrainConfig(ArgparseModel):
     """Train a model."""
 
-    data_path: Path = Field(description="Training data directory")
-    learning_rate: float = Field(1e-4, gt=0, description="Optimizer learning rate")
-    fp16: bool = False
+    data_path: Path = Field(description="Training data directory")  # No default: required
+    fp16: bool = False                                              # False default: a flag
+    layers: list[int] = [64, 64]                                    # Takes any number of values
+    optimizer: Optimizer = Optimizer()                              # --optimizer.learning-rate etc.
 
-for job in TrainJob.parse_jobs():  # Or TrainJob.parse_job() for a single job
-    print(job.name, job.data_path, job.learning_rate, job.fp16)
+# cfg is a fully typed and validated Pydantic model
+cfg = TrainConfig.parse_job()
 ```
 
-Fields holding a Pydantic model become dotted arguments such as `--optimizer.learning-rate`,
-and fields with `Field(init=False)` are left out of the command line. To save and load jobs as
-JSON, also inherit from `UniversalJsonModel`: `class TrainJob(ArgparseModel, UniversalJsonModel)`.
+```sh
+python train.py --help
+python train.py --data-path data --fp16 --layers 128 128 --optimizer.learning-rate 3e-4
+```
+
+Config files come for free. The command line overrides the config file, which overrides
+field defaults. One INI file can hold several named jobs sharing a `[DEFAULT]` section:
+
+```ini
+[DEFAULT]
+data-path = data
+fp16
+
+[small]
+layers = 32 32
+
+[large]
+layers = 512 512 512
+optimizer.learning-rate = 3e-5
+```
+
+```py
+for job in TrainJob.parse_jobs():
+    job.write_documentation(Path("runs") / job.name / "arguments.ini")  # Reproducible runs
+    ...
+```
+
+```console
+python train.py --config-file config.ini --optimizer.momentum 0.95  # Override applies to all jobs
+python train.py --config-file config.ini:large                      # Run just one
+```
+
+Add `UniversalJsonModel` as a base to save and load jobs as JSON, and use
+`Field(init=False)` for fields that should not be arguments. See the
+[`ArgparseModel` docs](https://pelutils.readthedocs.io/en/latest/api/pelutils.job_parser.html)
+for the full mapping from types to arguments.
+
+Need to build the arguments dynamically? `JobParser` is the untyped core underneath,
+taking `RequiredArg`, `OptionalArg`, and `Flag` objects and returning jobs with the
+same config and override behaviour.
 
 ## Fast `unique`
 
