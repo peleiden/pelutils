@@ -17,6 +17,7 @@
 - Raise `ConfigError` for config keys without a value on non-flag arguments and for `name` keys.
 - Fix arguments named `config` when using config files, and reject arguments named `explicit-args` or `docfile-content`.
 - Fix `git_repo_info` failing in repositories without commits, for which the commit is now `None`, and return `(None, None)` for bare repositories.
+- Add `misc.pformat` for pretty-formatting Pydantic models and other objects.
 
 ## 4.5.0
 

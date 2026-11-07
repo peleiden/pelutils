@@ -9,11 +9,13 @@ Main inclusions are :class:`Table` for aligned text tables that also export to L
 :meth:`Table.to_latex` and Markdown via :meth:`Table.to_markdown`; :class:`OS` and :data:`hardware_info` for describing the machine
 the code runs on; :func:`git_repo_info` for the repository and commit currently executing; and small file
 and dict helpers such as :func:`reverse_line_iterator` and :func:`except_keys`.
+:func:`pformat` pretty-formats objects, including long Pydantic models, over multiple lines.
 """
 
 from pelutils.misc._files import reverse_line_iterator
 from pelutils.misc._git import git_repo_info
 from pelutils.misc._misc import except_keys
+from pelutils.misc._pformat import pformat
 from pelutils.misc._platform import OS, UnsupportedOS, hardware_info
 from pelutils.misc._table import Table
 
@@ -24,5 +26,6 @@ __all__ = (
     "except_keys",
     "git_repo_info",
     "hardware_info",
+    "pformat",
     "reverse_line_iterator",
 )
