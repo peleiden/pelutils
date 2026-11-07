@@ -12,7 +12,7 @@
 - Fix edge case bugs in `unique` and better support for edge cases and unusual arrays.
 - Make `SparseGridBlobDetection` faster and use less memory.
 - Add `ArgparseModel` to `job_parser` for declaring job arguments as a Pydantic model, with nested models as dotted arguments.
-- Require Pydantic 2.11 or newer.
+- Require Pydantic 2.11 or newer and Rich 13 or newer.
 - Accept flag values in config files regardless of case.
 - Raise `ConfigError` for config keys without a value on non-flag arguments and for `name` keys.
 - Fix arguments named `config` when using config files, and reject arguments named `explicit-args` or `docfile-content`.
