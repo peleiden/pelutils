@@ -4,7 +4,7 @@ from pathlib import Path
 from types import NoneType, UnionType
 from typing import Annotated, Any, Self, Union, get_args, get_origin  # pyright: ignore[reportDeprecated]
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, PrivateAttr, ValidationError
 from pydantic.fields import FieldInfo
 from pydantic_core import ErrorDetails, PydanticUndefined
 from typing_extensions import override
@@ -15,7 +15,7 @@ from ._job_parser import JobParser
 from ._structs import ArgumentTypes, Flag, JobDescription, JobParserError, OptionalArg, RequiredArg
 
 # Fields declared by ArgparseModel to describe how a job was parsed rather than what it does
-_JOB_FIELDS = ("name", "documentation")
+_JOB_FIELDS = ("name",)
 # Marks a field whose default comes from a default factory, which is not called to build the parser
 _FACTORY = object()
 
@@ -210,7 +210,7 @@ class ArgparseModel(BaseModel):
       fields are added. Fields of nested models have no short options.
 
     Fields named ``config_file``, ``help``, ``explicit_args``, or ``docfile_content`` are not
-    allowed, and ``name`` and ``documentation`` are declared by this class. Fields of type
+    allowed, and ``name`` is declared by this class. Fields of type
     ``dict``, containers of models, unions of models with other types, and fields with aliases
     are not supported.
 
@@ -219,27 +219,21 @@ class ArgparseModel(BaseModel):
     strings, they are rejected by strict fields and non-string ``Literal`` types (use an
     ``IntEnum`` instead of ``Literal[1, 2]``), and ``int | str`` always results in a string.
     Values kept from a nested default are validated again. Fields not given a value are left out of
-    ``model_fields_set``, except ``name`` and ``documentation``, which are set by parsing.
+    ``model_fields_set``, except ``name``, which is set by parsing.
 
     Pydantic does not enforce ``init=False`` on models, so such fields can still be given to the
     constructor; only type checkers reject them.
 
-    Jobs are equal if they have the same type and field values, regardless of their
-    ``name`` and ``documentation``.
+    Jobs are equal if they have the same type and field values, regardless of their ``name``.
 
     To save and load jobs as JSON, also inherit from
     :class:`~pelutils.serialization.UniversalJsonModel`, e.g.
-    ``class TrainJob(ArgparseModel, UniversalJsonModel)``. Loaded jobs keep their ``name``
-    and can still be documented with :meth:`write_documentation`.
+    ``class TrainJob(ArgparseModel, UniversalJsonModel)``. Loaded jobs keep their ``name``,
+    but cannot be documented with :meth:`write_documentation`.
     """
 
     name: str = Field(default="", init=False, description="Name of the job, which is empty if the model was not parsed")
-    documentation: str | None = Field(
-        default=None,
-        init=False,
-        repr=False,
-        description="Invocation and configuration of a parsed job, as written by write_documentation",
-    )
+    _docfile_content: str | None = PrivateAttr(default=None)
 
     @classmethod
     def parse_job(cls) -> Self:
@@ -278,12 +272,12 @@ class ArgparseModel(BaseModel):
         JobParserError
             If the model was not created by :meth:`parse_job` or :meth:`parse_jobs`.
         """
-        if self.documentation is None:
+        if self._docfile_content is None:
             raise JobParserError("Only parsed jobs can be documented")
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a" if append else "w") as docfile:
-            docfile.write(self.documentation)
+            docfile.write(self._docfile_content)
 
     @override
     def __eq__(self, other: object) -> bool:
@@ -327,13 +321,15 @@ class ArgparseModel(BaseModel):
                     target = target.setdefault(part, {})
                 target[field_name] = job[name]
         values = _overlay(cls, values, PydanticUndefined)
-        values |= {"name": job.name, "documentation": job._docfile_content}  # pyright: ignore[reportPrivateUsage]
+        values["name"] = job.name
 
         try:
-            return cls.model_validate(values)
+            model = cls.model_validate(values)
         except ValidationError as e:
             errors = "\n".join(_format_error(cls, error) for error in e.errors())
             raise JobParserError(f"Job '{job.name}' is invalid:\n{errors}") from None
+        model._docfile_content = job._docfile_content  # pyright: ignore[reportPrivateUsage]
+        return model
 
 
 def _format_error(model: type[BaseModel], error: ErrorDetails) -> str:
