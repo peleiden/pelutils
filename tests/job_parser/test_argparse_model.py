@@ -1,3 +1,4 @@
+import pickle
 import sys
 from collections.abc import Sequence
 from enum import Enum, IntEnum
@@ -11,7 +12,7 @@ from pelutils.job_parser import ArgparseModel, ConfigError, JobParserError
 from pelutils.serialization import UniversalJsonModel
 from pelutils.tests import UnitTestCollection, restore_argv
 
-JOB_FIELDS = {"name", "documentation"}
+JOB_FIELDS = {"name"}
 
 
 class Color(Enum):
@@ -336,12 +337,20 @@ class TestArgparseModel(UnitTestCollection):
         job = self._parse("-d", "x", "--name", "my-job")
         assert job.name == "my-job"
         assert job.model_dump()["name"] == "my-job"
-        assert "Running job" in job.model_dump()["documentation"]
-        assert "documentation" not in repr(job)
+        assert job.model_dump().keys() == Job.model_fields.keys()
 
         unparsed = Job(data_path=Path("x"))
         assert unparsed.name == ""
-        assert unparsed.documentation is None
+
+    @restore_argv
+    def test_documentation_is_kept(self):
+        class Frozen(ArgparseModel, frozen=True):
+            a: int = 1
+
+        docfile = self.get_test_path("docs") / "kept.ini"
+        for job in (self._parse("-a", "2", model=Frozen).model_copy(), pickle.loads(pickle.dumps(self._parse("-d", "x")))):
+            job.write_documentation(docfile, append=False)
+            assert "Running job" in docfile.read_text()
 
     @restore_argv
     def test_documentation_of_default_factory(self):
@@ -517,9 +526,16 @@ class TestArgparseModel(UnitTestCollection):
 
     @restore_argv
     def test_job_fields(self):
-        # name and documentation are not arguments and do not affect equality or hashing
-        with pytest.raises(SystemExit):
-            self._parse("-d", "x", "--documentation", "y")
+        # name is not an argument and does not affect equality or hashing
+        class Documented(ArgparseModel):
+            documentation: str = ""
+
+        # documentation is an ordinary field name
+        job = self._parse("--documentation", "y", model=Documented)
+        assert job.documentation == "y"
+        docfile = self.get_test_path("docs") / "documented.ini"
+        job.write_documentation(docfile)
+        assert "--documentation y" in docfile.read_text()
 
         class Frozen(ArgparseModel, frozen=True):
             a: int = 1
@@ -531,10 +547,9 @@ class TestArgparseModel(UnitTestCollection):
         with pytest.raises(TypeError, match="unhashable"):
             hash(self._parse("-d", "x"))
 
-        for name in ("name", "documentation"):
-            redefined = type("Redefined", (ArgparseModel,), {"__annotations__": {name: str}, name: ""})
-            with pytest.raises(JobParserError, match=f"'{name}' is reserved"):
-                self._parse(model=redefined)
+        redefined = type("Redefined", (ArgparseModel,), {"__annotations__": {"name": str}, "name": ""})
+        with pytest.raises(JobParserError, match="'name' is reserved"):
+            self._parse(model=redefined)
 
     @restore_argv
     def test_universal_json_model(self):
@@ -546,9 +561,9 @@ class TestArgparseModel(UnitTestCollection):
         assert loaded == job
         assert loaded.optimizer == Optimizer(learning_rate=0.1, momentum=0.5)
         assert loaded.name == "run"
-        docfile = self.get_test_path("json") / "job.ini"
-        loaded.write_documentation(docfile)
-        assert "--optimizer.learning-rate 0.1" in docfile.read_text()
+        assert "Running job" not in path.read_text()
+        with pytest.raises(JobParserError):
+            loaded.write_documentation(self.get_test_path("json") / "job.ini")
 
         sys.argv = ["main.py", "--data.path", "/d"]
         job = JsonTrainReversed.parse_job()
